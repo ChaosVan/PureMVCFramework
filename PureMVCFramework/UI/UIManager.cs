@@ -184,7 +184,7 @@ namespace PureMVCFramework.UI
             // 多开的window或者单开window的缓存里找不到，都需要创建window
             if (param.windowMode == WindowMode.Multiple || !m_SingleWindows.TryGetValue(param.name, out UIWindow window))
             {
-                if (param.windowClass == null)
+                if (string.IsNullOrEmpty(param.windowClass))
                 {
                     window = ReferencePool.Instance.SpawnInstance<UIWindow>();
                 }

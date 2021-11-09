@@ -65,18 +65,12 @@ namespace PureMVCFramework.UI
 
         internal bool ForceClosed { get; set; }
 
-        protected override void OnDelete()
+        protected virtual void OnFocus(bool tf)
         {
-            IsOpen = false;
-            IsFocus = false;
 
-            config = default;
-            worldParam = default;
-
-            base.OnDelete();
         }
 
-        protected virtual void OnFocus(bool tf)
+        protected virtual void ApplySafeArea(Rect area)
         {
 
         }
@@ -223,6 +217,8 @@ namespace PureMVCFramework.UI
                 return;
             }
 
+            IsOpen = false;
+
             if (!string.IsNullOrEmpty(config.mediatorName))
             {
                 if (config.windowMode != WindowMode.Multiple)
@@ -235,6 +231,9 @@ namespace PureMVCFramework.UI
             // Reset Canvas Layer
             ResetCanvas();
 
+            config = default;
+            worldParam = default;
+
             if (gameObject != null)
                 gameObject.Recycle();
 
@@ -246,11 +245,6 @@ namespace PureMVCFramework.UI
             {
                 Debug.LogError(e);
             }
-        }
-
-        protected virtual void ApplySafeArea(Rect area)
-        {
-
         }
     }
 }
