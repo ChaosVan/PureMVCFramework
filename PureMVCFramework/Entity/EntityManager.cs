@@ -116,7 +116,7 @@ namespace PureMVCFramework.Entity
         {
             T comp = ReferencePool.Instance.SpawnInstance<T>();
             InternalAddComponentData(entity, Entity.StringToHash(typeof(T).FullName), comp);
-            World.Instance.InjectEntity(entity);
+            World.InjectEntityToWorlds(entity);
 
             return comp;
         }
@@ -125,7 +125,7 @@ namespace PureMVCFramework.Entity
         {
             IComponent comp = (IComponent)ReferencePool.Instance.SpawnInstance(type);
             InternalAddComponentData(entity, Entity.StringToHash(type.FullName), comp);
-            World.Instance.InjectEntity(entity);
+            World.InjectEntityToWorlds(entity);
 
             return comp;
         }
@@ -134,7 +134,7 @@ namespace PureMVCFramework.Entity
         {
             IComponent comp = (IComponent)ReferencePool.Instance.SpawnInstance(typeName);
             InternalAddComponentData(entity, Entity.StringToHash(typeName), comp);
-            World.Instance.InjectEntity(entity);
+            World.InjectEntityToWorlds(entity);
 
             return comp;
         }
@@ -149,7 +149,7 @@ namespace PureMVCFramework.Entity
                 components[i] = comp;
             }
 
-            World.Instance.InjectEntity(entity);
+            World.InjectEntityToWorlds(entity);
         }
 
         public T GetComponentData<T>(Entity entity) where T : IComponent
@@ -195,7 +195,7 @@ namespace PureMVCFramework.Entity
             if (InternalRemoveComponentData(entity, typeHash, out var comp))
                 ReferencePool.Instance.RecycleInstance(comp);
 
-            World.Instance.InjectEntity(entity);
+            World.InjectEntityToWorlds(entity);
         }
 
         public void DestroyEntity(ulong key)
@@ -222,7 +222,7 @@ namespace PureMVCFramework.Entity
                     }
                 }
 
-                World.Instance.InjectEntity(entity);
+                World.InjectEntityToWorlds(entity);
 
                 if (entity.gameObject != null)
                 {
@@ -281,7 +281,7 @@ namespace PureMVCFramework.Entity
 #endif
 
                 Instance.GameObjectEntities[entity.gameObject] = entity;
-                World.Instance.InjectEntity(entity);
+                World.InjectEntityToWorlds(entity);
             }
         }
 
@@ -290,7 +290,7 @@ namespace PureMVCFramework.Entity
             if (entity.gameObject != null)
             {
                 var comp = entity.gameObject.AddComponent<T>();
-                World.Instance.InjectEntity(entity);
+                World.InjectEntityToWorlds(entity);
 
                 return comp;
             }
@@ -312,7 +312,7 @@ namespace PureMVCFramework.Entity
             if (comp != null)
             {
                 UnityEngine.Object.Destroy(comp);
-                World.Instance.InjectEntity(entity);
+                World.InjectEntityToWorlds(entity);
             }
         }
     }

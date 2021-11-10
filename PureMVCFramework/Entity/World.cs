@@ -8,12 +8,37 @@ using Sirenix.OdinInspector;
 
 namespace PureMVCFramework.Entity
 {
-    public class World : SingletonBehaviour<World>
+    public interface IWorld
     {
+        void InjectEntity(Entity entity);
+    }
+
+    public class World : SingletonBehaviour<World>, IWorld
+    {
+        public static List<IWorld> All = new List<IWorld>();
+
+        public static World DefaultWorld { get; private set; }
+
+        public static void InjectEntityToWorlds(Entity entity)
+        {
+            foreach (var world in All)
+            {
+                world.InjectEntity(entity);
+            }
+        }
+
+        public static void RegisterWorld(IWorld world)
+        {
+            All.Add(world);
+        }
+
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void RuntimeOnDisableDomainReload()
         {
             applicationIsQuitting = false;
+            All.Clear();
+            DefaultWorld = null;
         }
 
 #if ODIN_INSPECTOR
@@ -23,7 +48,22 @@ namespace PureMVCFramework.Entity
 
         public float DeltaTime { get; private set; }
 
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            DefaultWorld = this;
+            RegisterWorld(this);
+        }
+
         protected override void OnDelete()
+        {
+            Destroy();
+
+            base.OnDelete();
+        }
+
+        public void Destroy()
         {
             for (int i = 0; i < m_Systems.Count; ++i)
             {
@@ -31,8 +71,6 @@ namespace PureMVCFramework.Entity
             }
 
             m_Systems.Clear();
-
-            base.OnDelete();
         }
 
         public void InjectEntity(Entity entity)
