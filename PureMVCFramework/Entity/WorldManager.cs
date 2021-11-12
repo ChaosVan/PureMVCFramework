@@ -41,6 +41,11 @@ namespace PureMVCFramework.Entity
             AllWorlds.Add(world);
         }
 
+        public void RemoveWorld(IWorld world)
+        {
+            AllWorlds.Remove(world);
+        }
+
         protected override void OnInitialized()
         {
             base.OnInitialized();
