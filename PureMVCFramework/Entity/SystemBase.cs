@@ -12,11 +12,12 @@ namespace PureMVCFramework.Entity
     {
         void OnInitialized();
         void OnRelease();
-
         void InjectEntity(Entity entity);
         void Update();
         void PreUpdate();
         void PostUpdate();
+
+        IWorld World { get; set; }
     }
 
     public abstract class SystemBase : Notifier, ISystemBase
@@ -30,6 +31,8 @@ namespace PureMVCFramework.Entity
         [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
         protected readonly List<Entity> Entities = new List<Entity>();
+
+        public IWorld World { get; set; }
 
         public virtual void OnInitialized() { }
 

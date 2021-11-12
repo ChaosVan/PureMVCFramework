@@ -1,0 +1,70 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
+
+namespace PureMVCFramework.Entity
+{
+    public class WorldManager : SingletonBehaviour<WorldManager>
+    {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void RuntimeOnDisableDomainReload()
+        {
+            applicationIsQuitting = false;
+        }
+
+        public World LocalWorld;
+
+#if ODIN_INSPECTOR
+        [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
+#endif
+        private readonly List<IWorld> AllWorlds = new List<IWorld>();
+
+        public void Initialize()
+        {
+
+        }
+
+        public void InjectEntityToWorlds(Entity entity)
+        {
+            foreach (var world in AllWorlds)
+            {
+                world.InjectEntity(entity);
+            }
+        }
+
+        public void RegisterWorld(IWorld world)
+        {
+            AllWorlds.Add(world);
+        }
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+            LocalWorld = new World();
+            LocalWorld.Initialize();
+            RegisterWorld(LocalWorld);
+        }
+
+        protected override void OnDelete()
+        {
+            foreach (var world in AllWorlds)
+            {
+                world.Destroy();
+            }
+
+            LocalWorld = null;
+
+            base.OnDelete();
+        }
+
+        protected override void OnUpdate(float delta)
+        {
+            if (LocalWorld != null)
+                LocalWorld.OnUpdate(delta);
+        }
+    }
+}

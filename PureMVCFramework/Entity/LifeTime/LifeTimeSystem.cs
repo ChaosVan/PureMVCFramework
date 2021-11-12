@@ -21,7 +21,7 @@ namespace PureMVCFramework.Entity
         public readonly List<Entity> willDestroy = new List<Entity>();
         protected override void OnUpdate(int index, Entity entity, LifeTime component)
         {
-            component.Value -= World.Instance.DeltaTime;
+            component.Value -= ((World)World).DeltaTime;
 
             if (component.Value <= 0)
             {
