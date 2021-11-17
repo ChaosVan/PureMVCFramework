@@ -16,7 +16,7 @@ namespace PureMVCFramework.Entity
             applicationIsQuitting = false;
         }
 
-        public World LocalWorld;
+        private World LocalWorld;
 
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
