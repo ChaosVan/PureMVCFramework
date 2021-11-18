@@ -14,15 +14,30 @@ namespace PureMVCFramework
 
         private void Start()
         {
-            m_bStarted = true;
+            StartCoroutine();
+        }
+
+        private void Update()
+        {
+            if (m_bStarted)
+                return;
+
             StartCoroutine();
         }
 
         // Use this for initialization
         protected virtual IEnumerator DelayAction()
         {
-            yield return new WaitForSecondsRealtime(delay);
+            yield return new WaitForSeconds(delay);
             gameObject.Recycle();
+        }
+
+        private void StartCoroutine()
+        {
+            StopCoroutine();
+
+            m_Coroutine = StartCoroutine(DelayAction());
+            m_bStarted = true;
         }
 
         private void StopCoroutine()
@@ -32,18 +47,8 @@ namespace PureMVCFramework
                 StopCoroutine(m_Coroutine);
                 m_Coroutine = null;
             }
-        }
 
-        private void StartCoroutine()
-        {
-            StopCoroutine();
-            m_Coroutine = StartCoroutine(DelayAction());
-        }
-
-        private void OnEnable()
-        {
-            if (m_bStarted)
-                StartCoroutine();
+            m_bStarted = false;
         }
 
         private void OnDisable()
