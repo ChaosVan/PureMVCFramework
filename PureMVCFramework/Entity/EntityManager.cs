@@ -259,10 +259,6 @@ namespace PureMVCFramework.Entity
                         OnGameObjectLoaded(entity, go);
                         callback?.Invoke(entity, data);
                     }
-                    else
-                    {
-                        Debug.LogErrorFormat("LoadGameObject error: {0}", assetPath);
-                    }
                 }
                 else
                 {
@@ -270,6 +266,25 @@ namespace PureMVCFramework.Entity
                 }
             }, userdata);
         }
+
+        public void LoadGameObject(Entity entity, string assetPath, Vector3 position, Quaternion rotation, Action<Entity, object> callback = null, object userdata = null)
+        {
+            AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, position, rotation, (go, data) =>
+            {
+                if (entity.IsAlive)
+                {
+                    if (go != null)
+                    {
+                        OnGameObjectLoaded(entity, go);
+                        callback?.Invoke(entity, data);
+                    }
+                }
+                else
+                {
+                    go.Recycle();
+                }
+            }, userdata);
+        } 
 
         private void OnGameObjectLoaded(Entity entity, GameObject go)
         {
