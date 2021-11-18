@@ -42,6 +42,8 @@ namespace PureMVCFramework.Entity
                     Entities.RemoveAt(i);
                     Components1.RemoveAt(i);
                     Components2.RemoveAt(i);
+
+                    OnEject(entity, c1);
                 }
             }
             else if (tf)
@@ -61,6 +63,8 @@ namespace PureMVCFramework.Entity
         }
 
         protected abstract void OnUpdate(int index, Entity entity, T1 component1, T2 component2);
+
+        protected virtual void OnEject(Entity entity, T1 component) { }
     }
 
     public abstract class HybridSystem<T1, T2, T3> : SystemBase where T1 : Component where T2 : IComponent where T3 : IComponent
@@ -105,6 +109,8 @@ namespace PureMVCFramework.Entity
                     Components1.RemoveAt(i);
                     Components2.RemoveAt(i);
                     Components3.RemoveAt(i);
+
+                    OnEject(entity, c1);
                 }
             }
             else if (tf)
@@ -125,5 +131,7 @@ namespace PureMVCFramework.Entity
         }
 
         protected abstract void OnUpdate(int index, Entity entity, T1 component1, T2 component2, T3 component3);
+
+        protected virtual void OnEject(Entity entity, T1 component) { }
     }
 }
