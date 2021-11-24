@@ -1,6 +1,7 @@
 ﻿using PureMVC.Patterns.Observer;
 using System.Collections.Generic;
 using UnityEngine;
+using PureMVCFramework.Advantages;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -8,10 +9,8 @@ using Sirenix.OdinInspector;
 
 namespace PureMVCFramework.Entity
 {
-    public interface ISystemBase
+    public interface ISystemBase : IRecycleable, IInitializeable
     {
-        void OnInitialized();
-        void OnRelease();
         void InjectEntity(Entity entity);
         void Update();
         void PreUpdate();
@@ -34,9 +33,10 @@ namespace PureMVCFramework.Entity
 
         public IWorld World { get; set; }
 
+        public virtual void OnRecycle() { }
+
         public virtual void OnInitialized() { }
 
-        public virtual void OnRelease() { }
 
         public abstract void InjectEntity(Entity entity);
 

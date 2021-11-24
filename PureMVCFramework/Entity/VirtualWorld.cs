@@ -34,7 +34,7 @@ namespace PureMVCFramework.Entity
         {
             for (int i = 0; i < m_Systems.Count; ++i)
             {
-                m_Systems[i].OnRelease();
+                ReferencePool.Instance.RecycleInstance(m_Systems[i]);
             }
 
             m_Systems.Clear();
@@ -48,28 +48,43 @@ namespace PureMVCFramework.Entity
             }
         }
 
-        public void RegisterSystem<T>() where T : ISystemBase, new()
+        public ISystemBase RegisterSystem<T>() where T : ISystemBase, new()
         {
             var system = ReferencePool.Instance.SpawnInstance<T>();
             m_Systems.Add(system);
             system.World = this;
             system.OnInitialized();
+
+            return system;
         }
 
-        public void RegisterSystem(System.Type type)
+        public ISystemBase RegisterSystem(System.Type type)
         {
             var system = (ISystemBase)ReferencePool.Instance.SpawnInstance(type);
             m_Systems.Add(system);
             system.World = this;
             system.OnInitialized();
+
+            return system;
         }
 
-        public void RegisterSystem(string typeName)
+        public ISystemBase RegisterSystem(string typeName)
         {
             var system = (ISystemBase)ReferencePool.Instance.SpawnInstance(typeName);
             m_Systems.Add(system);
             system.World = this;
             system.OnInitialized();
+
+            return system;
+        }
+
+        public void RemoveSystem(ISystemBase system)
+        {
+            if (m_Systems.Contains(system))
+            {
+                m_Systems.Remove(system);
+                ReferencePool.Instance.RecycleInstance(system);
+            }
         }
     }
 }

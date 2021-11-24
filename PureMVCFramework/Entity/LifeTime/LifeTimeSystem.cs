@@ -6,14 +6,9 @@ using UnityEngine;
 
 namespace PureMVCFramework.Entity
 {
-    public class LifeTime : IComponent, IRecycleable
+    public class LifeTime : IComponent
     {
         public float Value;
-
-        public void OnRecycle()
-        {
-            Value = float.MaxValue;
-        }
     }
 
     public class LifeTimeSystem : ComponentSystem<LifeTime>

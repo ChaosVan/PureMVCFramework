@@ -1,10 +1,10 @@
+using Unity.Mathematics;
 using UnityEngine;
 
 #if ENABLE_JOBS
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Jobs;
-using Unity.Mathematics;
 using UnityEngine.Jobs;
 #endif
 
@@ -69,7 +69,9 @@ namespace PureMVCFramework.Entity
             transofrms.Add(component1);
 #else
             if (component1 != null)
-                component1.SetPositionAndRotation(component2.Position, component2.Rotation);
+            {
+                component1.SetPositionAndRotation(math.lerp(component1.position, component2.Position, 0.62f), math.slerp(component1.rotation, component2.Rotation, 0.62f));
+            }
 #endif
 
         }
