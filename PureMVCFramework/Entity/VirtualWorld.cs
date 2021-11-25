@@ -12,6 +12,8 @@ namespace PureMVCFramework.Entity
 {
     public interface IWorld
     {
+        public float TimePerFrame { get; set; }
+
         void InjectEntity(Entity entity);
         void Initialize();
         void Destroy();
@@ -25,6 +27,8 @@ namespace PureMVCFramework.Entity
 #endif
         protected readonly List<ISystemBase> m_Systems = new List<ISystemBase>();
 
+        public float TimePerFrame { get; set; }
+
         public virtual void Initialize()
         {
             WorldManager.Instance.RegisterWorld(this);
@@ -32,6 +36,9 @@ namespace PureMVCFramework.Entity
 
         public virtual void Destroy()
         {
+            if (ReferencePool.applicationIsQuitting)
+                return;
+
             for (int i = 0; i < m_Systems.Count; ++i)
             {
                 ReferencePool.Instance.RecycleInstance(m_Systems[i]);

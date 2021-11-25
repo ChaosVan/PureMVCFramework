@@ -70,7 +70,7 @@ namespace PureMVCFramework.Entity
 #else
             if (component1 != null)
             {
-                component1.SetPositionAndRotation(math.lerp(component1.position, component2.Position, 0.62f), math.slerp(component1.rotation, component2.Rotation, 0.62f));
+                component1.SetPositionAndRotation(component2.Position, component2.Rotation);
             }
 #endif
 
