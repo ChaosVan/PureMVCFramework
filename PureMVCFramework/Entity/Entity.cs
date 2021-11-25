@@ -5,12 +5,6 @@ using UnityEngine;
 using Sirenix.OdinInspector;
 #endif
 
-#if UNITY_EDITOR
-using System.Linq;
-using System.Text;
-using System.IO;
-#endif
-
 namespace PureMVCFramework.Entity
 {
     public sealed class Entity
@@ -49,59 +43,6 @@ namespace PureMVCFramework.Entity
 
             return hashcode;
         }
-
-#if UNITY_EDITOR
-        [UnityEditor.MenuItem("Tools/ECS/FindDuplicateHash")]
-        [RuntimeInitializeOnLoadMethod()]
-        public static void FindDuplicateHash()
-        {
-            var types = System.AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IComponent)))).ToArray();
-
-            var typeList = new List<int>();
-
-            foreach (var item in types)
-            {
-                int hash = StringToHash(item.FullName);
-                if (!typeList.Contains(hash))
-                {
-                    typeList.Add(hash);
-                }
-                else
-                {
-                    var typeIndex = typeList.IndexOf(hash);
-                    throw new System.Exception($"The component stringID inherited from IComponent is duplicated, " +
-                        $"{types[typeIndex].FullName} AND {item.FullName}");
-                }
-            }
-        }
-
-        [UnityEditor.MenuItem("Tools/ECS/GenerateEntityComponentsHash")]
-        public static void GenerateEntityComponentsHash()
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.Append("public static class EntityComponentsHash\n");
-            sb.Append("{\n");
-            
-            var types = System.AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IComponent)))).ToArray();
-            foreach (var item in types)
-            {
-                int hash = StringToHash(item.FullName);
-                sb.AppendFormat("\tpublic const int {0}Hash = {1};\n", item.FullName.Replace(".", "_"), hash);
-            }
-
-
-            sb.Append("}\n");
-            var steam = FileUtils.CreateFile("Assets/Scripts/EntityComponentsHash.cs");
-
-            using (StreamWriter writer = new StreamWriter(steam))
-            {
-                writer.Write(sb.ToString());
-                writer.Flush();
-            }
-        }
-#endif
     }
 
 }
