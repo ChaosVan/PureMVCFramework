@@ -44,4 +44,5 @@ namespace PureMVCFramework.Entity
             return hashcode;
         }
     }
+
 }

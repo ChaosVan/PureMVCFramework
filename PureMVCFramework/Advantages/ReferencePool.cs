@@ -11,6 +11,11 @@ using Sirenix.OdinInspector;
 
 namespace PureMVCFramework.Advantages
 {
+    public interface IInitializeable
+    {
+        void OnInitialized();
+    }
+
     public interface IRecycleable
     {
         void OnRecycle();
@@ -89,11 +94,16 @@ namespace PureMVCFramework.Advantages
                 int count = m_Cache[typeName].Count;
                 m_Counter[typeName] = count;
 #endif
-
-                return result;
+            }
+            else
+            {
+                result = provider.Spawn(typeName, args);
             }
 
-            return provider.Spawn(typeName, args);
+            if (result is IInitializeable o)
+                o.OnInitialized();
+
+            return result;
         }
 
         public object SpawnInstance(Type type, params object[] args)

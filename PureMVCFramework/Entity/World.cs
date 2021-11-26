@@ -5,8 +5,6 @@
     {
         public static World Self { get; private set; }
 
-        public float DeltaTime { get; private set; }
-
         internal World() { }
 
         public override void Initialize()
@@ -16,7 +14,7 @@
 
         public void OnUpdate(float delta)
         {
-            DeltaTime = delta;
+            TimePerFrame = delta;
             int count = m_Systems.Count;
 
             for (int i = 0; i < count; ++i)
