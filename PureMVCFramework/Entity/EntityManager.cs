@@ -93,13 +93,12 @@ namespace PureMVCFramework.Entity
 
         internal void InternalAddComponentData(Entity entity, int typeHash, IComponent comp)
         {
-            if (!entity.components.ContainsKey(typeHash))
+            if (entity.components.ContainsKey(typeHash))
             {
-                entity.components.Add(typeHash, comp);
+                throw new Exception("添加了重复类型的组件，或者组件的hash重复：" + comp.GetType());
             }
-            else
-                ReferencePool.Instance.RecycleInstance(comp);
 
+            entity.components.Add(typeHash, comp);
         }
 
         internal bool InternalRemoveComponentData(Entity entity, int typeHash, out IComponent comp)
