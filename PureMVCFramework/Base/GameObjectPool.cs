@@ -204,6 +204,7 @@ namespace PureMVCFramework
                 }
                 obj = Instantiate(prefab);
                 obj.name = obj.name.Replace("(Clone)", "(Spawn)");  // mark object as "Spawn"
+                DontDestroyOnLoad(obj);
 
                 trans = obj.transform;
                 trans.SetParent(parent, false);
@@ -211,6 +212,7 @@ namespace PureMVCFramework
                 trans.localRotation = rotation;
                 obj.SetActive(true);
                 Instance.spawnedObjects.Add(obj, prefab);
+
                 return obj;
             }
             else

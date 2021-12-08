@@ -59,12 +59,19 @@ namespace PureMVCFramework.Entity
 #endif
         internal readonly Dictionary<ulong, Entity> Entities = new Dictionary<ulong, Entity>();
 
+        public bool IsDataMode { get; private set; }
+ 
         protected override void OnDelete()
         {
             GameObjectEntities.Clear();
             Entities.Clear();
             base.OnDelete();
         }
+
+        public void EnableDataMode(bool tf)
+        {
+            IsDataMode = tf;
+        } 
 
         public bool TryGetEntity(GameObject obj, out Entity entity)
         {
@@ -95,7 +102,7 @@ namespace PureMVCFramework.Entity
         {
             if (entity.components.ContainsKey(typeHash))
             {
-                throw new Exception("添加了重复类型的组件，或者组件的hash重复：" + comp.GetType());
+                throw new Exception("添加了重复类型的组件，或者组件的hash重复：" + comp.GetType().FullName);
             }
 
             entity.components.Add(typeHash, comp);
@@ -249,6 +256,9 @@ namespace PureMVCFramework.Entity
 
         public void LoadGameObject(Entity entity, string assetPath, Transform parent = null, Action<Entity, object> callback = null, object userdata = null)
         {
+            if (IsDataMode)
+                return;
+
             AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, parent, (go, data) =>
             {
                 if (entity.IsAlive)
@@ -268,6 +278,9 @@ namespace PureMVCFramework.Entity
 
         public void LoadGameObject(Entity entity, string assetPath, Vector3 position, Quaternion rotation, Action<Entity, object> callback = null, object userdata = null)
         {
+            if (IsDataMode)
+                return;
+
             AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, position, rotation, (go, data) =>
             {
                 if (entity.IsAlive)
