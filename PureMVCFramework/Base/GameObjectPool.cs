@@ -211,6 +211,8 @@ namespace PureMVCFramework
                 trans.localRotation = rotation;
                 obj.SetActive(true);
                 Instance.spawnedObjects.Add(obj, prefab);
+
+                DontDestroyOnLoad(obj);
                 return obj;
             }
             else
