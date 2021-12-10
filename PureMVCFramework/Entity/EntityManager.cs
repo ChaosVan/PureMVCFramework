@@ -71,7 +71,7 @@ namespace PureMVCFramework.Entity
         public void EnableDataMode(bool tf)
         {
             IsDataMode = tf;
-        } 
+        }
 
         public bool TryGetEntity(GameObject obj, out Entity entity)
         {
@@ -209,6 +209,15 @@ namespace PureMVCFramework.Entity
             if (Entities.TryGetValue(key, out Entity e))
             {
                 DestroyEntity(e);
+            }
+        }
+
+        public void DestroyAll()
+        {
+            var list = Entities.Values.ToArray();
+            foreach (var entity in list)
+            {
+                DestroyEntity(entity);
             }
         }
 
