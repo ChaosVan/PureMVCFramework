@@ -122,7 +122,7 @@ namespace PureMVCFramework.Entity
         {
             T comp = ReferencePool.Instance.SpawnInstance<T>();
             InternalAddComponentData(entity, Entity.StringToHash(typeof(T).FullName), comp);
-            WorldManager.Instance.InjectEntityToWorlds(entity);
+            WorldManager.Instance.ModifyEntity(entity);
 
             return comp;
         }
@@ -131,7 +131,7 @@ namespace PureMVCFramework.Entity
         {
             IComponent comp = (IComponent)ReferencePool.Instance.SpawnInstance(type);
             InternalAddComponentData(entity, Entity.StringToHash(type.FullName), comp);
-            WorldManager.Instance.InjectEntityToWorlds(entity);
+            WorldManager.Instance.ModifyEntity(entity);
 
             return comp;
         }
@@ -140,7 +140,7 @@ namespace PureMVCFramework.Entity
         {
             IComponent comp = (IComponent)ReferencePool.Instance.SpawnInstance(typeName);
             InternalAddComponentData(entity, Entity.StringToHash(typeName), comp);
-            WorldManager.Instance.InjectEntityToWorlds(entity);
+            WorldManager.Instance.ModifyEntity(entity);
 
             return comp;
         }
@@ -155,7 +155,7 @@ namespace PureMVCFramework.Entity
                 components[i] = comp;
             }
 
-            WorldManager.Instance.InjectEntityToWorlds(entity);
+            WorldManager.Instance.ModifyEntity(entity);
         }
 
         public T GetComponentData<T>(Entity entity) where T : IComponent
@@ -201,7 +201,7 @@ namespace PureMVCFramework.Entity
             if (InternalRemoveComponentData(entity, typeHash, out var comp))
                 ReferencePool.Instance.RecycleInstance(comp);
 
-            WorldManager.Instance.InjectEntityToWorlds(entity);
+            WorldManager.Instance.ModifyEntity(entity);
         }
 
         public void DestroyEntity(ulong key)
@@ -237,7 +237,7 @@ namespace PureMVCFramework.Entity
                     }
                 }
 
-                WorldManager.Instance.InjectEntityToWorlds(entity);
+                WorldManager.Instance.ModifyEntity(entity);
 
                 if (entity.gameObject != null)
                 {
@@ -274,6 +274,9 @@ namespace PureMVCFramework.Entity
                 {
                     if (go != null)
                     {
+                        if (!go.activeSelf)
+                            Debug.Log(entity.GUID);
+
                         OnGameObjectLoaded(entity, go);
                         callback?.Invoke(entity, data);
                     }
@@ -313,11 +316,11 @@ namespace PureMVCFramework.Entity
             {
                 entity.gameObject = go;
 #if UNITY_EDITOR
-                entity.name = go.name.Replace("(Spawn)", "");
+                entity.name = go.name.Replace("(Spawn)", entity.GUID.ToString());
 #endif
 
                 Instance.GameObjectEntities[entity.gameObject] = entity;
-                WorldManager.Instance.InjectEntityToWorlds(entity);
+                WorldManager.Instance.ModifyEntity(entity);
             }
         }
 
@@ -326,7 +329,7 @@ namespace PureMVCFramework.Entity
             if (entity.gameObject != null)
             {
                 var comp = entity.gameObject.AddComponent<T>();
-                WorldManager.Instance.InjectEntityToWorlds(entity);
+                WorldManager.Instance.ModifyEntity(entity);
 
                 return comp;
             }
@@ -348,7 +351,7 @@ namespace PureMVCFramework.Entity
             if (comp != null)
             {
                 UnityEngine.Object.Destroy(comp);
-                WorldManager.Instance.InjectEntityToWorlds(entity);
+                WorldManager.Instance.ModifyEntity(entity);
             }
         }
     }

@@ -28,11 +28,11 @@ namespace PureMVCFramework.Entity
 
         }
 
-        public void InjectEntityToWorlds(Entity entity)
+        public void ModifyEntity(Entity entity)
         {
             foreach (var world in AllWorlds)
             {
-                world.InjectEntity(entity);
+                world.ModifyEntity(entity);
             }
         }
 

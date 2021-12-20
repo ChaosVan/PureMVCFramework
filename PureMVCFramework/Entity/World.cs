@@ -29,6 +29,8 @@
             {
                 m_Systems[i].PostUpdate();
             }
+
+            CheckModifiedEntities();
         }
     }
 }
