@@ -4,7 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-preview.5] - 2021-12-08
+## [1.0.0-preview.7] - 2021-12-08
+- 修复：由于添加删除组件导致的系统更新时序问题
+- 改进：修改Entity注入时机
+- 改进：UILoopScrollRect兼容2021.2的接口改动
+
+## [1.0.0-preview.6] - 2021-12-08
 - 改进：EntityManager增加删除所有Entity的接口
 
 ## [1.0.0-preview.5] - 2021-12-08
