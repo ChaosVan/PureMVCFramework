@@ -14,7 +14,8 @@ namespace PureMVCFramework.Entity
     {
         public float TimePerFrame { get; set; }
 
-        void InjectEntity(Entity entity);
+        void CheckModifiedEntities();
+        void ModifyEntity(Entity entity);
         void Initialize();
         void Destroy();
     }
@@ -26,6 +27,8 @@ namespace PureMVCFramework.Entity
         [ShowInInspector, ListDrawerSettings(IsReadOnly = true)]
 #endif
         protected readonly List<ISystemBase> m_Systems = new List<ISystemBase>();
+
+        private List<Entity> modifiedEntities = new List<Entity>();
 
         public float TimePerFrame { get; set; }
 
@@ -47,12 +50,23 @@ namespace PureMVCFramework.Entity
             m_Systems.Clear();
         }
 
-        public void InjectEntity(Entity entity)
+        public void CheckModifiedEntities()
         {
-            foreach (var system in m_Systems)
+            for (int i = 0; i < m_Systems.Count; ++i)
             {
-                system.InjectEntity(entity);
+                for (int j = 0; j < modifiedEntities.Count; ++j)
+                {
+                    m_Systems[i].InjectEntity(modifiedEntities[j]);
+                }
             }
+
+            modifiedEntities.Clear();
+        }
+
+        public void ModifyEntity(Entity entity)
+        {
+            if (!modifiedEntities.Contains(entity))
+                modifiedEntities.Add(entity);
         }
 
         public ISystemBase RegisterSystem<T>() where T : ISystemBase, new()

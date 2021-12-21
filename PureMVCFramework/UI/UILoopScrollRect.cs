@@ -664,7 +664,11 @@ namespace PureMVCFramework.UI
         private static void OnCreateLoopScroll(bool isVertical)
         {
             var view = new GameObject("LoopScrollView").GetOrAddComponent<RectTransform>();
+#if UNITY_2021_2_OR_NEWER
+            if (UnityEditor.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage() != null)
+#else
             if (UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetCurrentPrefabStage() != null)
+#endif
             {
                 if (Selection.activeGameObject != null)
                     view.SetParent(Selection.activeGameObject.transform, false);
@@ -756,6 +760,6 @@ namespace PureMVCFramework.UI
             }
         }
 #endif
-        #endregion
-    }
+#endregion
+        }
 }
