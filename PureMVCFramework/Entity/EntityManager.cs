@@ -57,7 +57,7 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
-        internal readonly Dictionary<ulong, Entity> Entities = new Dictionary<ulong, Entity>();
+        internal readonly SortedDictionary<ulong, Entity> Entities = new SortedDictionary<ulong, Entity>();
 
         public bool IsDataMode { get; private set; }
  
@@ -71,6 +71,17 @@ namespace PureMVCFramework.Entity
         public void EnableDataMode(bool tf)
         {
             IsDataMode = tf;
+        }
+
+
+        public SortedDictionary<ulong, Entity> GetAllEntities()
+        {
+            return Entities;
+        }
+
+        public SortedDictionary<long, IComponent> GetAllComponentDatas(Entity entity)
+        {
+            return entity.components;
         }
 
         public bool TryGetEntity(GameObject obj, out Entity entity)
@@ -98,7 +109,7 @@ namespace PureMVCFramework.Entity
             return QueryEntities(query, (entity) => entity.gameObject);
         }
 
-        internal void InternalAddComponentData(Entity entity, int typeHash, IComponent comp)
+        internal void InternalAddComponentData(Entity entity, long typeHash, IComponent comp)
         {
             if (entity.components.ContainsKey(typeHash))
             {
@@ -108,7 +119,7 @@ namespace PureMVCFramework.Entity
             entity.components.Add(typeHash, comp);
         }
 
-        internal bool InternalRemoveComponentData(Entity entity, int typeHash, out IComponent comp)
+        internal bool InternalRemoveComponentData(Entity entity, long typeHash, out IComponent comp)
         {
             if (entity.components.TryGetValue(typeHash, out comp) && entity.components.Remove(typeHash))
             {
@@ -173,7 +184,7 @@ namespace PureMVCFramework.Entity
             return GetComponentData(entity, Entity.StringToHash(typeName));
         }
 
-        public IComponent GetComponentData(Entity entity, int typeHash)
+        public IComponent GetComponentData(Entity entity, long typeHash)
         {
             if (entity.components.TryGetValue(typeHash, out var c))
                 return c;
@@ -196,7 +207,7 @@ namespace PureMVCFramework.Entity
             RemoveComponentData(entity, Entity.StringToHash(typeName));
         }
 
-        public void RemoveComponentData(Entity entity, int typeHash)
+        public void RemoveComponentData(Entity entity, long typeHash)
         {
             if (InternalRemoveComponentData(entity, typeHash, out var comp))
                 ReferencePool.Instance.RecycleInstance(comp);
@@ -274,9 +285,6 @@ namespace PureMVCFramework.Entity
                 {
                     if (go != null)
                     {
-                        if (!go.activeSelf)
-                            Debug.Log(entity.GUID);
-
                         OnGameObjectLoaded(entity, go);
                         callback?.Invoke(entity, data);
                     }
@@ -316,7 +324,7 @@ namespace PureMVCFramework.Entity
             {
                 entity.gameObject = go;
 #if UNITY_EDITOR
-                entity.name = go.name.Replace("(Spawn)", entity.GUID.ToString());
+                entity.name = go.name = go.name.Replace("(Spawn)", entity.GUID.ToString());
 #endif
 
                 Instance.GameObjectEntities[entity.gameObject] = entity;

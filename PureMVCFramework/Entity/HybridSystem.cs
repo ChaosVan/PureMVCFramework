@@ -16,7 +16,7 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T2> Components2 = new List<T2>();
-		private int hash2;
+		private long hash2;
 		public override void OnInitialized()
 		{
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
@@ -82,8 +82,8 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T3> Components3 = new List<T3>();
-		private int hash2;
-		private int hash3;
+		private long hash2;
+		private long hash3;
 		public override void OnInitialized()
 		{
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
@@ -158,9 +158,9 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T4> Components4 = new List<T4>();
-		private int hash2;
-		private int hash3;
-		private int hash4;
+		private long hash2;
+		private long hash3;
+		private long hash4;
 		public override void OnInitialized()
 		{
 			hash2 = Entity.StringToHash(typeof(T2).FullName);

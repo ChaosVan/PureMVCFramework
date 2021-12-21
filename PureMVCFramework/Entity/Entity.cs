@@ -28,11 +28,11 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowInInspector]
 #endif
-        internal readonly Dictionary<int, IComponent> components = new Dictionary<int, IComponent>();
+        internal readonly SortedDictionary<long, IComponent> components = new SortedDictionary<long, IComponent>();
 
-        public static int StringToHash(string str)
+        public static long StringToHash(string str)
         {
-            int hashcode = 0;
+            long hashcode = 0;
             if (!string.IsNullOrEmpty(str))
             {
                 for (int i = 0; i < str.Length; ++i)

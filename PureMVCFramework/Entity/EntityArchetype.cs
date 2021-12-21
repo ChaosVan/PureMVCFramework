@@ -8,7 +8,7 @@ namespace PureMVCFramework.Entity
         {
             this.typeNames = typeNames;
 
-            hash = new int[typeNames.Length];
+            hash = new long[typeNames.Length];
             for (int i = 0; i < typeNames.Length; ++i)
             {
                 hash[i] = Entity.StringToHash(typeNames[i]);
@@ -22,7 +22,7 @@ namespace PureMVCFramework.Entity
             {
                 typeNames[i] = types[i].FullName;
             }
-            hash = new int[typeNames.Length];
+            hash = new long[typeNames.Length];
             for (int i = 0; i < typeNames.Length; ++i)
             {
                 hash[i] = Entity.StringToHash(typeNames[i]);
@@ -30,6 +30,6 @@ namespace PureMVCFramework.Entity
         }
 
         public string[] typeNames;
-        public int[] hash;
+        public long[] hash;
     }
 }

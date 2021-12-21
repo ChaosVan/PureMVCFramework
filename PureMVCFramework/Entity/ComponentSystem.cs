@@ -11,8 +11,7 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T1> Components1 = new List<T1>();
-		private int hash1;
-
+		private long hash1;
 		public override void OnInitialized()
 		{
 			hash1 = Entity.StringToHash(typeof(T1).FullName);
@@ -57,8 +56,8 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T2> Components2 = new List<T2>();
-		private int hash1;
-		private int hash2;
+		private long hash1;
+		private long hash2;
 		public override void OnInitialized()
 		{
 			hash1 = Entity.StringToHash(typeof(T1).FullName);
@@ -111,9 +110,9 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T3> Components3 = new List<T3>();
-		private int hash1;
-		private int hash2;
-		private int hash3;
+		private long hash1;
+		private long hash2;
+		private long hash3;
 		public override void OnInitialized()
 		{
 			hash1 = Entity.StringToHash(typeof(T1).FullName);
@@ -174,10 +173,10 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T4> Components4 = new List<T4>();
-		private int hash1;
-		private int hash2;
-		private int hash3;
-		private int hash4;
+		private long hash1;
+		private long hash2;
+		private long hash3;
+		private long hash4;
 		public override void OnInitialized()
 		{
 			hash1 = Entity.StringToHash(typeof(T1).FullName);
@@ -246,11 +245,11 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T5> Components5 = new List<T5>();
-		private int hash1;
-		private int hash2;
-		private int hash3;
-		private int hash4;
-		private int hash5;
+		private long hash1;
+		private long hash2;
+		private long hash3;
+		private long hash4;
+		private long hash5;
 		public override void OnInitialized()
 		{
 			hash1 = Entity.StringToHash(typeof(T1).FullName);
@@ -327,12 +326,12 @@ namespace PureMVCFramework.Entity
 		[ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
 		private readonly List<T6> Components6 = new List<T6>();
-		private int hash1;
-		private int hash2;
-		private int hash3;
-		private int hash4;
-		private int hash5;
-		private int hash6;
+		private long hash1;
+		private long hash2;
+		private long hash3;
+		private long hash4;
+		private long hash5;
+		private long hash6;
 		public override void OnInitialized()
 		{
 			hash1 = Entity.StringToHash(typeof(T1).FullName);
