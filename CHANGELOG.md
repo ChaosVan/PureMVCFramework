@@ -4,6 +4,9 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-preview.9] - 2021-12-22
+- 改进：System在OnRecycle中清空实体和组件集合
+
 ## [1.0.0-preview.8] - 2021-12-21
 - 改进：EntityHash类型改为long
 - 改进：EntityManager增加获取所有Entity和ComponentData的接口
