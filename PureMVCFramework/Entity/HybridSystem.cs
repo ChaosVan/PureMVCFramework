@@ -19,7 +19,14 @@ namespace PureMVCFramework.Entity
 		private long hash2;
 		public override void OnInitialized()
 		{
+			base.OnInitialized();
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
+		}
+		public override void OnRecycle()
+		{
+			Components1.Clear();
+			Components2.Clear();
+			base.OnRecycle();
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{
@@ -86,8 +93,16 @@ namespace PureMVCFramework.Entity
 		private long hash3;
 		public override void OnInitialized()
 		{
+			base.OnInitialized();
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
+		}
+		public override void OnRecycle()
+		{
+			Components1.Clear();
+			Components2.Clear();
+			Components3.Clear();
+			base.OnRecycle();
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{
@@ -163,9 +178,18 @@ namespace PureMVCFramework.Entity
 		private long hash4;
 		public override void OnInitialized()
 		{
+			base.OnInitialized();
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 			hash4 = Entity.StringToHash(typeof(T4).FullName);
+		}
+		public override void OnRecycle()
+		{
+			Components1.Clear();
+			Components2.Clear();
+			Components3.Clear();
+			Components4.Clear();
+			base.OnRecycle();
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{

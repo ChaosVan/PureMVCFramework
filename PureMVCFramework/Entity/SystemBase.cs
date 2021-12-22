@@ -33,7 +33,10 @@ namespace PureMVCFramework.Entity
 
         public IWorld World { get; set; }
 
-        public virtual void OnRecycle() { }
+        public virtual void OnRecycle() 
+        {
+            Entities.Clear();
+        }
 
         public virtual void OnInitialized() { }
 
