@@ -26,12 +26,6 @@ namespace PureMVCFramework
 
     public class AudioManager : SingletonBehaviour<AudioManager>
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif

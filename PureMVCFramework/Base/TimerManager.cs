@@ -11,13 +11,6 @@ namespace PureMVCFramework
 {
     public class TimerManager : SingletonBehaviour<TimerManager>
     {
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-
         public enum TimerType
         {
             FIXED_DURATION,

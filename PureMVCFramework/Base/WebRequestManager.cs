@@ -12,12 +12,6 @@ namespace PureMVCFramework
 
     public class WebRequestManager : SingletonBehaviour<WebRequestManager>
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-
         [System.Serializable]
         struct WebRequestParams
         {

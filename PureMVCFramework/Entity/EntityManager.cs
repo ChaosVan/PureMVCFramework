@@ -15,13 +15,6 @@ namespace PureMVCFramework.Entity
     {
         private static ulong GUID_COUNT = 1000000;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            GUID_COUNT = 1000000;
-            applicationIsQuitting = false;
-        }
-
         public static Entity Create()
         {
             var entity = ReferencePool.Instance.SpawnInstance<Entity>();

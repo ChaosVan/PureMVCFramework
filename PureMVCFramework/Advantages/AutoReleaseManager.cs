@@ -8,15 +8,8 @@ using Sirenix.OdinInspector;
 
 namespace PureMVCFramework.Advantages
 {
-
     public class AutoReleaseManager : SingletonBehaviour<AutoReleaseManager>
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif

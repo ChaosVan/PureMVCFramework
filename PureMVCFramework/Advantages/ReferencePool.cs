@@ -30,12 +30,6 @@ namespace PureMVCFramework.Advantages
 
     public class ReferencePool : SingletonBehaviour<ReferencePool>
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-
         private readonly ConcurrentDictionary<string, ConcurrentQueue<object>> m_Cache = new ConcurrentDictionary<string, ConcurrentQueue<object>>();
 
 #if UNITY_EDITOR

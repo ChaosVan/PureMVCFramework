@@ -2,14 +2,7 @@
 
 namespace PureMVCFramework
 {
-    public class SingletonParent : SingletonBehaviour<SingletonParent>
-    {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-    }
+    public class SingletonParent : SingletonBehaviour<SingletonParent> { }
 
     /// <summary>
     /// Be aware this will not prevent a non singleton constructor
