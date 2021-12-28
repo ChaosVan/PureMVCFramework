@@ -13,7 +13,8 @@ namespace PureMVCFramework.Entity
 {
     public class EntityManager : SingletonBehaviour<EntityManager>
     {
-        private static ulong GUID_COUNT = 1000000;
+        [DomainReload(1000000UL)]
+        private static ulong GUID_COUNT = 1000000UL;
 
         public static Entity Create()
         {
@@ -272,9 +273,10 @@ namespace PureMVCFramework.Entity
             if (IsDataMode)
                 return;
 
+            ulong guid = entity.GUID;
             AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, parent, (go, data) =>
             {
-                if (entity.IsAlive)
+                if (entity.IsAlive && guid == entity.GUID)
                 {
                     if (go != null)
                     {
@@ -294,9 +296,10 @@ namespace PureMVCFramework.Entity
             if (IsDataMode)
                 return;
 
+            ulong guid = entity.GUID;
             AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, position, rotation, (go, data) =>
             {
-                if (entity.IsAlive)
+                if (entity.IsAlive && guid == entity.GUID)
                 {
                     if (go != null)
                     {

@@ -18,6 +18,7 @@ namespace PureMVCFramework
         protected bool showOdinInfo;
 #endif
 
+        [DomainReload]
         private static T _instance;
         private static readonly object _lock = new object();
 
@@ -75,6 +76,7 @@ namespace PureMVCFramework
             }
         }
 
+        [DomainReload(false)]
         public static bool applicationIsQuitting = false;
 
         public static void DestroyInstance()
