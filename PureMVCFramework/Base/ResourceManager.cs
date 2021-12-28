@@ -27,12 +27,6 @@ namespace PureMVCFramework
 
     public class ResourceManager : SingletonBehaviour<ResourceManager>
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-
         public IResourceProvider Provider { get; private set; }
         public IResourcesUpdateProvider Updater { get; private set; }
 

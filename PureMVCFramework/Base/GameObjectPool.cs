@@ -10,13 +10,6 @@ namespace PureMVCFramework
 {
     public sealed class GameObjectPool : SingletonBehaviour<GameObjectPool>
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-            tempList.Clear();
-        }
-
         public enum StartupPoolMode { Awake, Start, CallManually };
 
         [System.Serializable]
@@ -26,7 +19,7 @@ namespace PureMVCFramework
             public GameObject prefab;
         }
 
-        static List<GameObject> tempList = new List<GameObject>();
+        List<GameObject> tempList = new List<GameObject>();
 
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
@@ -300,14 +293,14 @@ namespace PureMVCFramework
                 foreach (var item in Instance.spawnedObjects)
                 {
                     if (item.Value == prefab)
-                        tempList.Add(item.Key);
+                        Instance.tempList.Add(item.Key);
                 }
-                for (int i = 0; i < tempList.Count; ++i)
+                for (int i = 0; i < Instance.tempList.Count; ++i)
                 {
-                    Recycle(tempList[i]);
+                    Recycle(Instance.tempList[i]);
                 }
 
-                tempList.Clear();
+                Instance.tempList.Clear();
             }
         }
 

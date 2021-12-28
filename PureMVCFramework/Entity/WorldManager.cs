@@ -10,12 +10,6 @@ namespace PureMVCFramework.Entity
 {
     public class WorldManager : SingletonBehaviour<WorldManager>
     {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-
         private World LocalWorld;
 
 #if ODIN_INSPECTOR

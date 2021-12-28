@@ -1,8 +1,9 @@
-// 这个代码是由GenerateComponentSystem自动生成的，不要随意改动
+// 代码是由GenerateComponentSystem自动生成的，不要随意改动
 using System.Collections.Generic;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
+
 namespace PureMVCFramework.Entity
 {
 	public abstract class ComponentSystem<T1> : SystemBase where T1 : IComponent 
@@ -15,7 +16,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized()
 		{
 			base.OnInitialized();
-			hash1 = Entity.StringToHash(typeof(T1).FullName);
+            hash1 = Entity.StringToHash(typeof(T1).FullName);
 		}
 		public override void OnRecycle()
 		{
@@ -24,9 +25,10 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{
-			// Injections
-            IComponent[] c = new IComponent[1];
+			IComponent[] c = new IComponent[1];
+
             bool tf = entity.components.TryGetValue(hash1, out c[0]);
+
             if (Entities.Contains(entity))
             {
                 if (!tf)
@@ -44,8 +46,7 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void Update()
 		{
-			// Update all entities with components
-            for (int i = 0; i < Entities.Count; ++i)
+			for (int i = 0; i < Entities.Count; ++i)
             {
                 OnUpdate(i, Entities[i], Components1[i]);
             }
@@ -67,7 +68,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized()
 		{
 			base.OnInitialized();
-			hash1 = Entity.StringToHash(typeof(T1).FullName);
+            hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 		}
 		public override void OnRecycle()
@@ -78,10 +79,11 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{
-			// Injections
-            IComponent[] c = new IComponent[2];
-            bool tf = entity.components.TryGetValue(hash1, out c[0]) && 
-				entity.components.TryGetValue(hash2, out c[1]);
+			IComponent[] c = new IComponent[2];
+
+            bool tf = entity.components.TryGetValue(hash1, out c[0])
+				 && entity.components.TryGetValue(hash2, out c[1]);
+
             if (Entities.Contains(entity))
             {
                 if (!tf)
@@ -101,8 +103,7 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void Update()
 		{
-			// Update all entities with components
-            for (int i = 0; i < Entities.Count; ++i)
+			for (int i = 0; i < Entities.Count; ++i)
             {
                 OnUpdate(i, Entities[i], Components1[i], Components2[i]);
             }
@@ -129,7 +130,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized()
 		{
 			base.OnInitialized();
-			hash1 = Entity.StringToHash(typeof(T1).FullName);
+            hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 		}
@@ -142,11 +143,12 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{
-			// Injections
-            IComponent[] c = new IComponent[3];
-            bool tf = entity.components.TryGetValue(hash1, out c[0]) && 
-				entity.components.TryGetValue(hash2, out c[1]) && 
-				entity.components.TryGetValue(hash3, out c[2]);
+			IComponent[] c = new IComponent[3];
+
+            bool tf = entity.components.TryGetValue(hash1, out c[0])
+				 && entity.components.TryGetValue(hash2, out c[1])
+				 && entity.components.TryGetValue(hash3, out c[2]);
+
             if (Entities.Contains(entity))
             {
                 if (!tf)
@@ -168,8 +170,7 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void Update()
 		{
-			// Update all entities with components
-            for (int i = 0; i < Entities.Count; ++i)
+			for (int i = 0; i < Entities.Count; ++i)
             {
                 OnUpdate(i, Entities[i], Components1[i], Components2[i], Components3[i]);
             }
@@ -201,7 +202,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized()
 		{
 			base.OnInitialized();
-			hash1 = Entity.StringToHash(typeof(T1).FullName);
+            hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 			hash4 = Entity.StringToHash(typeof(T4).FullName);
@@ -216,12 +217,13 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{
-			// Injections
-            IComponent[] c = new IComponent[4];
-            bool tf = entity.components.TryGetValue(hash1, out c[0]) && 
-				entity.components.TryGetValue(hash2, out c[1]) && 
-				entity.components.TryGetValue(hash3, out c[2]) && 
-				entity.components.TryGetValue(hash4, out c[3]);
+			IComponent[] c = new IComponent[4];
+
+            bool tf = entity.components.TryGetValue(hash1, out c[0])
+				 && entity.components.TryGetValue(hash2, out c[1])
+				 && entity.components.TryGetValue(hash3, out c[2])
+				 && entity.components.TryGetValue(hash4, out c[3]);
+
             if (Entities.Contains(entity))
             {
                 if (!tf)
@@ -245,8 +247,7 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void Update()
 		{
-			// Update all entities with components
-            for (int i = 0; i < Entities.Count; ++i)
+			for (int i = 0; i < Entities.Count; ++i)
             {
                 OnUpdate(i, Entities[i], Components1[i], Components2[i], Components3[i], Components4[i]);
             }
@@ -283,7 +284,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized()
 		{
 			base.OnInitialized();
-			hash1 = Entity.StringToHash(typeof(T1).FullName);
+            hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 			hash4 = Entity.StringToHash(typeof(T4).FullName);
@@ -300,13 +301,14 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{
-			// Injections
-            IComponent[] c = new IComponent[5];
-            bool tf = entity.components.TryGetValue(hash1, out c[0]) && 
-				entity.components.TryGetValue(hash2, out c[1]) && 
-				entity.components.TryGetValue(hash3, out c[2]) && 
-				entity.components.TryGetValue(hash4, out c[3]) && 
-				entity.components.TryGetValue(hash5, out c[4]);
+			IComponent[] c = new IComponent[5];
+
+            bool tf = entity.components.TryGetValue(hash1, out c[0])
+				 && entity.components.TryGetValue(hash2, out c[1])
+				 && entity.components.TryGetValue(hash3, out c[2])
+				 && entity.components.TryGetValue(hash4, out c[3])
+				 && entity.components.TryGetValue(hash5, out c[4]);
+
             if (Entities.Contains(entity))
             {
                 if (!tf)
@@ -332,8 +334,7 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void Update()
 		{
-			// Update all entities with components
-            for (int i = 0; i < Entities.Count; ++i)
+			for (int i = 0; i < Entities.Count; ++i)
             {
                 OnUpdate(i, Entities[i], Components1[i], Components2[i], Components3[i], Components4[i], Components5[i]);
             }
@@ -375,7 +376,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized()
 		{
 			base.OnInitialized();
-			hash1 = Entity.StringToHash(typeof(T1).FullName);
+            hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 			hash4 = Entity.StringToHash(typeof(T4).FullName);
@@ -394,14 +395,15 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void InjectEntity(Entity entity)
 		{
-			// Injections
-            IComponent[] c = new IComponent[6];
-            bool tf = entity.components.TryGetValue(hash1, out c[0]) && 
-				entity.components.TryGetValue(hash2, out c[1]) && 
-				entity.components.TryGetValue(hash3, out c[2]) && 
-				entity.components.TryGetValue(hash4, out c[3]) && 
-				entity.components.TryGetValue(hash5, out c[4]) && 
-				entity.components.TryGetValue(hash6, out c[5]);
+			IComponent[] c = new IComponent[6];
+
+            bool tf = entity.components.TryGetValue(hash1, out c[0])
+				 && entity.components.TryGetValue(hash2, out c[1])
+				 && entity.components.TryGetValue(hash3, out c[2])
+				 && entity.components.TryGetValue(hash4, out c[3])
+				 && entity.components.TryGetValue(hash5, out c[4])
+				 && entity.components.TryGetValue(hash6, out c[5]);
+
             if (Entities.Contains(entity))
             {
                 if (!tf)
@@ -429,8 +431,7 @@ namespace PureMVCFramework.Entity
 		}
 		public sealed override void Update()
 		{
-			// Update all entities with components
-            for (int i = 0; i < Entities.Count; ++i)
+			for (int i = 0; i < Entities.Count; ++i)
             {
                 OnUpdate(i, Entities[i], Components1[i], Components2[i], Components3[i], Components4[i], Components5[i], Components6[i]);
             }

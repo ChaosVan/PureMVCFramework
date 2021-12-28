@@ -2,14 +2,7 @@
 
 namespace PureMVCFramework
 {
-    public class SingletonParent : SingletonBehaviour<SingletonParent>
-    {
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            applicationIsQuitting = false;
-        }
-    }
+    public class SingletonParent : SingletonBehaviour<SingletonParent> { }
 
     /// <summary>
     /// Be aware this will not prevent a non singleton constructor
@@ -25,6 +18,7 @@ namespace PureMVCFramework
         protected bool showOdinInfo;
 #endif
 
+        [DomainReload]
         private static T _instance;
         private static readonly object _lock = new object();
 
@@ -82,6 +76,7 @@ namespace PureMVCFramework
             }
         }
 
+        [DomainReload(false)]
         public static bool applicationIsQuitting = false;
 
         public static void DestroyInstance()
