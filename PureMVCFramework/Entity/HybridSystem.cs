@@ -18,9 +18,9 @@ namespace PureMVCFramework.Entity
 #endif
 		private readonly List<T2> Components2 = new List<T2>();
 		private long hash2;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash2 = Entity.StringToHash(typeof(T2).FullName);
 		}
 		public override void OnRecycle()
@@ -92,9 +92,9 @@ namespace PureMVCFramework.Entity
 		private readonly List<T3> Components3 = new List<T3>();
 		private long hash2;
 		private long hash3;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 		}
@@ -177,9 +177,9 @@ namespace PureMVCFramework.Entity
 		private long hash2;
 		private long hash3;
 		private long hash4;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 			hash4 = Entity.StringToHash(typeof(T4).FullName);

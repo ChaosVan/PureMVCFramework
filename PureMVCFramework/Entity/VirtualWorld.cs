@@ -74,7 +74,6 @@ namespace PureMVCFramework.Entity
             var system = ReferencePool.Instance.SpawnInstance<T>();
             m_Systems.Add(system);
             system.World = this;
-            system.OnInitialized();
 
             return system;
         }
@@ -84,7 +83,6 @@ namespace PureMVCFramework.Entity
             var system = (ISystemBase)ReferencePool.Instance.SpawnInstance(type);
             m_Systems.Add(system);
             system.World = this;
-            system.OnInitialized();
 
             return system;
         }
@@ -94,7 +92,6 @@ namespace PureMVCFramework.Entity
             var system = (ISystemBase)ReferencePool.Instance.SpawnInstance(typeName);
             m_Systems.Add(system);
             system.World = this;
-            system.OnInitialized();
 
             return system;
         }
