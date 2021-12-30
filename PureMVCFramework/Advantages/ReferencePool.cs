@@ -13,7 +13,7 @@ namespace PureMVCFramework.Advantages
 {
     public interface IInitializeable
     {
-        void OnInitialized();
+        void OnInitialized(params object[] args);
     }
 
     public interface IRecycleable
@@ -95,7 +95,7 @@ namespace PureMVCFramework.Advantages
             }
 
             if (result is IInitializeable o)
-                o.OnInitialized();
+                o.OnInitialized(args);
 
             return result;
         }

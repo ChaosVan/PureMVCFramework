@@ -38,7 +38,7 @@ namespace PureMVCFramework.Entity
             Entities.Clear();
         }
 
-        public virtual void OnInitialized() { }
+        public virtual void OnInitialized(params object[] args) { }
 
 
         public abstract void InjectEntity(Entity entity);

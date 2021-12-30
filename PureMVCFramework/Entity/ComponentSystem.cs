@@ -13,9 +13,9 @@ namespace PureMVCFramework.Entity
 #endif
 		private readonly List<T1> Components1 = new List<T1>();
 		private long hash1;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash1 = Entity.StringToHash(typeof(T1).FullName);
 		}
 		public override void OnRecycle()
@@ -65,9 +65,9 @@ namespace PureMVCFramework.Entity
 		private readonly List<T2> Components2 = new List<T2>();
 		private long hash1;
 		private long hash2;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 		}
@@ -127,9 +127,9 @@ namespace PureMVCFramework.Entity
 		private long hash1;
 		private long hash2;
 		private long hash3;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
@@ -199,9 +199,9 @@ namespace PureMVCFramework.Entity
 		private long hash2;
 		private long hash3;
 		private long hash4;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
@@ -281,9 +281,9 @@ namespace PureMVCFramework.Entity
 		private long hash3;
 		private long hash4;
 		private long hash5;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
@@ -373,9 +373,9 @@ namespace PureMVCFramework.Entity
 		private long hash4;
 		private long hash5;
 		private long hash6;
-		public override void OnInitialized()
+		public override void OnInitialized(params object[] args)
 		{
-			base.OnInitialized();
+			base.OnInitialized(args);
             hash1 = Entity.StringToHash(typeof(T1).FullName);
 			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);

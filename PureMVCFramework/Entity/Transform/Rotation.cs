@@ -1,15 +1,9 @@
-using PureMVCFramework.Advantages;
 using Unity.Mathematics;
 
 namespace PureMVCFramework.Entity
 {
-    public class Rotation : IComponent, IInitializeable
+    public class Rotation : IComponent
     {
         public quaternion Value;
-
-        public void OnInitialized()
-        {
-            Value = quaternion.identity;
-        }
     }
 }

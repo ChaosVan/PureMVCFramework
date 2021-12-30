@@ -44,7 +44,7 @@ namespace PureMVCFramework.Providers
                 return Activator.CreateInstance(classType, args);
             }
 
-            return customSpawner?.Invoke(typeName, args);
+            return customSpawner?.Invoke(typeName);
         }
     }
 }
