@@ -26,6 +26,7 @@ namespace PureMVCFramework.Advantages
         object Spawn(string typeName, params object[] args);
         object Recycle(object obj, out string typeName);
         void LoadTypes(string assemblyString);
+        void InvokeConstructor(object inst, string typeName, params object[] args);
     }
 
     public class ReferencePool : SingletonBehaviour<ReferencePool>
@@ -88,6 +89,7 @@ namespace PureMVCFramework.Advantages
                 int count = m_Cache[typeName].Count;
                 m_Counter[typeName] = count;
 #endif
+                provider.InvokeConstructor(result, typeName, args);
             }
             else
             {
