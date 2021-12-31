@@ -4,10 +4,10 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-preview.11] - 2021-12-30
+## [1.0.0-preview.13] - 2021-12-31
 - 改进：IInitializeable的接口增加参数
 - 改进：修改相应的代码段和生成代码的逻辑
-  
+- 修复：引用池二次使用时没有执行构造函数的问题
 ## [1.0.0-preview.10] - 2021-12-28
 - 改进：重新生成System代码
 - 更新：增加域重载（DomainReload）特性
