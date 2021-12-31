@@ -10,11 +10,13 @@ namespace PureMVCFramework.Providers
     {
         public delegate object SpawneDelegate(string typeName, params object[] args);
         public delegate object RecycleDelegate(object inst, out string typeName);
+        public delegate void ConstructDelegate(object inst, string typeName, params object[] args);
 
         private readonly Dictionary<string, Type> loadedTypes = new Dictionary<string, Type>();
 
         public SpawneDelegate customSpawner;
         public RecycleDelegate customRecycler;
+        public ConstructDelegate customConstructor;
 
         public void LoadTypes(string assemblyString)
         {
@@ -24,6 +26,21 @@ namespace PureMVCFramework.Providers
             {
                 loadedTypes.Add(type.FullName, type);
             }
+        }
+
+        public void InvokeConstructor(object inst, string typeName, params object[] args)
+        {
+            if (loadedTypes.TryGetValue(typeName, out var type))
+            {
+                var constructors = type.GetConstructors();
+                if (constructors != null && constructors.Length > 0)
+                    constructors[0].Invoke(inst, args);
+            }
+            else
+            {
+                customConstructor?.Invoke(inst, typeName, args);
+            }
+            
         }
 
         public object Recycle(object inst, out string typeName)
