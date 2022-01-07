@@ -320,7 +320,7 @@ namespace PureMVCFramework.Entity
             {
                 entity.gameObject = go;
 #if UNITY_EDITOR
-                entity.name = go.name = go.name.Replace("(Spawn)", entity.GUID.ToString());
+                entity.name = go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
 #endif
 
                 Instance.GameObjectEntities[entity.gameObject] = entity;

@@ -134,7 +134,9 @@ namespace PureMVCFramework
                     while (list.Count < initialPoolSize)
                     {
                         var obj = Instantiate(prefab);
+#if UNITY_EDITOR
                         obj.name = obj.name.Replace("(Clone)", "(Spawn)"); // mark object as "Spawn"
+#endif
                         obj.transform.SetParent(parent, false);
                         list.Add(obj);
                         RecordTimeStamp(obj);
@@ -196,7 +198,9 @@ namespace PureMVCFramework
                     }
                 }
                 obj = Instantiate(prefab);
+#if UNITY_EDITOR
                 obj.name = obj.name.Replace("(Clone)", "(Spawn)");  // mark object as "Spawn"
+#endif
                 DontDestroyOnLoad(obj);
 
                 trans = obj.transform;
@@ -268,6 +272,9 @@ namespace PureMVCFramework
             if (Instance.pooledObjects.TryGetValue(prefab, out List<GameObject> list))
             {
                 list.Add(obj);
+#if UNITY_EDITOR
+                obj.name = prefab.name + "(Spawn)";
+#endif
                 obj.transform.SetParent(Instance.transform, false);
                 obj.SetActive(false);
                 RecordTimeStamp(obj);
