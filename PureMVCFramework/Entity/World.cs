@@ -24,13 +24,13 @@
             for (int i = 0; i < count; ++i)
             {
                 m_Systems[i].Update();
+                CheckModifiedEntities();
             }
             for (int i = 0; i < count; ++i)
             {
                 m_Systems[i].PostUpdate();
             }
 
-            CheckModifiedEntities();
         }
     }
 }
