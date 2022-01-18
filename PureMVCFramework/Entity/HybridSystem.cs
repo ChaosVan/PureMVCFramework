@@ -21,7 +21,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized(params object[] args)
 		{
 			base.OnInitialized(args);
-            hash2 = Entity.StringToHash(typeof(T2).FullName);
+			hash2 = Entity.StringToHash(typeof(T2).FullName);
 		}
 		public override void OnRecycle()
 		{
@@ -34,44 +34,41 @@ namespace PureMVCFramework.Entity
 			if (entity.gameObject == null)
 			{
 				if (Entities.Contains(entity))
-                {
+				{
 					var i = Entities.IndexOf(entity);
 					Entities.RemoveAt(i);
 					Components1.RemoveAt(i);
 					Components2.RemoveAt(i);
-                }
+				}
 				return;
 			}
-
-            var co = entity.gameObject.GetComponent<T1>();
-            IComponent[] c = new IComponent[1];
-            bool tf = co && entity.components.TryGetValue(hash2, out c[0]);
-
-            if (Entities.Contains(entity))
-            {
-                if (!tf)
-                {
-                    var i = Entities.IndexOf(entity);
-                    Entities.RemoveAt(i);
-                    Components1.RemoveAt(i);
+			var co = entity.gameObject.GetComponent<T1>();
+			IComponent[] c = new IComponent[1];
+			bool tf = co && entity.components.TryGetValue(hash2, out c[0]);
+			if (Entities.Contains(entity))
+			{
+				if (!tf)
+				{
+					var i = Entities.IndexOf(entity);
+					Entities.RemoveAt(i);
+					Components1.RemoveAt(i);
 					Components2.RemoveAt(i);
-                    
-                    OnEject(entity, co);
-                }
-            }
-            else if (tf)
-            {
-                Entities.Add(entity);
-                Components1.Add(co);
-                Components2.Add((T2)c[0]);
-            }
+					OnEject(entity, co);
+				}
+			}
+			else if (tf)
+			{
+				Entities.Add(entity);
+				Components1.Add(co);
+				Components2.Add((T2)c[0]);
+			}
 		}
 		public sealed override void Update()
 		{
 			for (int i = 0; i < Entities.Count; ++i)
-            {
-                OnUpdate(i, Entities[i], Components1[i], Components2[i]);
-            }
+			{
+				OnUpdate(i, Entities[i], Components1[i], Components2[i]);
+			}
 		}
 		protected abstract void OnUpdate(int index, Entity entity, T1 component1, T2 component2);
 		protected virtual void OnEject(Entity entity, T1 component) { }
@@ -95,7 +92,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized(params object[] args)
 		{
 			base.OnInitialized(args);
-            hash2 = Entity.StringToHash(typeof(T2).FullName);
+			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 		}
 		public override void OnRecycle()
@@ -110,48 +107,44 @@ namespace PureMVCFramework.Entity
 			if (entity.gameObject == null)
 			{
 				if (Entities.Contains(entity))
-                {
+				{
 					var i = Entities.IndexOf(entity);
 					Entities.RemoveAt(i);
 					Components1.RemoveAt(i);
 					Components2.RemoveAt(i);
 					Components3.RemoveAt(i);
-                }
+				}
 				return;
 			}
-
-            var co = entity.gameObject.GetComponent<T1>();
-            IComponent[] c = new IComponent[2];
-            bool tf = co && entity.components.TryGetValue(hash2, out c[0])
-				 && entity.components.TryGetValue(hash3, out c[1]);
-
-            if (Entities.Contains(entity))
-            {
-                if (!tf)
-                {
-                    var i = Entities.IndexOf(entity);
-                    Entities.RemoveAt(i);
-                    Components1.RemoveAt(i);
+			var co = entity.gameObject.GetComponent<T1>();
+			IComponent[] c = new IComponent[2];
+			bool tf = co && entity.components.TryGetValue(hash2, out c[0]) && entity.components.TryGetValue(hash3, out c[1]);
+			if (Entities.Contains(entity))
+			{
+				if (!tf)
+				{
+					var i = Entities.IndexOf(entity);
+					Entities.RemoveAt(i);
+					Components1.RemoveAt(i);
 					Components2.RemoveAt(i);
 					Components3.RemoveAt(i);
-                    
-                    OnEject(entity, co);
-                }
-            }
-            else if (tf)
-            {
-                Entities.Add(entity);
-                Components1.Add(co);
-                Components2.Add((T2)c[0]);
+					OnEject(entity, co);
+				}
+			}
+			else if (tf)
+			{
+				Entities.Add(entity);
+				Components1.Add(co);
+				Components2.Add((T2)c[0]);
 				Components3.Add((T3)c[1]);
-            }
+			}
 		}
 		public sealed override void Update()
 		{
 			for (int i = 0; i < Entities.Count; ++i)
-            {
-                OnUpdate(i, Entities[i], Components1[i], Components2[i], Components3[i]);
-            }
+			{
+				OnUpdate(i, Entities[i], Components1[i], Components2[i], Components3[i]);
+			}
 		}
 		protected abstract void OnUpdate(int index, Entity entity, T1 component1, T2 component2, T3 component3);
 		protected virtual void OnEject(Entity entity, T1 component) { }
@@ -180,7 +173,7 @@ namespace PureMVCFramework.Entity
 		public override void OnInitialized(params object[] args)
 		{
 			base.OnInitialized(args);
-            hash2 = Entity.StringToHash(typeof(T2).FullName);
+			hash2 = Entity.StringToHash(typeof(T2).FullName);
 			hash3 = Entity.StringToHash(typeof(T3).FullName);
 			hash4 = Entity.StringToHash(typeof(T4).FullName);
 		}
@@ -197,52 +190,47 @@ namespace PureMVCFramework.Entity
 			if (entity.gameObject == null)
 			{
 				if (Entities.Contains(entity))
-                {
+				{
 					var i = Entities.IndexOf(entity);
 					Entities.RemoveAt(i);
 					Components1.RemoveAt(i);
 					Components2.RemoveAt(i);
 					Components3.RemoveAt(i);
 					Components4.RemoveAt(i);
-                }
+				}
 				return;
 			}
-
-            var co = entity.gameObject.GetComponent<T1>();
-            IComponent[] c = new IComponent[3];
-            bool tf = co && entity.components.TryGetValue(hash2, out c[0])
-				 && entity.components.TryGetValue(hash3, out c[1])
-				 && entity.components.TryGetValue(hash4, out c[2]);
-
-            if (Entities.Contains(entity))
-            {
-                if (!tf)
-                {
-                    var i = Entities.IndexOf(entity);
-                    Entities.RemoveAt(i);
-                    Components1.RemoveAt(i);
+			var co = entity.gameObject.GetComponent<T1>();
+			IComponent[] c = new IComponent[3];
+			bool tf = co && entity.components.TryGetValue(hash2, out c[0]) && entity.components.TryGetValue(hash3, out c[1]) && entity.components.TryGetValue(hash4, out c[2]);
+			if (Entities.Contains(entity))
+			{
+				if (!tf)
+				{
+					var i = Entities.IndexOf(entity);
+					Entities.RemoveAt(i);
+					Components1.RemoveAt(i);
 					Components2.RemoveAt(i);
 					Components3.RemoveAt(i);
 					Components4.RemoveAt(i);
-                    
-                    OnEject(entity, co);
-                }
-            }
-            else if (tf)
-            {
-                Entities.Add(entity);
-                Components1.Add(co);
-                Components2.Add((T2)c[0]);
+					OnEject(entity, co);
+				}
+			}
+			else if (tf)
+			{
+				Entities.Add(entity);
+				Components1.Add(co);
+				Components2.Add((T2)c[0]);
 				Components3.Add((T3)c[1]);
 				Components4.Add((T4)c[2]);
-            }
+			}
 		}
 		public sealed override void Update()
 		{
 			for (int i = 0; i < Entities.Count; ++i)
-            {
-                OnUpdate(i, Entities[i], Components1[i], Components2[i], Components3[i], Components4[i]);
-            }
+			{
+				OnUpdate(i, Entities[i], Components1[i], Components2[i], Components3[i], Components4[i]);
+			}
 		}
 		protected abstract void OnUpdate(int index, Entity entity, T1 component1, T2 component2, T3 component3, T4 component4);
 		protected virtual void OnEject(Entity entity, T1 component) { }

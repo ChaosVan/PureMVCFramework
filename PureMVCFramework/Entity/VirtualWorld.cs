@@ -52,11 +52,11 @@ namespace PureMVCFramework.Entity
 
         public void CheckModifiedEntities()
         {
-            for (int i = 0; i < m_Systems.Count; ++i)
+            for (int i = 0; i < modifiedEntities.Count; ++i)
             {
-                for (int j = 0; j < modifiedEntities.Count; ++j)
+                for (int j = 0; j < m_Systems.Count; ++j)
                 {
-                    m_Systems[i].InjectEntity(modifiedEntities[j]);
+                    m_Systems[j].InjectEntity(modifiedEntities[i]);
                 }
             }
 

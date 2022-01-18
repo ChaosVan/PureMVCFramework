@@ -23,6 +23,11 @@ namespace PureMVCFramework.Extensions
             go.layer = layer;
         }
 
+        public static void SetLayer(this GameObject go, string layerName = "Default")
+        {
+            SetLayer(go, LayerMask.NameToLayer(layerName));
+        }
+
         public static void Active(this GameObject go)
         {
             go.SetActive(true);
