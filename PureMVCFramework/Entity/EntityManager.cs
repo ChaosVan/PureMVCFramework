@@ -226,8 +226,9 @@ namespace PureMVCFramework.Entity
             }
         }
 
-        public void DestroyEntity(Entity entity, float delay = 0)
+        public void DestroyEntity(Entity entity, out GameObject gameObject)
         {
+            gameObject = null;
             if (entity.IsAlive)
             {
                 entity.IsAlive = false;
@@ -247,15 +248,7 @@ namespace PureMVCFramework.Entity
                 if (entity.gameObject != null)
                 {
                     GameObjectEntities.Remove(entity.gameObject);
-
-                    if (delay <= 0)
-                    {
-                        entity.gameObject.Recycle();
-                    }
-                    else
-                    {
-                        TimerManager.Instance.AddOneShotTask(delay, entity.gameObject.Recycle);
-                    }
+                    gameObject = entity.gameObject;
                 }
 
                 Entities.Remove(entity.GUID);
@@ -265,6 +258,24 @@ namespace PureMVCFramework.Entity
 
                 if (!ReferencePool.applicationIsQuitting)
                     ReferencePool.Instance.RecycleInstance(entity);
+            }
+
+        }
+
+        public void DestroyEntity(Entity entity, float delay = 0)
+        {
+            DestroyEntity(entity, out var gameObject);
+
+            if (gameObject != null)
+            {
+                if (delay <= 0)
+                {
+                    gameObject.Recycle();
+                }
+                else
+                {
+                    TimerManager.Instance.AddOneShotTask(delay, gameObject.Recycle);
+                }
             }
         }
 
