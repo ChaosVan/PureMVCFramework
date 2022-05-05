@@ -28,6 +28,14 @@ namespace PureMVCFramework.Providers
             }
         }
 
+        public Type GetType(string fullTypeName)
+        {
+            if (loadedTypes.TryGetValue(fullTypeName, out var type))
+                return type;
+
+            return null;
+        }
+
         public void InvokeConstructor(object inst, string typeName, params object[] args)
         {
             if (loadedTypes.TryGetValue(typeName, out var type))

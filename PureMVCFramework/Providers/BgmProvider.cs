@@ -35,19 +35,23 @@ namespace PureMVCFramework.Providers
         private float smoothDampVelocity;
 
 
-        public BgmProvider(string tag, BgmParams param)
+        public BgmProvider(string tag, object userdata)
         {
             providerTag = tag;
             audioSource = new GameObject(tag).AddComponent<AudioSource>();
-            audioSource.playOnAwake = param.playOnAwake;
-            Volume = param.volume;
 
-            smoothDampVelocity = 0;
+            if (userdata is BgmParams param)
+            {
+                audioSource.playOnAwake = param.playOnAwake;
+                Volume = param.volume;
 
-            if (param.parent != null)
-                audioSource.transform.SetParent(param.parent);
-            else
-                audioSource.transform.SetParent(AudioManager.Instance.transform, false);
+                smoothDampVelocity = 0;
+
+                if (param.parent != null)
+                    audioSource.transform.SetParent(param.parent);
+                else
+                    audioSource.transform.SetParent(AudioManager.Instance.transform, false);
+            }
 
             EnableUpdate(true);
         }

@@ -26,6 +26,7 @@ namespace PureMVCFramework.Advantages
         object Spawn(string typeName, params object[] args);
         object Recycle(object obj, out string typeName);
         void LoadTypes(string assemblyString);
+        Type GetType(string fullTypeName);
         void InvokeConstructor(object inst, string typeName, params object[] args);
     }
 
@@ -79,6 +80,11 @@ namespace PureMVCFramework.Advantages
         public void LoadTypes(string assemblyString)
         {
             provider.LoadTypes(assemblyString);
+        }
+
+        public Type GetType(string fullTypeName)
+        {
+            return provider.GetType(fullTypeName);
         }
 
         public object SpawnInstance(string typeName, params object[] args)
