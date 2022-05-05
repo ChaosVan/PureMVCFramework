@@ -21,12 +21,14 @@ namespace PureMVCFramework.Providers
         [SerializeField]
         private int audioSourceMax;
 
-        public SfxProvider(string tag, SfxParams param)
+        public SfxProvider(string tag, object userdata)
         {
             providerTag = tag;
-            audioSourceMax = param.maxSourceCount;
-
-            Volume = param.volume;
+            if (userdata is SfxParams param)
+            {
+                audioSourceMax = param.maxSourceCount;
+                Volume = param.volume;
+            }
         }
 
         [SerializeField]
