@@ -62,11 +62,6 @@ namespace PureMVCFramework.Providers
         [SerializeField]
         public float Volume { get; set; }
 
-        public void Pause()
-        {
-            state = State.Pause;
-        }
-
         public void Play(AudioClip clip, object userdata)
         {
             if (audioSource.clip != clip)
@@ -105,6 +100,11 @@ namespace PureMVCFramework.Providers
                 Object.Destroy(audioSource);
         }
 
+        public void Pause()
+        {
+            state = State.Pause;
+        }
+
         public void Resume()
         {
             audioSource.UnPause();
@@ -112,7 +112,7 @@ namespace PureMVCFramework.Providers
             if (Volume > 0)
             {
                 state = State.Playing;
-                audioSource.volume = 0;
+                audioSource.volume = Volume;
             }
             else
                 state = State.Stop;
@@ -137,17 +137,22 @@ namespace PureMVCFramework.Providers
             switch (state)
             {
                 case State.Stop:
-                    if (audioSource.volume > 0)
+                    if (!Mathf.Approximately(audioSource.volume, 0))
+                    {
                         audioSource.volume = Mathf.SmoothDamp(audioSource.volume, 0, ref smoothDampVelocity, 1);
+                    }
                     else
+                    {
                         audioSource.Stop();
+                        audioSource.time = 0;
+                    }
                     break;
                 case State.Playing:
                     if (Volume > 0)
                     {
                         if (audioSource.isPlaying)
                         {
-                            if (audioSource.volume != Volume)
+                            if (!Mathf.Approximately(audioSource.volume, Volume))
                                 audioSource.volume = Mathf.SmoothDamp(audioSource.volume, Volume, ref smoothDampVelocity, 1);
                         }
                         else
@@ -165,10 +170,7 @@ namespace PureMVCFramework.Providers
                         audioSource.transform.position = trackTransform.position;
                     break;
                 case State.Pause:
-                    if (audioSource.volume > 0)
-                        audioSource.volume = Mathf.SmoothDamp(audioSource.volume, 0, ref smoothDampVelocity, 1);
-                    else
-                        audioSource.Pause();
+                    audioSource.Pause();
                     break;
                 default:
                     Debug.LogErrorFormat("Error Audio State {0}", state);

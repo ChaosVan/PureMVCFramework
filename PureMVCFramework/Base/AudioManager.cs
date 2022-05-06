@@ -10,6 +10,7 @@ namespace PureMVCFramework
 {
     public interface IAudioProvider
     {
+        bool IsPlaying { get; }
         float Volume { get; set; }
         void Play(AudioClip clip, object userdata);
         void Pause();
@@ -125,12 +126,18 @@ namespace PureMVCFramework
         {
             void OnLoaded(AudioClip clip, object data)
             {
-                if (clip != null && audioProviders.TryGetValue(tag, out var provider)) {
-                    provider.Play(clip, userdata);
-                }
+                Play(tag, clip, data);
             }
 
             ResourceManager.Instance.LoadAssetAsync<AudioClip>(asset, OnLoaded, userdata);
+        }
+
+        public void Play(string tag, AudioClip clip, object userdata = null)
+        {
+            if (clip != null && audioProviders.TryGetValue(tag, out var provider))
+            {
+                provider.Play(clip, userdata);
+            }
         }
     }
 

@@ -32,12 +32,10 @@ namespace PureMVCFramework.Providers
         }
 
         [SerializeField]
-        public float Volume { get; set; }
+        public bool IsPlaying => false;
 
-        public void Pause()
-        {
-            
-        }
+        [SerializeField]
+        public float Volume { get; set; }
 
         public void Play(AudioClip clip, object userdata)
         {
@@ -56,7 +54,6 @@ namespace PureMVCFramework.Providers
             }
 
             audioSource.PlayOneShot(clip, volumeScale);
-
         }
 
         public void Release()
@@ -67,16 +64,6 @@ namespace PureMVCFramework.Providers
                 if (source != null)
                     Object.Destroy(source);
             }
-        }
-
-        public void Resume()
-        {
-            
-        }
-
-        public void Stop()
-        {
-            
         }
 
         private AudioSource FetchPlayer(string clipName = "")
@@ -113,5 +100,11 @@ namespace PureMVCFramework.Providers
 
             return source;
         }
+
+        public void Pause() { }
+
+        public void Resume() { }
+
+        public void Stop() { }
     }
 }
