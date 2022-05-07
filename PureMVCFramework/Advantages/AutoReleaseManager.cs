@@ -62,8 +62,8 @@ namespace PureMVCFramework.Advantages
 
         public void RegistAutoRelease(Object obj, Object asset)
         {
-            if (m_AutoReleaseObjects.ContainsKey(obj))
-                ResourceManager.Instance.ReleaseAsset(m_AutoReleaseObjects[obj]);
+            if (m_AutoReleaseObjects.TryGetValue(obj, out var cache) && asset != cache)
+                ResourceManager.Instance.ReleaseAsset(cache);
 
             m_AutoReleaseObjects[obj] = asset;
         }
