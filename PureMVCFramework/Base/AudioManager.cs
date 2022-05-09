@@ -126,18 +126,23 @@ namespace PureMVCFramework
         {
             void OnLoaded(AudioClip clip, object data)
             {
-                Play(tag, clip, data);
+                if (clip != null)
+                {
+                    if (audioProviders.TryGetValue(tag, out var provider))
+                    {
+                        provider.Play(clip, userdata);
+                    }
+                    else
+                    {
+                        ResourceManager.Instance.ReleaseAsset(clip);
+#if UNITY_EDITOR
+                        Debug.LogErrorFormat("Cannot find audio provider tag:{0}", tag);
+#endif
+                    }
+                }
             }
 
             ResourceManager.Instance.LoadAssetAsync<AudioClip>(asset, OnLoaded, userdata);
-        }
-
-        public void Play(string tag, AudioClip clip, object userdata = null)
-        {
-            if (clip != null && audioProviders.TryGetValue(tag, out var provider))
-            {
-                provider.Play(clip, userdata);
-            }
         }
     }
 
