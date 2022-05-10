@@ -2,7 +2,7 @@
 	"name": "com.chaosvan.puremvcframework",
 	"displayName": "PureMVCFramework",
 	"description": "PureMVCFramework",
-	"version": "v1.0.0-preview.16",
+	"version": "1.0.0-preview.16",
 	"unity": "2019.4",
 	"license": "MIT",
 	"author": {
