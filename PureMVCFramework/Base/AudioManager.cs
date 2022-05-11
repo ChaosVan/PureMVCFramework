@@ -10,6 +10,7 @@ namespace PureMVCFramework
 {
     public interface IAudioProvider
     {
+        bool IsPlaying { get; }
         float Volume { get; set; }
         void Play(AudioClip clip, object userdata);
         void Pause();
@@ -125,8 +126,19 @@ namespace PureMVCFramework
         {
             void OnLoaded(AudioClip clip, object data)
             {
-                if (clip != null && audioProviders.TryGetValue(tag, out var provider)) {
-                    provider.Play(clip, userdata);
+                if (clip != null)
+                {
+                    if (audioProviders.TryGetValue(tag, out var provider))
+                    {
+                        provider.Play(clip, userdata);
+                    }
+                    else
+                    {
+                        ResourceManager.Instance.ReleaseAsset(clip);
+#if UNITY_EDITOR
+                        Debug.LogErrorFormat("Cannot find audio provider tag:{0}", tag);
+#endif
+                    }
                 }
             }
 
