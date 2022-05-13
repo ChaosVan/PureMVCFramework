@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace PureMVCFramework
 {
-    public static class DomainReloadConfig
+    public static class DomainReloadListConfig
     {
         [DomainReloadList("PureMVC")]
         public static Dictionary<string, object> Configs = new Dictionary<string, object>()
