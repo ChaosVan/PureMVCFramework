@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 using UnityEngine.U2D;
 
@@ -13,7 +14,7 @@ namespace PureMVCFramework
         void ReleaseAssets<TObject>(IList<TObject> assets) where TObject : Object;
         void LoadAssetAsync<TObject>(object key, System.Action<TObject, object> callback = null, object userdata = null) where TObject : Object;
         void LoadAssetsAsync<TObject>(object key, System.Action<IList<TObject>> callbackAll, System.Action<TObject> callbackEach) where TObject : Object;
-        void LoadSceneAsync(object key, System.Action<Scene, object> callback, LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, object userdata = null);
+        void LoadSceneAsync(object key, System.Action<SceneInstance, object> callback, LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, object userdata = null);
         void UnloadSceneAsync(Scene scene, System.Action<string> callback);
         void UnloadSceneAsync(string sceneName, System.Action<string> callback);
     }
@@ -141,7 +142,7 @@ namespace PureMVCFramework
             Provider.LoadAssetsAsync(key, callbackAll, callbackEach);
         }
 
-        public void LoadSceneAsync(string key, System.Action<Scene, object> callback, LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, object userdata = null)
+        public void LoadSceneAsync(string key, System.Action<SceneInstance, object> callback, LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, object userdata = null)
         {
             Provider.LoadSceneAsync(key, callback, loadMode, activateOnLoad, userdata);
         }
