@@ -214,7 +214,7 @@ namespace PureMVCFramework.Providers
             };
         }
 
-        public void LoadSceneAsync(object key, System.Action<Scene, object> callback, LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, object userdata = null)
+        public void LoadSceneAsync(object key, System.Action<SceneInstance, object> callback, LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, object userdata = null)
         {
             Addressables.LoadSceneAsync(key, loadMode, activateOnLoad).Completed += handle =>
             {
@@ -228,7 +228,7 @@ namespace PureMVCFramework.Providers
                         if (activateOnLoad)
                             SceneManager.SetActiveScene(handle.Result.Scene);
 
-                        callback?.Invoke(handle.Result.Scene, userdata);
+                        callback?.Invoke(handle.Result, userdata);
                     }
                     else
                     {
