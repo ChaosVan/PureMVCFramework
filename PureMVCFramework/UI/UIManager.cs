@@ -200,8 +200,6 @@ namespace PureMVCFramework.UI
             if (window.IsLoading || window.IsOpen)
                 return window;
 
-            window.IsLoading = true;
-
             // 创建Layer
             if (!m_ActiveWindows.ContainsKey(param.layer))
                 m_ActiveWindows[param.layer] = new List<UIWindow>();
@@ -230,8 +228,13 @@ namespace PureMVCFramework.UI
         public UIWindow OpenWindow(UIWindowParams param, object userdata = null)
         {
             var window = InternalOpenWindow(param);
-            // 加载Prefab
-            AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, window.Open, userdata);
+
+            if (!window.IsLoading && !window.IsOpen)
+            {
+                window.IsLoading = true;
+                // 加载Prefab
+                AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, window.Open, userdata);
+            }
 
             return window;
         }
@@ -240,12 +243,16 @@ namespace PureMVCFramework.UI
         {
             var window = InternalOpenWindow(param);
 
-            // 加载Prefab
-            AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, (inst, data) =>
+            if (!window.IsLoading && !window.IsOpen)
             {
-                window.Open(inst, data);
-                callback?.Invoke(window, data);
-            }, userdata);
+                window.IsLoading = true;
+                // 加载Prefab
+                AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, (obj, data) =>
+                {
+                    window.Open(obj, data);
+                    callback?.Invoke(window, data);
+                }, userdata);
+            }
 
             return window;
         }
