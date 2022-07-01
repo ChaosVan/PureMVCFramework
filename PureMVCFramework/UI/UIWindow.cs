@@ -16,7 +16,7 @@ namespace PureMVCFramework.UI
         }
 
         [System.Serializable]
-        public struct UIWindowParams
+        public class UIWindowParams
         {
             public string name;
             public UILayer layer;
@@ -33,7 +33,7 @@ namespace PureMVCFramework.UI
             }
         }
 
-        public struct WorldParam
+        public class WorldParam
         {
             public Transform root;
             public Vector3 position;
