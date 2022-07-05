@@ -4,6 +4,13 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-preview.20] - 2022-02-28
+- 改进：ReferencePool接口
+- 改进：AudioManager接口
+- 改进：DomainReload
+- 改进：LoadScene回调
+- 修改：UIWindowParam修改为class
+- 改进：增加package.json的Samples
 ## [1.0.0-preview.15] - 2022-02-28
 - 改进：增加一个EntitManager.DestroyEntity的接口，支持自定义处理gameObject
 ## [1.0.0-preview.14] - 2022-01-18

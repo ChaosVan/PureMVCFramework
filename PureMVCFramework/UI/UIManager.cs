@@ -173,6 +173,7 @@ namespace PureMVCFramework.UI
 
         protected UIWindow InternalOpenWindow(UIWindowParams param)
         {
+            Assert.IsNotNull(param);
             Assert.IsFalse(string.IsNullOrEmpty(param.name));
 
             // 多开的window或者单开window的缓存里找不到，都需要创建window
