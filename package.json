@@ -13,5 +13,12 @@
 		"com.unity.addressables": "1.16.19",
 		"com.unity.burst": "1.4.11",
 		"com.unity.mathematics": "1.2.1"
-	}
+	},
+	"samples": [
+		{
+			"displayName": "ILRuntime Utilities",
+			"description": "ILRuntime Utilities",
+			"path": "Samples~/ILRuntimeUtilities"
+		}
+	]
 }
