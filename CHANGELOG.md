@@ -4,7 +4,7 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-preview.20] - 2022-02-28
+## [1.0.0-preview.21] - 2022-07-07
 - 改进：ReferencePool接口
 - 改进：AudioManager接口
 - 改进：DomainReload
