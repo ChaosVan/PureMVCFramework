@@ -10,6 +10,8 @@ using UnityEngine.Jobs;
 
 namespace PureMVCFramework.Entity
 {
+    [UpdateInGroup(typeof(TransformSystemGroup))]
+    [UpdateAfter(typeof(TRSToLocalToWorldSystem))]
     public class CopyToTransformSystem : HybridSystemBase<Transform, LocalToWorld, CopyToTransformComponent>
     {
 #if ENABLE_JOBS
