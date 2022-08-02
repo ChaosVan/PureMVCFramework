@@ -6,7 +6,7 @@ namespace PureMVCFramework.Editor
 {
     public static class GenILComponentSystem
     {
-        [MenuItem("Tools/ECS/Generate/ILComponentSystem")]
+        //[MenuItem("Tools/ECS/Generate/ILComponentSystem")]
         public static void GenerateILComponentSystem()
         {
             CodeFormatter cf = new CodeFormatter();

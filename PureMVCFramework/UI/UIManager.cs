@@ -1,10 +1,10 @@
 ﻿using PureMVCFramework.Advantages;
+using PureMVCFramework.Patterns;
+using static PureMVCFramework.UI.UIWindow;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
-using static PureMVCFramework.UI.UIWindow;
-using PureMVCFramework.Patterns;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;

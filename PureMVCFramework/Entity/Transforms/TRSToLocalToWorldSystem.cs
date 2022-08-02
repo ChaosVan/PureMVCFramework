@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace PureMVCFramework.Entity
 {
-    public class TRSToLocalToWorldSystem : ComponentSystem<LocalToWorld, Position, Rotation, Scale>
+    public class TRSToLocalToWorldSystem : SystemBase<LocalToWorld, Position, Rotation, Scale>
     {
         protected override void OnUpdate(int index, Entity entity, LocalToWorld c1, Position c2, Rotation c3, Scale c4)
         {

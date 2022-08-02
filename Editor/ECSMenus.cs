@@ -15,7 +15,7 @@ namespace PureMVCFramework.Editor
         public static void FindDuplicateHash()
         {
             var types = System.AppDomain.CurrentDomain.GetAssemblies()
-                .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IComponent)))).ToArray();
+                .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IComponentData)))).ToArray();
 
             var typeList = new List<long>();
 
@@ -44,7 +44,7 @@ namespace PureMVCFramework.Editor
             var classFmt = new CodeFormatter.CLASS { name = "EntityComponentsHash", scope = "public", keyword = "static" };
 
             var types = System.AppDomain.CurrentDomain.GetAssemblies().Where(t => t.GetName().Name != "Adapters")
-                .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IComponent)))).ToArray();
+                .SelectMany(a => a.GetTypes().Where(t => t.GetInterfaces().Contains(typeof(IComponentData)))).ToArray();
 
             foreach (var item in types)
             {

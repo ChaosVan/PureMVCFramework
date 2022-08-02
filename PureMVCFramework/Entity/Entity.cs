@@ -28,7 +28,7 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowInInspector]
 #endif
-        internal readonly SortedDictionary<long, IComponent> components = new SortedDictionary<long, IComponent>();
+        internal readonly SortedDictionary<long, IComponentData> components = new SortedDictionary<long, IComponentData>();
 
         public static long StringToHash(string str)
         {

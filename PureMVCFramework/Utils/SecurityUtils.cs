@@ -15,7 +15,7 @@ namespace PureMVCFramework
     {
         private static AesEncrypt Encrypter;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         public static void ResetEncrypter()
         {
             Encrypter = new AesEncrypt(SHA1(SystemInfo.deviceUniqueIdentifier).Substring(0, 16));

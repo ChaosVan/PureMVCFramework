@@ -6,7 +6,7 @@ namespace PureMVCFramework.Editor
 {
     public static class GenILHybridSystem
     {
-        [MenuItem("Tools/ECS/Generate/ILHybridSystem")]
+        //[MenuItem("Tools/ECS/Generate/ILHybridSystem")]
         public static void GenerateILHybridSystem()
         {
             CodeFormatter cf = new CodeFormatter();

@@ -1,22 +1,19 @@
-using PureMVCFramework.Advantages;
-using PureMVCFramework.Entity;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace PureMVCFramework.Entity
 {
-    public class LifeTime : IComponent
+    public class LifeTime : IComponentData
     {
         public float Value;
     }
 
-    public class LifeTimeSystem : ComponentSystem<LifeTime>
+    [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+    public class LifeTimeSystem : SystemBase<LifeTime>
     {
         public readonly List<Entity> willDestroy = new List<Entity>();
         protected override void OnUpdate(int index, Entity entity, LifeTime component)
         {
-            component.Value -= World.TimePerFrame;
+            component.Value -= Time.DeltaTime;
 
             if (component.Value <= 0)
             {

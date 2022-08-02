@@ -9,7 +9,7 @@ namespace PureMVCFramework
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public class DomainReloadAttribute : Attribute
     {
-        public object defaultValue;
+        private object defaultValue;
 
         public DomainReloadAttribute(object defaultValue = null)
         {
@@ -25,7 +25,7 @@ namespace PureMVCFramework
         {
             Dictionary<Assembly, List<MemberInfo>> allMembers = new Dictionary<Assembly, List<MemberInfo>>();
 
-            var assemblies = new string[] { "Assembly-CSharp", "PureMVCFramework", "Entity" };
+            var assemblies = new string[] { "Assembly-CSharp", "PureMVCFramework", "PureMVCFramework.Entity" };
             foreach (var assemblyName in assemblies)
             {
                 var assembly = Assembly.Load(assemblyName);

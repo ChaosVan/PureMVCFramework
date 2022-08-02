@@ -1,6 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using PureMVCFramework.Advantages;
+using System.Reflection;
+using System;
+using System.Linq;
+using UnityEngine.Assertions;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -10,60 +15,416 @@ namespace PureMVCFramework.Entity
 {
     public class WorldManager : SingletonBehaviour<WorldManager>
     {
-        private World LocalWorld;
-
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
-        private readonly List<IWorld> AllWorlds = new List<IWorld>();
+        private readonly List<World> worlds = new();
+#if ODIN_INSPECTOR
+        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true)]
+#endif
+        private readonly Dictionary<World, List<ComponentSystemGroup>> groups = new();
 
-        public void Initialize()
+        private DefaultWorldInitialization.DefaultRootGroups rootGroup;
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+            World.WorldCreated += OnWorldCreated;
+            World.WorldDestroyed += OnWorldDestroyed;
+            World.SystemCreated += OnSystemCreated;
+            World.SystemDestroyed += OnSystemDestroyed;
+
+            rootGroup = new DefaultWorldInitialization.DefaultRootGroups();
+        }
+
+        protected override void OnDelete()
+        {
+            World.WorldCreated -= OnWorldCreated;
+            World.WorldDestroyed -= OnWorldDestroyed;
+            World.SystemCreated -= OnSystemCreated;
+            World.SystemDestroyed -= OnSystemDestroyed;
+            base.OnDelete();
+        }
+
+        void OnWorldCreated(World world)
+        {
+            worlds.Add(world);
+        }
+
+        void OnWorldDestroyed(World world)
+        {
+            worlds.Remove(world);
+        }
+
+        void OnSystemCreated(World world, ComponentSystemBase system)
+        {
+            if (rootGroup.IsRootGroup(system.GetType()))
+            {
+                if (!groups.TryGetValue(world, out var group))
+                {
+                    group = new List<ComponentSystemGroup>();
+                    groups.Add(world, group);
+                }
+                group.Add(system as ComponentSystemGroup);
+            }
+        }
+
+        void OnSystemDestroyed(World world, ComponentSystemBase system)
+        {
+            if (rootGroup.IsRootGroup(system.GetType()))
+            {
+                if (groups.TryGetValue(world, out var group))
+                    group.Remove(system as ComponentSystemGroup);
+            }
+        }
+
+        //#if ODIN_INSPECTOR
+        //        [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
+        //#endif
+        //        private readonly List<IWorld> worlds = new();
+        //#if ODIN_INSPECTOR
+        //        [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
+        //#endif
+        //        private readonly List<Type> _updateGroups = new();
+
+        //#if ODIN_INSPECTOR
+        //        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true)]
+        //#endif
+        //        private readonly Dictionary<Type, ComponentSystemGroup> _groups = new();
+
+        //        private ComponentSystemGroup defaultGroup;
+        //        private bool groupSortDirty;
+
+        //        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        //        public static void Initialize()
+        //        {
+        //            Instance.updateMode = UpdateMode.UPDATE;
+        //        }
+
+        //        protected override void OnInitialized()
+        //        {
+        //            base.OnInitialized();
+
+        //            // create default group
+        //            //defaultGroup = RegisterGroup(typeof(DefaultGroup));
+
+        //            //var assemblies = new string[] { "Assembly-CSharp", "Entity" };
+        //            //List<Type> system_collect = new();
+        //            //List<Type> group_collect = new();
+
+        //            //// Collections
+        //            //foreach (var assemblyName in assemblies)
+        //            //{
+        //            //    group_collect.AddRange(Assembly.Load(assemblyName).GetTypes().Where(t => !t.IsAbstract && typeof(ComponentSystemGroup).IsAssignableFrom(t)));
+        //            //    system_collect.AddRange(Assembly.Load(assemblyName).GetTypes().Where(t => !t.IsAbstract && typeof(ComponentSystemBase).IsAssignableFrom(t)));
+        //            //}
+        //            //// Initialize groups and systems
+        //            //InitializeGroups(group_collect);
+        //            ////InitializeSystems(system_collect);
+
+        //        }
+
+        //        protected override void OnDelete()
+        //        {
+        //            foreach (var world in worlds)
+        //            {
+        //                world.Destroy();
+        //            }
+        //            worlds.Clear();
+        //            _updateGroups.Clear();
+
+        //            LocalWorld = null;
+
+        //            base.OnDelete();
+        //        }
+
+        //private void InitializeGroups(List<Type> collection)
+        //{
+        //    foreach (var t in collection)
+        //    {
+        //        RegisterGroup(t);
+        //    }
+
+
+        //    //Dictionary<Type, List<Type>> typeDep = new Dictionary<Type, List<Type>>();
+        //    //for (int i = 0; i < collection.Count; i++)
+        //    //{
+        //    //    var t1 = collection[i].GetCustomAttribute<UpdateAfterAttribute>();
+        //    //    if (t1 != null)
+        //    //    {
+        //    //        for (int j = i + 1; j < collection.Count; j++)
+        //    //        {
+        //    //            if (t1.GroupType == collection[j])
+        //    //            {
+
+        //    //            }
+        //    //        }
+        //    //    }
+        //    //}
+        //}
+
+        //public ComponentSystemGroup RegisterGroup(Type groupType)
+        //{
+        //    if (!_groups.TryGetValue(groupType, out var group))
+        //    {
+        //        group = ReferencePool.Instance.SpawnInstance(groupType) as ComponentSystemGroup;
+        //        _groups.Add(groupType, group);
+        //        groupSortDirty = true;
+        //    }
+
+        //    return group;
+        //}
+
+        //private void SortGroups()
+        //{
+        //    _updateGroups.Clear();
+        //    _updateGroups.AddRange(_groups.Keys);
+        //    _updateGroups.Sort((a, b) =>
+        //    {
+        //        var aa = a.GetCustomAttribute<UpdateAfterAttribute>();
+        //        var ba = b.GetCustomAttribute<UpdateAfterAttribute>();
+        //        var ab = a.GetCustomAttribute<UpdateBeforeAttribute>();
+        //        var bb = b.GetCustomAttribute<UpdateBeforeAttribute>();
+
+        //        return 1;
+        //    });
+
+        //    groupSortDirty = false;
+        //}
+
+        //public bool TryGetGroup(Type groupType, out ComponentSystemGroup group)
+        //{
+        //    return _groups.TryGetValue(groupType, out group);
+        //}
+
+        protected override void OnUpdate(float delta)
         {
 
         }
 
         public void ModifyEntity(Entity entity)
         {
-            foreach (var world in AllWorlds)
+            //foreach (var world in worlds)
+            //{
+            //    world.ModifyEntity(entity);
+            //}
+        }
+
+        //public void RegisterWorld(IWorld world)
+        //{
+        //    worlds.Add(world);
+        //}
+
+        //public void RemoveWorld(IWorld world)
+        //{
+        //    worlds.Remove(world);
+        //}
+
+        //public IWorld GetWorld<T>() where T : IWorld
+        //{
+        //    foreach (var world in worlds)
+        //    {
+        //        if (world.GetType() == typeof(T))
+        //            return world;
+        //    }
+
+        //    var newWorld = ReferencePool.Instance.SpawnInstance<T>();
+        //    RegisterWorld(newWorld);
+
+        //    return newWorld;
+        //}
+    }
+
+    static class AutomaticWorldBootstrap
+    {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void Initialize()
+        {
+            DefaultWorldInitialization.Initialize("Default World", false);
+        }
+    }
+
+    public static class DefaultWorldInitialization
+    {
+        public static World Initialize(string defaultWorldName, bool editorWorld = false)
+        {
+#if UNITY_EDITOR
+            WorldManager.Instance.updateMode = SingletonBehaviour<WorldManager>.UpdateMode.LATE_UPDATE;
+#endif
+
+            if (!editorWorld)
             {
-                world.ModifyEntity(entity);
+                var bootStrap = CreateBootStrap();
+                if (bootStrap != null && bootStrap.Initialize(defaultWorldName))
+                {
+                    Assert.IsTrue(World.DefaultGameObjectInjectionWorld != null,
+                        $"ICustomBootstrap.Initialize() implementation failed to set " +
+                        $"World.DefaultGameObjectInjectionWorld, despite returning true " +
+                        $"(indicating the World has been properly initialized)");
+                    return World.DefaultGameObjectInjectionWorld;
+                }
+            }
+
+            var world = new World(defaultWorldName, editorWorld ? WorldFlags.Editor : WorldFlags.Game);
+            World.DefaultGameObjectInjectionWorld = world;
+
+            var systemList = GetAllSystems(WorldSystemFilterFlags.Default);
+            AddSystemToRootLevelSystemGroupsInternal(world, systemList);
+
+            return null;
+        }
+
+        static ICustomBootstrap CreateBootStrap()
+        {
+#if !UNITY_DOTSRUNTIME
+            var bootstrapTypes = TypeManager.GetTypesDerivedFrom(typeof(ICustomBootstrap));
+            Type selectedType = null;
+
+            foreach (var bootType in bootstrapTypes)
+            {
+                if (bootType.IsAbstract || bootType.ContainsGenericParameters)
+                    continue;
+
+                if (selectedType == null)
+                    selectedType = bootType;
+                else if (selectedType.IsAssignableFrom(bootType))
+                    selectedType = bootType;
+                else if (!bootType.IsAssignableFrom(selectedType))
+                    Debug.LogError("Multiple custom ICustomBootstrap specified, ignoring " + bootType);
+            }
+            ICustomBootstrap bootstrap = null;
+            if (selectedType != null)
+                bootstrap = Activator.CreateInstance(selectedType) as ICustomBootstrap;
+
+            return bootstrap;
+#else
+            throw new Exception("This method should have been replaced by code-gen.");
+#endif
+        }
+
+        /// <summary>
+        /// Calculates a list of all systems filtered with WorldSystemFilterFlags, [DisableAutoCreation] etc.
+        /// </summary>
+        /// <param name="filterFlags"></param>
+        /// <param name="requireExecuteAlways">Optionally require that [ExecuteAlways] is present on the system. This is used when creating edit mode worlds.</param>
+        /// <returns>The list of filtered systems</returns>
+        public static IReadOnlyList<Type> GetAllSystems(WorldSystemFilterFlags filterFlags)
+        {
+            return TypeManager.GetSystems(filterFlags, WorldSystemFilterFlags.Default);
+        }
+
+        /// <summary>
+        /// This internal interface is used when adding systems to the default world to identify the root groups in your
+        /// setup. They will then be skipped when we try to find the parent of each system (because they don't need a
+        /// parent).
+        /// </summary>
+        internal interface IIdentifyRootGroups
+        {
+            bool IsRootGroup(Type type);
+        }
+
+        internal struct DefaultRootGroups : IIdentifyRootGroups
+        {
+            public bool IsRootGroup(Type type) =>
+                type == typeof(InitializationSystemGroup) ||
+                type == typeof(SimulationSystemGroup);
+        }
+
+        internal static void AddSystemToRootLevelSystemGroupsInternal<T>(World world, IEnumerable<Type> systemTypesOrig, ComponentSystemGroup defaultGroup, T rootGroups)
+            where T : struct, IIdentifyRootGroups
+        {
+            var managedTypes = new List<Type>();
+            var unmanagedTypes = new List<Type>();
+
+            foreach (var stype in systemTypesOrig)
+            {
+                if (typeof(ComponentSystemBase).IsAssignableFrom(stype))
+                    managedTypes.Add(stype);
+                else if (typeof(ISystem).IsAssignableFrom(stype))
+                    unmanagedTypes.Add(stype);
+                else
+                    throw new InvalidOperationException("Bad type");
+            }
+
+            var systems = world.GetOrCreateSystemsAndLogException(managedTypes, managedTypes.Count);
+
+            // Add systems to their groups, based on the [UpdateInGroup] attribute.
+            foreach (var system in systems)
+            {
+                if (system == null)
+                    continue;
+
+                // Skip the built-in root-level system groups
+                var type = system.GetType();
+                if (rootGroups.IsRootGroup(type))
+                {
+                    continue;
+                }
+
+                var updateInGroupAttributes = TypeManager.GetSystemAttributes(system.GetType(), typeof(UpdateInGroupAttribute));
+                if (updateInGroupAttributes.Length == 0)
+                {
+                    defaultGroup.AddSystemToUpdateList(system);
+                }
+
+                foreach (var attr in updateInGroupAttributes)
+                {
+                    var group = FindGroup(world, type, attr);
+                    if (group != null)
+                    {
+                        group.AddSystemToUpdateList(system);
+                    }
+                }
             }
         }
 
-        public void RegisterWorld(IWorld world)
+        private static void AddSystemToRootLevelSystemGroupsInternal(World world, IEnumerable<Type> systemTypesOrig)
         {
-            AllWorlds.Add(world);
+            var initializationSystemGroup = world.GetOrCreateSystem<InitializationSystemGroup>();
+            var simulationSystemGroup = world.GetOrCreateSystem<SimulationSystemGroup>();
+
+            AddSystemToRootLevelSystemGroupsInternal(world, systemTypesOrig, simulationSystemGroup, new DefaultRootGroups());
+
+            // Update player loop
+            initializationSystemGroup.SortSystems();
+            simulationSystemGroup.SortSystems();
         }
 
-        public void RemoveWorld(IWorld world)
+        private static ComponentSystemGroup FindGroup(World world, Type systemType, Attribute attr)
         {
-            AllWorlds.Remove(world);
-        }
+            var uga = attr as UpdateInGroupAttribute;
 
-        protected override void OnInitialized()
-        {
-            base.OnInitialized();
-            LocalWorld = new World();
-            LocalWorld.Initialize();
-            RegisterWorld(LocalWorld);
-        }
+            if (uga == null)
+                return null;
 
-        protected override void OnDelete()
-        {
-            foreach (var world in AllWorlds)
+            if (!TypeManager.IsSystemAGroup(uga.GroupType))
             {
-                world.Destroy();
+                throw new InvalidOperationException($"Invalid [UpdateInGroup] attribute for {systemType}: {uga.GroupType} must be derived from ComponentSystemGroup.");
+            }
+            if (uga.OrderFirst && uga.OrderLast)
+            {
+                throw new InvalidOperationException($"The system {systemType} can not specify both OrderFirst=true and OrderLast=true in its [UpdateInGroup] attribute.");
             }
 
-            LocalWorld = null;
+            var groupSys = world.GetExistingSystem(uga.GroupType);
+            if (groupSys == null)
+            {
+                // Warn against unexpected behaviour combining DisableAutoCreation and UpdateInGroup
+                var parentDisableAutoCreation = TypeManager.GetSystemAttributes(uga.GroupType, typeof(DisableAutoCreationAttribute)).Length > 0;
+                if (parentDisableAutoCreation)
+                {
+                    Debug.LogWarning($"A system {systemType} wants to execute in {uga.GroupType} but this group has [DisableAutoCreation] and {systemType} does not. The system will not be added to any group and thus not update.");
+                }
+                else
+                {
+                    Debug.LogWarning(
+                        $"A system {systemType} could not be added to group {uga.GroupType}, because the group was not created. Fix these errors before continuing. The system will not be added to any group and thus not update.");
+                }
+            }
 
-            base.OnDelete();
+            return groupSys as ComponentSystemGroup;
         }
 
-        protected override void OnUpdate(float delta)
-        {
-            if (LocalWorld != null)
-                LocalWorld.OnUpdate(delta);
-        }
+
     }
 }

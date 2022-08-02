@@ -1,11 +1,12 @@
 {
-    "name": "Entity",
+    "name": "PureMVCFramework.Entity",
     "rootNamespace": "PureMVCFramework.Entity",
     "references": [
         "GUID:f754b4d3f6d7da54d8ebc13c383ea04f",
         "GUID:efc06480963469442a1197943668d6e4",
-        "GUID:d8b63aba1907145bea998dd612889d6b",
-        "GUID:2665a8d13d1b3f18800f46e256720795"
+        "GUID:2665a8d13d1b3f18800f46e256720795",
+        "GUID:e0cd26848372d4e5c891c569017e11f1",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

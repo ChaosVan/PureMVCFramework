@@ -51,6 +51,10 @@ namespace PureMVCFramework.Advantages
             base.OnInitialized();
 
             provider = new ReflectionProvider();
+
+            provider.LoadTypes("PureMVCFramework");
+            provider.LoadTypes("PureMVCFramework.Entity");
+            provider.LoadTypes("Assembly-CSharp");
         }
 
         protected override void OnDelete()
@@ -113,7 +117,7 @@ namespace PureMVCFramework.Advantages
             return SpawnInstance(type.FullName, args);
         }
 
-        public T SpawnInstance<T>(params object[] args) where T : new()
+        public T SpawnInstance<T>(params object[] args)
         {
             return (T)SpawnInstance(typeof(T).FullName, args);
         }

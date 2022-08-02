@@ -10,7 +10,7 @@ using UnityEngine.Jobs;
 
 namespace PureMVCFramework.Entity
 {
-    public class CopyToTransformSystem : HybridSystem<Transform, LocalToWorld, CopyToTransformComponent>
+    public class CopyToTransformSystem : HybridSystemBase<Transform, LocalToWorld, CopyToTransformComponent>
     {
 #if ENABLE_JOBS
         [BurstCompile]

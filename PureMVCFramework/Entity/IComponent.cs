@@ -2,11 +2,11 @@
 
 namespace PureMVCFramework.Entity
 {
-    public interface IComponent
+    public interface IComponentData
     {
     }
 
-    public class ComponentWrapper<T> : MonoBehaviour where T : IComponent, new()
+    public class ComponentWrapper<T> : MonoBehaviour where T : IComponentData, new()
     {
         private bool started;
         protected T self;

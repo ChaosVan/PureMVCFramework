@@ -4,28 +4,28 @@ using UnityEditor;
 
 namespace PureMVCFramework.Editor
 {
-    public static class GenLHybridSystem
+    public static class GenSystemBase
     {
-        [MenuItem("Tools/ECS/Generate/HybridSystem")]
-        public static void GenerateHybridSystem()
+        [MenuItem("Tools/ECS/Generate/SystemBase")]
+        public static void GenerateSystemBase()
         {
             CodeFormatter cf = new CodeFormatter();
 
-            cf.Append(new CodeFormatter.USING { namespaces = "UnityEngine;System.Collections.Generic" });
+            cf.Append(new CodeFormatter.USING { namespaces = "System.Collections.Generic" });
 
             var def = new CodeFormatter.MACRO_DEFINE { name = "ODIN_INSPECTOR" };
             def.AppendFormat(new CodeFormatter.USING { namespaces = "Sirenix.OdinInspector" });
             cf.AppendLine(def);
 
             var namespaceFmt = new CodeFormatter.NAMESPACE { name = "PureMVCFramework.Entity" };
-            for (int i = 0; i < 3; ++i)
+            for (int i = 0; i < 6; ++i)
             {
-                namespaceFmt.AppendFormat(GenerateHybridSystem(i + 2));
+                namespaceFmt.AppendFormat(GenerateSystemBase(i + 1));
             }
 
             cf.Append(namespaceFmt);
 
-            var steam = FileUtils.CreateFile("Assets/PureMVCFramework/PureMVCFramework/Entity/HybridSystem.cs");
+            var steam = FileUtils.CreateFile("Assets/PureMVCFramework/PureMVCFramework/Entity/SystemBase.cs");
 
             using (StreamWriter writer = new StreamWriter(steam))
             {
@@ -36,25 +36,20 @@ namespace PureMVCFramework.Editor
             AssetDatabase.Refresh();
         }
 
-        private static CodeFormatter.CLASS GenerateHybridSystem(int componentCount)
+        private static CodeFormatter.CLASS GenerateSystemBase(int componentCount)
         {
             var classFmt = new CodeFormatter.CLASS
             {
-                name = "HybridSystem",
+                name = "SystemBase",
                 scope = "public",
                 keyword = "abstract",
-                inherits = "SystemBase",
+                inherits = "ComponentSystemBase",
                 genericCount = componentCount,
             };
 
             List<string> list = new List<string>();
             for (int i = 1; i <= componentCount; ++i)
-            {
-                if (i == 1)
-                    list.Add("Component");
-                else
-                    list.Add("IComponent");
-            }
+                list.Add("IComponent");
             classFmt.genericInherits = string.Join(";", list);
 
             for (int i = 1; i <= componentCount; ++i)
@@ -76,7 +71,7 @@ namespace PureMVCFramework.Editor
                 });
             }
 
-            for (int i = 2; i <= componentCount; ++i)
+            for (int i = 1; i <= componentCount; ++i)
             {
                 classFmt.AppendFormat(new CodeFormatter.FIELD
                 {
@@ -91,7 +86,6 @@ namespace PureMVCFramework.Editor
             classFmt.AppendFormat(GenerateInjectEntity(componentCount));
             classFmt.AppendFormat(GenerateUpdate(componentCount));
             classFmt.AppendFormat(GenerateOnUpdate(componentCount));
-            classFmt.AppendFormat(GenerateOnEject(componentCount));
 
             return classFmt;
         }
@@ -100,15 +94,14 @@ namespace PureMVCFramework.Editor
         {
             var func = new CodeFormatter.FUNC
             {
-                name = "OnInitialized",
-                args = "params object[] args",
+                name = "OnCreate",
                 scope = "public",
                 keyword = "override",
                 returnVal = "void",
             };
 
             func.AppendFormat(new CodeFormatter.STATEMENT { content = "base.OnInitialized(args);" });
-            for (int i = 2; i <= componentCount; ++i)
+            for (int i = 1; i <= componentCount; ++i)
             {
                 func.AppendFormat(new CodeFormatter.STATEMENT { content = $"hash{i} = Entity.StringToHash(typeof(T{i}).FullName);" });
             }
@@ -120,7 +113,7 @@ namespace PureMVCFramework.Editor
         {
             var func = new CodeFormatter.FUNC
             {
-                name = "OnRecycle",
+                name = "OnDestroy",
                 scope = "public",
                 keyword = "override",
                 returnVal = "void",
@@ -146,42 +139,25 @@ namespace PureMVCFramework.Editor
                 args = "Entity entity",
             };
 
-            var if1 = new CodeFormatter.STATEMENT_IF { conditions = "entity.gameObject == null" };
-            var if2 = new CodeFormatter.STATEMENT_IF { conditions = "Entities.Contains(entity)" };
+            func.AppendFormat(new CodeFormatter.STATEMENT { content = $"IComponent[] c = new IComponent[{componentCount}];" });
+            List<string> list = new List<string>();
+            for (int i = 0; i < componentCount; ++i)
+                list.Add($"entity.components.TryGetValue(hash{i + 1}, out c[{i}])");
+            func.AppendFormat(new CodeFormatter.STATEMENT { content = $"bool tf = {string.Join($" && ", list)};" });
+
+            var if1 = new CodeFormatter.STATEMENT_IF { conditions = "Entities.Contains(entity)" };
+            var if2 = new CodeFormatter.STATEMENT_IF { conditions = "!tf" };
             if2.AppendFormat(new CodeFormatter.STATEMENT { content = "var i = Entities.IndexOf(entity);" });
             if2.AppendFormat(new CodeFormatter.STATEMENT { content = "Entities.RemoveAt(i);" });
             for (int i = 0; i < componentCount; ++i)
                 if2.AppendFormat(new CodeFormatter.STATEMENT { content = $"Components{i + 1}.RemoveAt(i);" });
             if1.AppendFormat(if2);
-            if1.AppendFormat(new CodeFormatter.STATEMENT { content = "return;" });
-
             func.AppendFormat(if1);
-
-            func.AppendFormat(new CodeFormatter.STATEMENT { content = "var co = entity.gameObject.GetComponent<T1>();" });
-            func.AppendFormat(new CodeFormatter.STATEMENT { content = $"IComponent[] c = new IComponent[{componentCount - 1}];" });
-
-            List<string> list = new List<string>();
-            for (int i = 0; i < componentCount - 1; ++i)
-                list.Add($"entity.components.TryGetValue(hash{i + 2}, out c[{i}])");
-
-            func.AppendFormat(new CodeFormatter.STATEMENT { content = $"bool tf = co && {string.Join(" && ", list)};" });
-            list.Clear();
-
-            var if3 = new CodeFormatter.STATEMENT_IF { conditions = "Entities.Contains(entity)" };
-            var if4 = new CodeFormatter.STATEMENT_IF { conditions = "!tf" };
-            if4.AppendFormat(new CodeFormatter.STATEMENT { content = "var i = Entities.IndexOf(entity);" });
-            if4.AppendFormat(new CodeFormatter.STATEMENT { content = "Entities.RemoveAt(i);" });
-            for (int i = 0; i < componentCount; ++i)
-                if4.AppendFormat(new CodeFormatter.STATEMENT { content = $"Components{i + 1}.RemoveAt(i);" });
-            if4.AppendFormat(new CodeFormatter.STATEMENT { content = "OnEject(entity, co);" });
-            if3.AppendFormat(if4);
-            func.AppendFormat(if3);
 
             var elif = new CodeFormatter.STATEMENT_ELSEIF { conditions = "tf" };
             elif.AppendFormat(new CodeFormatter.STATEMENT { content = "Entities.Add(entity);" });
-            elif.AppendFormat(new CodeFormatter.STATEMENT { content = "Components1.Add(co);" });
-            for (int i = 0; i < componentCount - 1; ++i)
-                elif.AppendFormat(new CodeFormatter.STATEMENT { content = $"Components{i + 2}.Add((T{i + 2})c[{i}]);" });
+            for (int i = 0; i < componentCount; ++i)
+                elif.AppendFormat(new CodeFormatter.STATEMENT { content = $"Components{i + 1}.Add((T{i + 1})c[{i}]);" });
             func.AppendFormat(elif);
 
             return func;
@@ -220,20 +196,6 @@ namespace PureMVCFramework.Editor
             func.args = "int index;Entity entity";
             for (int i = 1; i <= componentCount; ++i)
                 func.args += $";T{i} component{i}";
-
-            return func;
-        }
-
-        private static CodeFormatter.FUNC GenerateOnEject(int componentCount)
-        {
-            var func = new CodeFormatter.FUNC
-            {
-                name = "OnEject",
-                scope = "protected",
-                keyword = "virtual",
-                returnVal = "void",
-            };
-            func.args = "Entity entity;T1 component";
 
             return func;
         }

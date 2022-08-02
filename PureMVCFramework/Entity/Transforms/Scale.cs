@@ -2,8 +2,8 @@ using Unity.Mathematics;
 
 namespace PureMVCFramework.Entity
 {
-    public class Rotation : IComponent
+    public class Scale : IComponentData
     {
-        public quaternion Value;
+        public float3 Value;
     }
 }

@@ -2,7 +2,7 @@ using Unity.Mathematics;
 
 namespace PureMVCFramework.Entity
 {
-    public class LocalToWorld : IComponent
+    public class LocalToWorld : IComponentData
     {
         public float4x4 Value;
         public float3 Right => new float3(Value.c0.x, Value.c0.y, Value.c0.z);

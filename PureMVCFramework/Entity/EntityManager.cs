@@ -73,7 +73,7 @@ namespace PureMVCFramework.Entity
             return Entities;
         }
 
-        public SortedDictionary<long, IComponent> GetAllComponentDatas(Entity entity)
+        public SortedDictionary<long, IComponentData> GetAllComponentDatas(Entity entity)
         {
             return entity.components;
         }
@@ -103,7 +103,7 @@ namespace PureMVCFramework.Entity
             return QueryEntities(query, (entity) => entity.gameObject);
         }
 
-        internal void InternalAddComponentData(Entity entity, long typeHash, IComponent comp)
+        internal void InternalAddComponentData(Entity entity, long typeHash, IComponentData comp)
         {
             if (entity.components.ContainsKey(typeHash))
             {
@@ -113,7 +113,7 @@ namespace PureMVCFramework.Entity
             entity.components.Add(typeHash, comp);
         }
 
-        internal bool InternalRemoveComponentData(Entity entity, long typeHash, out IComponent comp)
+        internal bool InternalRemoveComponentData(Entity entity, long typeHash, out IComponentData comp)
         {
             if (entity.components.TryGetValue(typeHash, out comp) && entity.components.Remove(typeHash))
             {
@@ -123,7 +123,7 @@ namespace PureMVCFramework.Entity
             return false;
         }
 
-        public T AddComponentData<T>(Entity entity) where T : IComponent, new()
+        public T AddComponentData<T>(Entity entity) where T : IComponentData, new()
         {
             T comp = ReferencePool.Instance.SpawnInstance<T>();
             InternalAddComponentData(entity, Entity.StringToHash(typeof(T).FullName), comp);
@@ -132,30 +132,30 @@ namespace PureMVCFramework.Entity
             return comp;
         }
 
-        public IComponent AddComponentData(Entity entity, Type type)
+        public IComponentData AddComponentData(Entity entity, Type type)
         {
-            IComponent comp = (IComponent)ReferencePool.Instance.SpawnInstance(type);
+            IComponentData comp = (IComponentData)ReferencePool.Instance.SpawnInstance(type);
             InternalAddComponentData(entity, Entity.StringToHash(type.FullName), comp);
             WorldManager.Instance.ModifyEntity(entity);
 
             return comp;
         }
 
-        public IComponent AddComponentData(Entity entity, string typeName)
+        public IComponentData AddComponentData(Entity entity, string typeName)
         {
-            IComponent comp = (IComponent)ReferencePool.Instance.SpawnInstance(typeName);
+            IComponentData comp = (IComponentData)ReferencePool.Instance.SpawnInstance(typeName);
             InternalAddComponentData(entity, Entity.StringToHash(typeName), comp);
             WorldManager.Instance.ModifyEntity(entity);
 
             return comp;
         }
 
-        public void AddComponentDataByArchetype(Entity entity, EntityArchetype archetype, out IComponent[] components)
+        public void AddComponentDataByArchetype(Entity entity, EntityArchetype archetype, out IComponentData[] components)
         {
-            components = new IComponent[archetype.typeNames.Length];
+            components = new IComponentData[archetype.typeNames.Length];
             for (int i = 0; i < archetype.typeNames.Length; ++i)
             {
-                IComponent comp = (IComponent)ReferencePool.Instance.SpawnInstance(archetype.typeNames[i]);
+                IComponentData comp = (IComponentData)ReferencePool.Instance.SpawnInstance(archetype.typeNames[i]);
                 InternalAddComponentData(entity, archetype.hash[i], comp);
                 components[i] = comp;
             }
@@ -163,22 +163,22 @@ namespace PureMVCFramework.Entity
             WorldManager.Instance.ModifyEntity(entity);
         }
 
-        public T GetComponentData<T>(Entity entity) where T : IComponent
+        public T GetComponentData<T>(Entity entity) where T : IComponentData
         {
             return (T)GetComponentData(entity, Entity.StringToHash(typeof(T).FullName));
         }
 
-        public IComponent GetComponentData(Entity entity, Type type)
+        public IComponentData GetComponentData(Entity entity, Type type)
         {
             return GetComponentData(entity, Entity.StringToHash(type.FullName));
         }
 
-        public IComponent GetComponentData(Entity entity, string typeName)
+        public IComponentData GetComponentData(Entity entity, string typeName)
         {
             return GetComponentData(entity, Entity.StringToHash(typeName));
         }
 
-        public IComponent GetComponentData(Entity entity, long typeHash)
+        public IComponentData GetComponentData(Entity entity, long typeHash)
         {
             if (entity.components.TryGetValue(typeHash, out var c))
                 return c;
@@ -186,7 +186,7 @@ namespace PureMVCFramework.Entity
             return null;
         }
 
-        public void RemoveComponentData<T>(Entity entity) where T : IComponent
+        public void RemoveComponentData<T>(Entity entity) where T : IComponentData
         {
             RemoveComponentData(entity, Entity.StringToHash(typeof(T).FullName));
         }
@@ -373,7 +373,7 @@ namespace PureMVCFramework.Entity
 
     public static class EntityExtensions
     {
-        public static T GetOrAddComponentData<T>(this Entity entity) where T : IComponent, new()
+        public static T GetOrAddComponentData<T>(this Entity entity) where T : IComponentData, new()
         {
             var comp = EntityManager.Instance.GetComponentData<T>(entity);
             if (comp == null)
