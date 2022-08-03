@@ -6,6 +6,7 @@ using System.Reflection;
 using System;
 using System.Linq;
 using UnityEngine.Assertions;
+using UnityEngine.LowLevel;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -246,6 +247,54 @@ namespace PureMVCFramework.Entity
 
     public static class DefaultWorldInitialization
     {
+#pragma warning disable 0067 // unused variable
+        /// <summary>
+        /// Invoked after the default World is initialized.
+        /// </summary>
+        internal static event Action<World> DefaultWorldInitialized;
+
+        /// <summary>
+        /// Invoked after the Worlds are destroyed.
+        /// </summary>
+        internal static event Action DefaultWorldDestroyed;
+#pragma warning restore 0067 // unused variable
+
+#if !UNITY_DOTSRUNTIME
+        [DomainReload(true)]
+        static bool s_UnloadOrPlayModeChangeShutdownRegistered = false;
+
+        /// <summary>
+        /// Destroys Editor World when entering Play Mode without Domain Reload.
+        /// RuntimeInitializeOnLoadMethod is called before the new scene is loaded, before Awake and OnEnable of MonoBehaviour.
+        /// </summary>
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void CleanupWorldBeforeSceneLoad()
+        {
+            DomainUnloadOrPlayModeChangeShutdown();
+        }
+#endif
+
+        internal static void DomainUnloadOrPlayModeChangeShutdown()
+        {
+#if !UNITY_DOTSRUNTIME
+            if (!s_UnloadOrPlayModeChangeShutdownRegistered)
+                return;
+
+            var playerLoop = PlayerLoop.GetCurrentPlayerLoop();
+            foreach (var w in World.s_AllWorlds)
+                ScriptBehaviourUpdateOrder.RemoveWorldFromPlayerLoop(w, ref playerLoop);
+            PlayerLoop.SetPlayerLoop(playerLoop);
+
+            //RuntimeApplication.UnregisterFrameUpdateToCurrentPlayerLoop();
+
+            World.DisposeAllWorlds();
+
+            s_UnloadOrPlayModeChangeShutdownRegistered = false;
+
+            DefaultWorldDestroyed?.Invoke();
+#endif
+        }
+
         public static World Initialize(string defaultWorldName, bool editorWorld = false)
         {
 #if UNITY_EDITOR
@@ -271,7 +320,12 @@ namespace PureMVCFramework.Entity
             var systemList = GetAllSystems(WorldSystemFilterFlags.Default);
             AddSystemToRootLevelSystemGroupsInternal(world, systemList);
 
-            return null;
+#if !UNITY_DOTSRUNTIME
+            ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(world);
+#endif
+
+            DefaultWorldInitialized?.Invoke(world);
+            return world;
         }
 
         static ICustomBootstrap CreateBootStrap()

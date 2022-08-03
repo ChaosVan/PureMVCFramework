@@ -1,7 +1,9 @@
+using System;
 using System.ComponentModel;
 
 namespace PureMVCFramework.Entity
 {
+    [Serializable]
     public readonly struct TimeData
     {
         /// <summary>

@@ -13,12 +13,12 @@ namespace PureMVCFramework.Advantages
 {
     public interface IInitializeable
     {
-        void OnInitialized(params object[] args);
+        void OnCreate(params object[] args);
     }
 
     public interface IRecycleable
     {
-        void OnRecycle();
+        void OnDestroy();
     }
 
     public interface IReflectionProvider
@@ -107,7 +107,7 @@ namespace PureMVCFramework.Advantages
             }
 
             if (result is IInitializeable o)
-                o.OnInitialized(args);
+                o.OnCreate(args);
 
             return result;
         }
@@ -129,7 +129,7 @@ namespace PureMVCFramework.Advantages
             if (obj != null)
             {
                 if (obj is IRecycleable o)
-                    o.OnRecycle();
+                    o.OnDestroy();
 
                 if (!m_Cache.ContainsKey(typeName))
                     m_Cache[typeName] = new ConcurrentQueue<object>();

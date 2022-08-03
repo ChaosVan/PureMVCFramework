@@ -11,11 +11,11 @@ namespace PureMVCFramework.Editor
         {
             CodeFormatter cf = new CodeFormatter();
 
-            cf.Append(new CodeFormatter.USING { namespaces = "System.Collections.Generic" });
-
             var def = new CodeFormatter.MACRO_DEFINE { name = "ODIN_INSPECTOR" };
             def.AppendFormat(new CodeFormatter.USING { namespaces = "Sirenix.OdinInspector" });
             cf.AppendLine(def);
+
+            cf.Append(new CodeFormatter.USING { namespaces = "System.Collections.Generic" });
 
             var namespaceFmt = new CodeFormatter.NAMESPACE { name = "PureMVCFramework.Entity" };
             for (int i = 0; i < 6; ++i)
@@ -49,7 +49,7 @@ namespace PureMVCFramework.Editor
 
             List<string> list = new List<string>();
             for (int i = 1; i <= componentCount; ++i)
-                list.Add("IComponent");
+                list.Add("IComponentData");
             classFmt.genericInherits = string.Join(";", list);
 
             for (int i = 1; i <= componentCount; ++i)
@@ -57,7 +57,7 @@ namespace PureMVCFramework.Editor
                 var def = new CodeFormatter.MACRO_DEFINE { name = "ODIN_INSPECTOR" };
                 def.AppendFormat(new CodeFormatter.ATTRIBUTE
                 {
-                    tags = "ShowInInspector;ShowIf(\"showOdinInfo\");ListDrawerSettings(IsReadOnly = true)",
+                    tags = "ShowIf(\"showOdinInfo\");ShowInInspector;ListDrawerSettings(IsReadOnly = true)",
                 });
                 classFmt.AppendFormat(def);
 
@@ -81,8 +81,8 @@ namespace PureMVCFramework.Editor
                 });
             }
 
-            classFmt.AppendFormat(GenerateOnInitialized(componentCount));
-            classFmt.AppendFormat(GenerateOnRecycle(componentCount));
+            classFmt.AppendFormat(GenerateOnCreate(componentCount));
+            classFmt.AppendFormat(GenerateOnDestroy(componentCount));
             classFmt.AppendFormat(GenerateInjectEntity(componentCount));
             classFmt.AppendFormat(GenerateUpdate(componentCount));
             classFmt.AppendFormat(GenerateOnUpdate(componentCount));
@@ -90,17 +90,17 @@ namespace PureMVCFramework.Editor
             return classFmt;
         }
 
-        private static CodeFormatter.FUNC GenerateOnInitialized(int componentCount)
+        private static CodeFormatter.FUNC GenerateOnCreate(int componentCount)
         {
             var func = new CodeFormatter.FUNC
             {
                 name = "OnCreate",
-                scope = "public",
+                scope = "protected",
                 keyword = "override",
                 returnVal = "void",
             };
 
-            func.AppendFormat(new CodeFormatter.STATEMENT { content = "base.OnInitialized(args);" });
+            func.AppendFormat(new CodeFormatter.STATEMENT { content = "base.OnCreate();" });
             for (int i = 1; i <= componentCount; ++i)
             {
                 func.AppendFormat(new CodeFormatter.STATEMENT { content = $"hash{i} = Entity.StringToHash(typeof(T{i}).FullName);" });
@@ -109,12 +109,12 @@ namespace PureMVCFramework.Editor
             return func;
         }
 
-        private static CodeFormatter.FUNC GenerateOnRecycle(int componentCount)
+        private static CodeFormatter.FUNC GenerateOnDestroy(int componentCount)
         {
             var func = new CodeFormatter.FUNC
             {
                 name = "OnDestroy",
-                scope = "public",
+                scope = "protected",
                 keyword = "override",
                 returnVal = "void",
             };
@@ -123,7 +123,7 @@ namespace PureMVCFramework.Editor
             {
                 func.AppendFormat(new CodeFormatter.STATEMENT { content = $"Components{i}.Clear();" });
             }
-            func.AppendFormat(new CodeFormatter.STATEMENT { content = "base.OnRecycle();" });
+            func.AppendFormat(new CodeFormatter.STATEMENT { content = "base.OnDestroy();" });
 
             return func;
         }
@@ -139,7 +139,7 @@ namespace PureMVCFramework.Editor
                 args = "Entity entity",
             };
 
-            func.AppendFormat(new CodeFormatter.STATEMENT { content = $"IComponent[] c = new IComponent[{componentCount}];" });
+            func.AppendFormat(new CodeFormatter.STATEMENT { content = $"IComponentData[] c = new IComponentData[{componentCount}];" });
             List<string> list = new List<string>();
             for (int i = 0; i < componentCount; ++i)
                 list.Add($"entity.components.TryGetValue(hash{i + 1}, out c[{i}])");

@@ -120,20 +120,32 @@ namespace PureMVCFramework.Entity
 
         public WorldFlags Flags => m_Unmanaged.Flags;
 
-        public int Version => m_Unmanaged.Version;
-
-        public ulong SequenceNumber => m_Unmanaged.SequenceNumber;
-
-        public TimeData Time => m_Unmanaged.CurrentTime;
-
 #if ODIN_INSPECTOR
         [ShowInInspector]
 #endif
         public string Name { get; }
 
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        public int Version => m_Unmanaged.Version;
+
         public bool IsCreated => m_Systems != null;
 
-        public float TimePerFrame;
+        public ulong SequenceNumber => m_Unmanaged.SequenceNumber;
+
+#if ODIN_INSPECTOR
+        [ShowInInspector]
+#endif
+        public TimeData Time {get => m_Unmanaged.CurrentTime; set => m_Unmanaged.CurrentTime = value; }
+
+        public float MaximumDeltaTime
+        {
+            get => m_Unmanaged.MaximumDeltaTime;
+            set => m_Unmanaged.MaximumDeltaTime = value;
+        }
 
         public World(string name, WorldFlags flags = WorldFlags.Game)
         {
@@ -151,6 +163,53 @@ namespace PureMVCFramework.Entity
             WorldCreated?.Invoke(this);
         }
 
+        public void Dispose()
+        {
+            if (!IsCreated)
+                throw new ArgumentException("The World has already been Disposed.");
+            // Debug.LogError("Dispose World "+ Name + " - " + GetHashCode());
+
+            WorldDestroyed?.Invoke(this);
+
+            //m_Unmanaged.EntityManager.PreDisposeCheck();
+
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            m_Unmanaged.DisallowGetSystem();
+#endif
+            // We don't want any jobs making changes to this world as we are disposing it.
+            // This could be particularly bad if we are destroying blobs referenced by Components as a job attempts to access them.
+            //EntityManager.ExclusiveEntityTransactionDependency.Complete();
+            //EntityManager.EndExclusiveEntityTransaction();
+            //EntityManager.CompleteAllJobs();
+
+            DestroyAllSystemsAndLogException();
+            //m_Unmanaged.DestroyAllUnmanagedSystemsAndLogException();
+
+            s_AllWorlds.Remove(this);
+
+            m_SystemLookup.Clear();
+            m_SystemLookup = null;
+
+            if (DefaultGameObjectInjectionWorld == this)
+                DefaultGameObjectInjectionWorld = null;
+
+            m_Unmanaged.Dispose();
+        }
+
+        public static void DisposeAllWorlds()
+        {
+            while (s_AllWorlds.Count != 0)
+            {
+                s_AllWorlds[0].Dispose();
+            }
+        }
+
+        public void SetTime(TimeData newTimeData)
+        {
+            //EntityManager.SetComponentData(TimeSingleton, new WorldTime() { Time = newTimeData });
+            Time = newTimeData;
+        }
+
         ComponentSystemBase CreateSystemInternal(Type type)
         {
             var system = AllocateSystemInternal(type);
@@ -161,6 +220,12 @@ namespace PureMVCFramework.Entity
 
         ComponentSystemBase AllocateSystemInternal(Type type)
         {
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            if (!m_Unmanaged.AllowGetSystem)
+                throw new ArgumentException(
+                    "During destruction of a system you are not allowed to create more systems.");
+#endif
+
             return TypeManager.ConstructSystem(type);
         }
 
@@ -234,6 +299,12 @@ namespace PureMVCFramework.Entity
             {
                 throw new ArgumentException("The World has already been Disposed.");
             }
+#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            if (!m_Unmanaged.AllowGetSystem)
+            {
+                throw new ArgumentException("You are not allowed to get or create more systems during destruction of a system.");
+            }
+#endif
         }
 
         // Public system management
@@ -275,6 +346,53 @@ namespace PureMVCFramework.Entity
             SystemDestroyed?.Invoke(this, system);
             RemoveSystemInternal(system);
             system.DestroyInstance();
+        }
+
+        public void DestroyAllSystemsAndLogException()
+        {
+            if (m_Systems == null)
+                return;
+
+            // Systems are destroyed in reverse order from construction, in three phases:
+            // 1. Stop all systems from running (if they weren't already stopped), to ensure OnStopRunning() is called.
+            // 2. Call each system's OnDestroy() method
+            // 3. Actually destroy each system
+            for (int i = m_Systems.Count - 1; i >= 0; --i)
+            {
+                try
+                {
+                    SystemDestroyed?.Invoke(this, m_Systems[i]);
+                    m_Systems[i].OnBeforeDestroyInternal();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+            for (int i = m_Systems.Count - 1; i >= 0; --i)
+            {
+                try
+                {
+                    m_Systems[i].OnDestroy_Internal();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+            for (int i = m_Systems.Count - 1; i >= 0; --i)
+            {
+                try
+                {
+                    m_Systems[i].OnAfterDestroyInternal();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+            m_Systems.Clear();
+            m_Systems = null;
         }
 
         internal ComponentSystemBase[] GetOrCreateSystemsAndLogException(IEnumerable<Type> types, int typesCount)
@@ -329,11 +447,6 @@ namespace PureMVCFramework.Entity
             }
 
             return toInitSystems;
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
         }
     }
 

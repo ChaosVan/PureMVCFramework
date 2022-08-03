@@ -16,7 +16,7 @@ namespace PureMVCFramework.Entity
         void PostUpdate();
     }
 
-    public abstract class ComponentSystemBase : Notifier, ISystem, IRecycleable, IInitializeable
+    public abstract class ComponentSystemBase : Notifier, ISystem
     {
 #if ODIN_INSPECTOR && UNITY_EDITOR
         [SerializeField] protected bool showOdinInfo;
@@ -27,6 +27,11 @@ namespace PureMVCFramework.Entity
 
         internal SystemState CheckedState()
         {
+            var state = m_StatePtr;
+            if (!state.Enabled)
+            {
+                throw new InvalidOperationException("system state is not initialized or has already been destroyed");
+            }
             return m_StatePtr;
         }
 
@@ -35,7 +40,7 @@ namespace PureMVCFramework.Entity
 #endif
         public bool Enabled { get => CheckedState().Enabled; }
 
-        public World World => (World)m_StatePtr.m_World.Target;
+        public World World => World.DefaultGameObjectInjectionWorld;
 
         public TimeData Time => World.Time;
 
@@ -162,16 +167,6 @@ namespace PureMVCFramework.Entity
         public virtual void PreUpdate() { }
 
         public virtual void PostUpdate() { }
-
-        public virtual void OnRecycle()
-        {
-            
-        }
-
-        public virtual void OnInitialized(params object[] args)
-        {
-            
-        }
     }
 
     // Updating before or after a system constrains the scheduler ordering of these systems within a ComponentSystemGroup.

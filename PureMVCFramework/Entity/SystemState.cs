@@ -10,6 +10,8 @@ namespace PureMVCFramework.Entity
     [Serializable]
     public struct SystemState
     {
+        internal WorldUnmanaged m_WorldUnmanaged;
+
         private const uint kEnabledMask = 0x1;
         private const uint kAlwaysUpdateSystemMask = 0x2;
         private const uint kPreviouslyEnabledMask = 0x4;
@@ -63,7 +65,7 @@ namespace PureMVCFramework.Entity
             Enabled = true;
             m_SystemID = ++ms_SystemIDAllocator;
             m_World = GCHandle.Alloc(world);
-            //m_WorldUnmanaged = world.Unmanaged;
+            m_WorldUnmanaged = world.Unmanaged;
             //m_EntityManager = world.EntityManager;
             //m_EntityComponentStore = m_EntityManager.GetCheckedEntityDataAccess()->EntityComponentStore;
             //m_DependencyManager = m_EntityManager.GetCheckedEntityDataAccess()->DependencyManager;
@@ -75,6 +77,47 @@ namespace PureMVCFramework.Entity
             //m_JobDependencyForWritingSystems = new UnsafeList<int>(0, Allocator.Persistent);
 
             AlwaysUpdateSystem = false;
+        }
+
+        internal bool ShouldRunSystem()
+        {
+            if (AlwaysUpdateSystem)
+                return true;
+
+            return true;
+
+            //ref var required = ref RequiredEntityQueries;
+
+            //if (required.Length > 0)
+            //{
+            //    for (int i = 0; i != required.Length; i++)
+            //    {
+            //        EntityQuery query = required[i];
+            //        if (query.IsEmptyIgnoreFilter)
+            //            return false;
+            //    }
+
+            //    return true;
+            //}
+            //else
+            //{
+            //    // Systems without queriesDesc should always run.
+            //    ref var eqs = ref EntityQueries;
+            //    var length = eqs.Length;
+            //    if (length == 0)
+            //        return true;
+
+            //    // If all the queriesDesc are empty, skip it.
+            //    // (There¡¯s no way to know what the key value is without other markup)
+            //    for (int i = 0; i != length; i++)
+            //    {
+            //        EntityQuery query = eqs[i];
+            //        if (!query.IsEmptyIgnoreFilter)
+            //            return true;
+            //    }
+
+            //    return false;
+            //}
         }
     }
 }

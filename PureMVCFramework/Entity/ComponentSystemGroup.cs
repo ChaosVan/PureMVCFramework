@@ -481,44 +481,4 @@ namespace PureMVCFramework.Entity
             }
         }
     }
-
-    public abstract class ComponentSystem : ComponentSystemBase
-    {
-
-        public bool ShouldRunSystem() => true;
-
-        public sealed override void InjectEntity(Entity entity)
-        {
-
-        }
-
-        public sealed override void PreUpdate()
-        {
-            base.PreUpdate();
-        }
-
-        public sealed override void PostUpdate()
-        {
-            base.PostUpdate();
-        }
-
-        public sealed override void Update()
-        {
-            if (Enabled && ShouldRunSystem())
-            {
-                PreUpdate();
-
-                try
-                {
-                    OnUpdate();
-                }
-                finally
-                {
-                    PostUpdate();
-                }
-            }
-        }
-
-        protected virtual void OnUpdate() { }
-    }
 }
