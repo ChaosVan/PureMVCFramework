@@ -427,6 +427,31 @@ namespace PureMVCFramework.Entity
             RecurseUpdate();
         }
 
+        protected override void OnStopRunning()
+        {
+            
+        }
+
+        internal override void OnStopRunningInternal()
+        {
+            OnStopRunning();
+
+            foreach (var sys in m_systemsToUpdate)
+            {
+                if (sys == null)
+                    continue;
+
+                if (!sys.m_State.Enabled)
+                    continue;
+
+                if (!sys.m_State.PreviouslyEnabled)
+                    continue;
+
+                sys.m_State.PreviouslyEnabled = false;
+                sys.OnStopRunningInternal();
+            }
+        }
+
         public IRateManager RateManager { get; set; }
 
         protected override void OnUpdate()
@@ -451,6 +476,9 @@ namespace PureMVCFramework.Entity
             if (m_systemSortDirty)
                 SortSystems();
 
+            var world = World.Unmanaged;
+            var previouslyExecutingSystem = world.ExecutingSystem;
+
             // Cache the update list length before updating; any new systems added mid-loop will change the length and
             // should not be processed until the subsequent group update, to give SortSystems() a chance to run.
             int updateListLength = m_MasterUpdateList.Length;
@@ -463,6 +491,7 @@ namespace PureMVCFramework.Entity
                     if (!index.IsManaged)
                     {
                         // TODO
+                        throw new();
                     }
                     else
                     {
@@ -475,9 +504,13 @@ namespace PureMVCFramework.Entity
                 {
                     Debug.LogException(e);
                 }
+                finally
+                {
+                    world.ExecutingSystem = previouslyExecutingSystem;
+                }
 
-                //if (World.QuitUpdate)
-                //    break;
+                if (World.QuitUpdate)
+                    break;
             }
         }
     }

@@ -11,17 +11,20 @@ namespace PureMVCFramework.Entity
     public struct SystemState
     {
         internal WorldUnmanaged m_WorldUnmanaged;
+        internal SystemHandleUntyped m_Handle;
 
         private const uint kEnabledMask = 0x1;
         private const uint kAlwaysUpdateSystemMask = 0x2;
         private const uint kPreviouslyEnabledMask = 0x4;
-        private const uint kNeedToGetDependencyFromSafetyManagerMask = 0x8;
+        //private const uint kNeedToGetDependencyFromSafetyManagerMask = 0x8;
 
         private uint m_Flags;
 
         private void SetFlag(uint mask, bool value) => m_Flags = value ? m_Flags | mask : m_Flags & ~mask;
 
         internal int m_SystemID;
+        internal long m_typeHash;
+
 
         /// <summary>
         /// Return the unmanaged type index of the system (>= 0 for ISystem-type systems), or -1 for managed systems.
@@ -36,12 +39,13 @@ namespace PureMVCFramework.Entity
 
         private bool AlwaysUpdateSystem { get => (m_Flags & kAlwaysUpdateSystemMask) != 0; set => SetFlag(kAlwaysUpdateSystemMask, value); }
         internal bool PreviouslyEnabled { get => (m_Flags & kPreviouslyEnabledMask) != 0; set => SetFlag(kPreviouslyEnabledMask, value); }
-        private bool NeedToGetDependencyFromSafetyManager { get => (m_Flags & kNeedToGetDependencyFromSafetyManagerMask) != 0; set => SetFlag(kNeedToGetDependencyFromSafetyManagerMask, value); }
+        //private bool NeedToGetDependencyFromSafetyManager { get => (m_Flags & kNeedToGetDependencyFromSafetyManagerMask) != 0; set => SetFlag(kNeedToGetDependencyFromSafetyManagerMask, value); }
 
         // Managed systems call this function to initialize their backing system state
         [NotBurstCompatible] // Because world
-        internal void InitManaged(World world, Type managedType, ComponentSystemBase system)
+        internal void InitManaged(World world, Type managedType, ComponentSystemBase system, uint worldSeqNo)
         {
+
             UnmanagedMetaIndex = -1;
             m_ManagedSystem = GCHandle.Alloc(system, GCHandleType.Normal);
 
@@ -57,6 +61,9 @@ namespace PureMVCFramework.Entity
                     AlwaysUpdateSystem = true;
 #endif
             }
+
+            //m_typeHash = BurstRuntime.GetHashCode64(managedType);
+            m_Handle = new SystemHandleUntyped(m_SystemID, worldSeqNo);
         }
 
         static int ms_SystemIDAllocator = 0;
@@ -65,7 +72,10 @@ namespace PureMVCFramework.Entity
             Enabled = true;
             m_SystemID = ++ms_SystemIDAllocator;
             m_World = GCHandle.Alloc(world);
-            m_WorldUnmanaged = world.Unmanaged;
+
+
+
+            //m_WorldUnmanaged = world.Unmanaged;
             //m_EntityManager = world.EntityManager;
             //m_EntityComponentStore = m_EntityManager.GetCheckedEntityDataAccess()->EntityComponentStore;
             //m_DependencyManager = m_EntityManager.GetCheckedEntityDataAccess()->DependencyManager;
@@ -84,7 +94,7 @@ namespace PureMVCFramework.Entity
             if (AlwaysUpdateSystem)
                 return true;
 
-            return true;
+            return Application.isPlaying;
 
             //ref var required = ref RequiredEntityQueries;
 

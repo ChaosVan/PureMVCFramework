@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using Unity.Burst;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Debug = UnityEngine.Debug;
@@ -313,6 +314,28 @@ namespace PureMVCFramework.Entity
 #endif
         }
 
+        public static int GetTypeIndex<T>()
+        {
+            var index = SharedTypeIndex<T>.Ref.Data;
+
+            if (index <= 0)
+            {
+                throw new();
+            }
+
+            return index;
+        }
+
+        public static int GetTypeIndex(Type type)
+        {
+            var index = FindTypeIndex(type);
+
+            if (index == -1)
+                throw new();
+
+            return index;
+        }
+
         private static void AddTypeInfoToTables(Type type, TypeInfo typeInfo, string typeName)
         {
             if (!s_StableTypeHashToTypeIndex.TryAdd(typeInfo.StableTypeHash, typeInfo.TypeIndex))
@@ -331,6 +354,7 @@ namespace PureMVCFramework.Entity
 
             if (type != null)
             {
+                SharedTypeIndex.Get(type) = typeInfo.TypeIndex;
                 s_ManagedTypeToIndex.Add(type, typeInfo.TypeIndex);
             }
         }
@@ -346,6 +370,26 @@ namespace PureMVCFramework.Entity
                 if (referenced.Name.Contains(kEntitiesAssemblyName))
                     return true;
             return false;
+        }
+
+        private sealed class SharedTypeIndex
+        {
+            public static ref int Get(Type componentType)
+            {
+                return ref SharedStatic<int>.GetOrCreate(typeof(TypeManagerKeyContext), componentType).Data;
+            }
+        }
+
+        private sealed class TypeManagerKeyContext
+        {
+            private TypeManagerKeyContext()
+            {
+            }
+        }
+
+        internal sealed class SharedTypeIndex<TComponent>
+        {
+            public static readonly SharedStatic<int> Ref = SharedStatic<int>.GetOrCreate<TypeManagerKeyContext, TComponent>();
         }
     }
 }

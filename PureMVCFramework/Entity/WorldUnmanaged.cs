@@ -1,84 +1,85 @@
+using System;
+using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 
 namespace PureMVCFramework.Entity
 {
+    /// <summary>
+    /// An identifier representing an unmanaged system struct instance in a particular world.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SystemHandleUntyped : IEquatable<SystemHandleUntyped>, IComparable<SystemHandleUntyped>
+    {
+        //internal ushort m_Handle;
+        //internal ushort m_Version;
+        internal int m_SystemId;
+        internal uint m_WorldSeqNo;
+
+        private ulong ToUlong()
+        {
+            return ((ulong)m_WorldSeqNo << 32) | (uint)m_SystemId;
+        }
+
+        internal SystemHandleUntyped(int systemId, uint worldSeqNo)
+        {
+            m_SystemId = systemId;
+            m_WorldSeqNo = worldSeqNo;
+        }
+
+        public int CompareTo(SystemHandleUntyped other)
+        {
+            ulong a = ToUlong();
+            ulong b = other.ToUlong();
+            if (a < b)
+                return -1;
+            else if (a > b)
+                return 1;
+            return 0;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is SystemHandleUntyped foo)
+                return Equals(foo);
+            return false;
+        }
+
+        public bool Equals(SystemHandleUntyped other)
+        {
+            return ToUlong() == other.ToUlong();
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -116238775;
+            hashCode = hashCode * -1521134295 + m_SystemId.GetHashCode();
+            hashCode = hashCode * -1521134295 + m_WorldSeqNo.GetHashCode();
+            return hashCode;
+        }
+
+        public static bool operator ==(SystemHandleUntyped a, SystemHandleUntyped b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(SystemHandleUntyped a, SystemHandleUntyped b)
+        {
+            return !a.Equals(b);
+        }
+    }
+
     public struct WorldUnmanaged
     {
 //#if ENABLE_UNITY_COLLECTIONS_CHECKS
 //        private AtomicSafetyHandle m_Safety;
 //#endif
 
-        private WorldUnmanagedImpl m_Impl;
-
-        internal static readonly SharedStatic<ulong> ms_NextSequenceNumber = SharedStatic<ulong>.GetOrCreate<World>();
-
-        public TimeData CurrentTime { get => m_Impl.CurrentTime; set => m_Impl.CurrentTime = value; }
-        public WorldFlags Flags => m_Impl.Flags;
-        public float MaximumDeltaTime
-        {
-            get => m_Impl.MaximumDeltaTime;
-            set => m_Impl.MaximumDeltaTime = value;
-        }
-        public ulong SequenceNumber => m_Impl.SequenceNumber;
-        public int Version => m_Impl.Version;
-        internal void BumpVersion() => m_Impl.BumpVersion();
-
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
-        [BurstCompatible(RequiredUnityDefine = "ENABLE_UNITY_COLLECTIONS_CHECKS", CompileTarget = BurstCompatibleAttribute.BurstCompatibleCompileTarget.Editor)]
-        internal bool AllowGetSystem => m_Impl.AllowGetSystem;
-
-        [BurstCompatible(RequiredUnityDefine = "ENABLE_UNITY_COLLECTIONS_CHECKS", CompileTarget = BurstCompatibleAttribute.BurstCompatibleCompileTarget.Editor)]
-        internal void DisallowGetSystem() => m_Impl.DisallowGetSystem();
-#endif
-
-        [NotBurstCompatible]
-        internal void Create(World world, WorldFlags flags, AllocatorManager.AllocatorHandle backingAllocatorHandle)
-        {
-            m_Impl = new WorldUnmanagedImpl(++ms_NextSequenceNumber.Data, flags);
-
-//#if ENABLE_UNITY_COLLECTIONS_CHECKS
-//            m_Safety = AtomicSafetyHandle.Create();
-//#endif
-
-            // The EntityManager itself is only a handle to a data access and already performs safety checks, so it is
-            // OK to keep it on this handle itself instead of in the actual implementation.
-            //m_EntityManager = default;
-            //m_EntityManager.Initialize(world);
-        }
-
-        [NotBurstCompatible]
-        internal void Dispose()
-        {
-//#if ENABLE_UNITY_COLLECTIONS_CHECKS
-//            AtomicSafetyHandle.CheckDeallocateAndThrow(m_Safety);
-//            AtomicSafetyHandle.Release(m_Safety);
-//#endif
-            //m_EntityManager.DestroyInstance();
-            //m_EntityManager = default;
-            m_Impl = default;
-        }
-
-//        private WorldUnmanagedImpl GetImpl()
-//        {
-//#if ENABLE_UNITY_COLLECTIONS_CHECKS
-//            AtomicSafetyHandle.CheckExistsAndThrow(m_Safety);
-//#endif
-//            return m_Impl;
-//        }
-
-        internal SystemState AllocateSystemStateForManagedSystem(World self, ComponentSystemBase system) =>
-            m_Impl.AllocateSystemStateForManagedSystem(self, system);
-
-
-    }
-
-    internal partial struct WorldUnmanagedImpl
-    {
         internal readonly ulong SequenceNumber;
         public WorldFlags Flags;
         public TimeData CurrentTime;
+        public SystemHandleUntyped ExecutingSystem;
 
         /// <summary>
         /// The maximum DeltaTime that will be applied to a World in a single call to Update().
@@ -97,26 +98,41 @@ namespace PureMVCFramework.Entity
         internal void DisallowGetSystem() => AllowGetSystem = false;
 #endif
 
-        internal WorldUnmanagedImpl(ulong sequenceNumber, WorldFlags flags)
+        internal static readonly SharedStatic<ulong> ms_NextSequenceNumber = SharedStatic<ulong>.GetOrCreate<World>();
+
+        internal WorldUnmanaged(World world, WorldFlags flags, AllocatorManager.AllocatorHandle backingAllocatorHandle)
         {
             CurrentTime = default;
 #if ENABLE_UNITY_COLLECTIONS_CHECKS
             AllowGetSystem = true;
 #endif
-            SequenceNumber = sequenceNumber;
+
+            SequenceNumber = ++ms_NextSequenceNumber.Data;
             MaximumDeltaTime = 1.0f / 3.0f;
             Flags = flags;
 
             Version = 0;
+            ExecutingSystem = default;
+
+//#if ENABLE_UNITY_COLLECTIONS_CHECKS
+//            m_Safety = AtomicSafetyHandle.Create();
+//#endif
+
+            // The EntityManager itself is only a handle to a data access and already performs safety checks, so it is
+            // OK to keep it on this handle itself instead of in the actual implementation.
+            //m_EntityManager = default;
+            //m_EntityManager.Initialize(world);
         }
 
         internal SystemState AllocateSystemStateForManagedSystem(World self, ComponentSystemBase system)
         {
             var type = system.GetType();
             SystemState state = new SystemState();
-            state.InitManaged(self, type, system);
+            state.InitManaged(self, type, system, (uint)SequenceNumber);
             ++Version;
             return state;
         }
     }
+
+    
 }

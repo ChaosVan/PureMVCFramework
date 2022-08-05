@@ -2,6 +2,12 @@
 
 namespace PureMVCFramework.Entity
 {
+    [System.Obsolete("IComponent has been renamed. Use IComponentData instead (RemovedAfter 2022-08-30) (UnityUpgradable) -> IComponentData")]
+    public interface IComponent : IComponentData
+    {
+
+    }
+
     public interface IComponentData
     {
     }

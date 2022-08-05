@@ -31,8 +31,6 @@ namespace PureMVCFramework.Entity
                 elapsedTime: currentElapsedTime + deltaTime,
                 deltaTime: deltaTime
             ));
-
-            Debug.Log(Time.ElapsedTime);
         }
     }
 }

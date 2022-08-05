@@ -195,7 +195,7 @@ namespace PureMVCFramework.Entity
 
             public void TriggerUpdate()
             {
-                if (m_System.m_StatePtr.Enabled)
+                if (m_System.m_State.Enabled)
                 {
                     m_System.Update();
                 }

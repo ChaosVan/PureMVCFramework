@@ -1,10 +1,5 @@
-﻿using PureMVC.Patterns.Observer;
-using PureMVCFramework.Advantages;
-#if ODIN_INSPECTOR
-using Sirenix.OdinInspector;
-#endif
+﻿using PureMVC.Interfaces;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PureMVCFramework.Entity
@@ -12,35 +7,35 @@ namespace PureMVCFramework.Entity
     public interface ISystem
     {
         void Update();
-        void PreUpdate();
-        void PostUpdate();
     }
 
-    public abstract class ComponentSystemBase : Notifier, ISystem
+    /// <summary>
+    /// A system provides behavior in an ECS architecture.
+    /// </summary>
+    /// <remarks>
+    /// System implementations should inherit <see cref="SystemBase"/>, which is a subclass of ComponentSystemBase.
+    /// </remarks>
+    public abstract class ComponentSystemBase : INotifier
     {
-#if ODIN_INSPECTOR && UNITY_EDITOR
+#if UNITY_EDITOR
         [SerializeField] protected bool showOdinInfo;
 #endif
-        protected readonly List<Entity> Entities = new List<Entity>();
 
-        internal SystemState m_StatePtr;
+        internal SystemState m_State;
 
-        internal SystemState CheckedState()
+        internal ref SystemState CheckedState()
         {
-            var state = m_StatePtr;
+            var state = m_State;
             if (!state.Enabled)
             {
                 throw new InvalidOperationException("system state is not initialized or has already been destroyed");
             }
-            return m_StatePtr;
+            return ref m_State;
         }
 
-#if ODIN_INSPECTOR
-        [ShowIf("showOdinInfo"), ShowInInspector]
-#endif
-        public bool Enabled { get => CheckedState().Enabled; }
+        public bool Enabled { get => m_State.Enabled; }
 
-        public World World => World.DefaultGameObjectInjectionWorld;
+        public World World => (World) CheckedState().m_World.Target;
 
         public TimeData Time => World.Time;
 
@@ -48,7 +43,7 @@ namespace PureMVCFramework.Entity
 
         internal void CreateInstance(World world, SystemState statePtr)
         {
-            m_StatePtr = statePtr;
+            m_State = statePtr;
             OnBeforeCreateInternal(world);
             try
             {
@@ -123,6 +118,7 @@ namespace PureMVCFramework.Entity
         /// </summary>
         /// <remarks>The exact behavior is determined by this system's specific subclass.</remarks>
         /// <seealso cref="ComponentSystemGroup"/>
+        /// <seealso cref="EntityCommandBufferSystem"/>
         public abstract void Update();
 
         internal ComponentSystemBase GetSystemFromSystemID(World world, int systemID)
@@ -140,33 +136,32 @@ namespace PureMVCFramework.Entity
             return null;
         }
 
+        public bool ShouldRunSystem() => CheckedState().ShouldRunSystem();
+
         internal virtual void OnBeforeCreateInternal(World world)
         {
         }
 
         internal void OnAfterDestroyInternal()
         {
-            m_StatePtr = default;
+            m_State = default;
         }
 
         internal virtual void OnBeforeDestroyInternal()
         {
-            var state = CheckedState();
-
-            if (state.PreviouslyEnabled)
+            CheckedState();
+            if (m_State.PreviouslyEnabled)
             {
-                state.PreviouslyEnabled = false;
+                m_State.PreviouslyEnabled = false;
                 OnStopRunning();
             }
         }
 
-
-        public abstract void InjectEntity(Entity entity);
-
-
-        public virtual void PreUpdate() { }
-
-        public virtual void PostUpdate() { }
+        private IFacade Facade => PureMVC.Patterns.Facade.Facade.GetInstance(() => new PureMVC.Patterns.Facade.Facade());
+        public void SendNotification(string notificationName, object body = null, string type = null)
+        {
+            Facade.SendNotification(notificationName, body, type);
+        }
     }
 
     // Updating before or after a system constrains the scheduler ordering of these systems within a ComponentSystemGroup.

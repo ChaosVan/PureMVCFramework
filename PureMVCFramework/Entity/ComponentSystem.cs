@@ -6,35 +6,20 @@ namespace PureMVCFramework.Entity
 {
     public abstract class ComponentSystem : ComponentSystemBase
     {
-
-        public bool ShouldRunSystem() => CheckedState().ShouldRunSystem();
-
-        public sealed override void InjectEntity(Entity entity)
-        {
-
-        }
-
-        public sealed override void PreUpdate()
-        {
-            base.PreUpdate();
-        }
-
-        public sealed override void PostUpdate()
-        {
-            base.PostUpdate();
-        }
-
         public sealed override void Update()
         {
             CheckedState();
             if (Enabled && ShouldRunSystem())
             {
-                if (!m_StatePtr.PreviouslyEnabled)
+                if (!m_State.PreviouslyEnabled)
                 {
-                    m_StatePtr.PreviouslyEnabled = true;
+                    m_State.PreviouslyEnabled = true;
                     OnStartRunning();
                 }
-                PreUpdate();
+
+                var world = World.Unmanaged;
+                var oldExecutingSystem = world.ExecutingSystem;
+                world.ExecutingSystem = m_State.m_Handle;
 
                 try
                 {
@@ -42,16 +27,32 @@ namespace PureMVCFramework.Entity
                 }
                 finally
                 {
-                    PostUpdate();
+                    world.ExecutingSystem = oldExecutingSystem;
                 }
             }
-            else if (m_StatePtr.PreviouslyEnabled)
+            else if (m_State.PreviouslyEnabled)
             {
-                m_StatePtr.PreviouslyEnabled = false;
+                m_State.PreviouslyEnabled = false;
                 OnStopRunningInternal();
             }
         }
 
-        protected virtual void OnUpdate() { }
+        internal sealed override void OnBeforeCreateInternal(World world)
+        {
+            base.OnBeforeCreateInternal(world);
+        }
+
+        internal sealed override void OnBeforeDestroyInternal()
+        {
+            base.OnBeforeDestroyInternal();
+        }
+
+        /// <summary>Implement OnUpdate to perform the major work of this system.</summary>
+        /// <remarks>
+        /// The system invokes OnUpdate once per frame on the main thread when any of this system's
+        /// EntityQueries match existing entities, or if the system has the <see cref="AlwaysUpdateSystemAttribute"/>.
+        /// </remarks>
+        /// <seealso cref="ComponentSystemBase.ShouldRunSystem"/>
+        protected abstract void OnUpdate();
     }
 }

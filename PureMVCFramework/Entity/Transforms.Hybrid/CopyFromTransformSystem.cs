@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace PureMVCFramework.Entity
 {
+    [ExecuteAlways]
     [UpdateInGroup(typeof(TransformSystemGroup))]
     [UpdateBefore(typeof(TRSToLocalToWorldSystem))]
     public class CopyFromTransformSystem : HybridSystemBase<Transform, LocalToWorld, CopyFromTransformComponent>

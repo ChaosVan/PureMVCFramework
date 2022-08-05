@@ -157,7 +157,7 @@ namespace PureMVCFramework.Entity
 
         void Init(WorldFlags flags, AllocatorManager.AllocatorHandle backingAllocatorHandle)
         {
-            m_Unmanaged.Create(this, flags, backingAllocatorHandle);
+            m_Unmanaged = new WorldUnmanaged(this, flags, backingAllocatorHandle);
 
             s_AllWorlds.Add(this);
             WorldCreated?.Invoke(this);
@@ -193,7 +193,7 @@ namespace PureMVCFramework.Entity
             if (DefaultGameObjectInjectionWorld == this)
                 DefaultGameObjectInjectionWorld = null;
 
-            m_Unmanaged.Dispose();
+            m_Unmanaged = default;
         }
 
         public static void DisposeAllWorlds()
@@ -268,6 +268,8 @@ namespace PureMVCFramework.Entity
                 throw;
             }
 
+            m_Unmanaged.BumpVersion();
+
             SystemCreated?.Invoke(this, system);
         }
 
@@ -275,6 +277,8 @@ namespace PureMVCFramework.Entity
         {
             if (!m_Systems.Remove(system))
                 throw new ArgumentException($"System does not exist in the world");
+
+            m_Unmanaged.BumpVersion();
 
             var type = system.GetType();
             while (type != typeof(ComponentSystemBase))
@@ -448,6 +452,13 @@ namespace PureMVCFramework.Entity
 
             return toInitSystems;
         }
+
+        public ComponentSystemBase[] GetOrCreateSystemsAndLogException(Type[] types)
+        {
+            return GetOrCreateSystemsAndLogException(types, types.Length);
+        }
+
+        public bool QuitUpdate { get; set; }
     }
 
     /// <summary>

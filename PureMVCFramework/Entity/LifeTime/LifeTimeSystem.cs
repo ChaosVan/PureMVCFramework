@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace PureMVCFramework.Entity
 {
     public class LifeTime : IComponentData
@@ -10,24 +8,39 @@ namespace PureMVCFramework.Entity
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
     public class LifeTimeSystem : SystemBase<LifeTime>
     {
-        public readonly List<Entity> willDestroy = new List<Entity>();
+        BeginSimulationEntityCommandBufferSystem m_EntityCommandBufferSystem;
+        EntityCommandBuffer ecb;
+
+        protected override void OnCreate()
+        {
+            base.OnCreate();
+
+            m_EntityCommandBufferSystem = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+        }
+
+        protected override void PreUpdate()
+        {
+            ecb = m_EntityCommandBufferSystem.CreateCommandBuffer();
+        }
+
         protected override void OnUpdate(int index, Entity entity, LifeTime component)
         {
             component.Value -= Time.DeltaTime;
 
             if (component.Value <= 0)
             {
-                willDestroy.Add(entity);
+                ecb.DestroyEntity(entity);
             }
         }
 
-        public override void PostUpdate()
+        protected override void PostUpdate()
         {
-            for (int i = 0; i < willDestroy.Count; i++)
-            {
-                EntityManager.Instance.DestroyEntity(willDestroy[i]);
-            }
-            willDestroy.Clear();
+            ecb.Dispose();
         }
     }
 }
