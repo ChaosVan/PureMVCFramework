@@ -48,13 +48,9 @@ namespace PureMVCFramework.Entity
         ///
         public static ComponentSystemBase ConstructSystem(Type systemType)
         {
-#if !NET_DOTS
             if (!typeof(ComponentSystemBase).IsAssignableFrom(systemType))
                 throw new ArgumentException($"'{systemType.FullName}' cannot be constructed as it does not inherit from ComponentSystemBase");
             return (ComponentSystemBase)ReferencePool.SpawnInstance(systemType);
-#else
-            throw new();
-#endif
         }
 
         public static T ConstructSystem<T>() where T : ComponentSystemBase
@@ -101,20 +97,12 @@ namespace PureMVCFramework.Entity
 
         public static string GetSystemName(Type t)
         {
-#if !NET_DOTS
             return t.FullName;
-#else
-            throw new();
-#endif
         }
 
         internal static long GetSystemTypeHash(Type t)
         {
-#if !NET_DOTS 
             return BurstRuntime.GetHashCode64(t);
-#else
-            throw new();
-#endif
         }
 
         internal static int GetSystemTypeIndexNoThrow(Type t)
@@ -130,17 +118,12 @@ namespace PureMVCFramework.Entity
 
         public static bool IsSystemAGroup(Type t)
         {
-#if !NET_DOTS
             return t.IsSubclassOf(typeof(ComponentSystemGroup));
-#else
-            throw new();
-#endif
         }
         public static Attribute[] GetSystemAttributes(Type systemType, Type attributeType)
         {
             Assert.IsTrue(s_Initialized, "The TypeManager must be initialized before the TypeManager can be used.");
 
-#if !NET_DOTS
             Attribute[] attributes;
             var kDisabledCreationAttribute = typeof(DisableAutoCreationAttribute);
             if (attributeType == kDisabledCreationAttribute)
@@ -176,9 +159,6 @@ namespace PureMVCFramework.Entity
             }
 
             return attributes;
-#else
-            throw new();
-#endif
         }
 
         internal static IEnumerable<Type> GetTypesDerivedFrom(Type type)

@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-#if !NET_DOTS
 using System.Linq;
 using UnityEngine;
-#endif
 
 namespace PureMVCFramework.Entity
 {
@@ -14,20 +12,10 @@ namespace PureMVCFramework.Entity
             public CircularSystemDependencyException(IEnumerable<Type> chain)
             {
                 Chain = chain;
-#if NET_DOTS
-                var lines = new List<string>();
-                Console.WriteLine($"The following systems form a circular dependency cycle (check their [UpdateBefore]/[UpdateAfter] attributes):");
-                foreach (var s in Chain)
-                {
-                    string name = TypeManager.GetSystemName(s);
-                    Console.WriteLine(name);
-                }
-#endif
             }
 
             public IEnumerable<Type> Chain { get; }
 
-#if !NET_DOTS
             public override string Message
             {
                 get
@@ -44,7 +32,6 @@ namespace PureMVCFramework.Entity
                     return lines.Aggregate((str1, str2) => str1 + "\n" + str2);
                 }
             }
-#endif
         }
 
         private class Heap
@@ -65,12 +52,11 @@ namespace PureMVCFramework.Entity
 
             public void Insert(TypeHeapElement e)
             {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 if (_size >= _capacity)
                 {
                     throw new InvalidOperationException($"Attempted to Insert() to a full heap.");
                 }
-#endif
+
                 var i = BaseIndex + _size++;
                 while (i > BaseIndex)
                 {
@@ -90,23 +76,21 @@ namespace PureMVCFramework.Entity
 
             public TypeHeapElement Peek()
             {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 if (Empty)
                 {
                     throw new InvalidOperationException($"Attempted to Peek() an empty heap.");
                 }
-#endif
+
                 return _elements[BaseIndex];
             }
 
             public TypeHeapElement Extract()
             {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
                 if (Empty)
                 {
                     throw new InvalidOperationException($"Attempted to Extract() from an empty heap.");
                 }
-#endif
+
                 var top = _elements[BaseIndex];
                 _elements[BaseIndex] = _elements[_size--];
                 if (!Empty)
@@ -241,7 +225,6 @@ namespace PureMVCFramework.Entity
                 elements[sysIndex].nAfter = -1; // "Remove()"
             }
 
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
             for (int i = 0; i < elements.Length; ++i)
             {
                 if (elements[i].nAfter != -1)
@@ -265,7 +248,6 @@ namespace PureMVCFramework.Entity
                     }
                 }
             }
-#endif
 
             // Replace input array with sorted array
             for (int i = 0; i < elements.Length; ++i)
@@ -276,12 +258,8 @@ namespace PureMVCFramework.Entity
         {
             if (!TypeManager.IsSystemType(stype))
             {
-#if !NET_DOTS
                 // in the editor or with full .NET, return the full name to make it easy to find types
                 return stype.FullName;
-#else
-                return "(unknown type / type not inheriting from SystemBase/ComponentSystem)";
-#endif
             }
 
             return TypeManager.GetSystemName(stype);

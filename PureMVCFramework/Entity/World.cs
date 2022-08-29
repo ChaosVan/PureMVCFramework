@@ -167,15 +167,11 @@ namespace PureMVCFramework.Entity
         {
             if (!IsCreated)
                 throw new ArgumentException("The World has already been Disposed.");
-            // Debug.LogError("Dispose World "+ Name + " - " + GetHashCode());
 
             WorldDestroyed?.Invoke(this);
 
-            //m_Unmanaged.EntityManager.PreDisposeCheck();
-
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
             m_Unmanaged.DisallowGetSystem();
-#endif
+
             // We don't want any jobs making changes to this world as we are disposing it.
             // This could be particularly bad if we are destroying blobs referenced by Components as a job attempts to access them.
             //EntityManager.ExclusiveEntityTransactionDependency.Complete();
@@ -206,7 +202,6 @@ namespace PureMVCFramework.Entity
 
         public void SetTime(TimeData newTimeData)
         {
-            //EntityManager.SetComponentData(TimeSingleton, new WorldTime() { Time = newTimeData });
             Time = newTimeData;
         }
 
@@ -220,11 +215,8 @@ namespace PureMVCFramework.Entity
 
         ComponentSystemBase AllocateSystemInternal(Type type)
         {
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
             if (!m_Unmanaged.AllowGetSystem)
-                throw new ArgumentException(
-                    "During destruction of a system you are not allowed to create more systems.");
-#endif
+                throw new ArgumentException("During destruction of a system you are not allowed to create more systems.");
 
             return TypeManager.ConstructSystem(type);
         }
@@ -303,12 +295,11 @@ namespace PureMVCFramework.Entity
             {
                 throw new ArgumentException("The World has already been Disposed.");
             }
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
+
             if (!m_Unmanaged.AllowGetSystem)
             {
                 throw new ArgumentException("You are not allowed to get or create more systems during destruction of a system.");
             }
-#endif
         }
 
         // Public system management

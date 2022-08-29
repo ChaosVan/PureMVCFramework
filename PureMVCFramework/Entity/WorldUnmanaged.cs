@@ -2,7 +2,6 @@ using System;
 using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 
 namespace PureMVCFramework.Entity
 {
@@ -72,10 +71,6 @@ namespace PureMVCFramework.Entity
 
     public class WorldUnmanaged
     {
-//#if ENABLE_UNITY_COLLECTIONS_CHECKS
-//        private AtomicSafetyHandle m_Safety;
-//#endif
-
         internal readonly ulong SequenceNumber;
         public WorldFlags Flags;
         public TimeData CurrentTime;
@@ -93,19 +88,15 @@ namespace PureMVCFramework.Entity
         public int Version { get; private set; }
         internal void BumpVersion() => Version++;
 
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
         public bool AllowGetSystem { get; private set; }
         internal void DisallowGetSystem() => AllowGetSystem = false;
-#endif
 
         internal static readonly SharedStatic<ulong> ms_NextSequenceNumber = SharedStatic<ulong>.GetOrCreate<World>();
 
         internal WorldUnmanaged(World world, WorldFlags flags, AllocatorManager.AllocatorHandle backingAllocatorHandle)
         {
             CurrentTime = default;
-#if ENABLE_UNITY_COLLECTIONS_CHECKS
             AllowGetSystem = true;
-#endif
 
             SequenceNumber = ++ms_NextSequenceNumber.Data;
             MaximumDeltaTime = 1.0f / 3.0f;
@@ -113,10 +104,6 @@ namespace PureMVCFramework.Entity
 
             Version = 0;
             ExecutingSystem = default;
-
-            //#if ENABLE_UNITY_COLLECTIONS_CHECKS
-            //            m_Safety = AtomicSafetyHandle.Create();
-            //#endif
 
             // The EntityManager itself is only a handle to a data access and already performs safety checks, so it is
             // OK to keep it on this handle itself instead of in the actual implementation.
@@ -134,5 +121,5 @@ namespace PureMVCFramework.Entity
         }
     }
 
-    
+
 }

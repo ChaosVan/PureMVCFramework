@@ -53,13 +53,7 @@ namespace PureMVCFramework.Entity
 
             if (managedType != null)
             {
-#if !NET_DOTS
                 AlwaysUpdateSystem = Attribute.IsDefined(managedType, typeof(AlwaysUpdateSystemAttribute), true);
-#else
-                var attrs = TypeManager.GetSystemAttributes(managedType, typeof(AlwaysUpdateSystemAttribute));
-                if (attrs.Length > 0)
-                    AlwaysUpdateSystem = true;
-#endif
             }
 
             //m_typeHash = BurstRuntime.GetHashCode64(managedType);

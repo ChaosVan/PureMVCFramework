@@ -1,11 +1,9 @@
-#if !NET_DOTS
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityEngine.Assertions;
-#endif
 
 namespace PureMVCFramework.Entity
 {
@@ -48,7 +46,7 @@ namespace PureMVCFramework.Entity
 
             return hash;
         }
-#if !NET_DOTS
+
         // Todo: Remove this. DOTS Runtime currently doesn't conform to these system types so don't inspect their fields
         private static readonly Type[] WorkaroundTypes = new Type[] { typeof(System.Guid) };
 
@@ -193,6 +191,5 @@ namespace PureMVCFramework.Entity
 
             return CombineFNV1A64(versionHash, typeHash);
         }
-#endif
     }
 }

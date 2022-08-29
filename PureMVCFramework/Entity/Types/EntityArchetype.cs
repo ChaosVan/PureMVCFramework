@@ -196,19 +196,4 @@ namespace PureMVCFramework.Entity
             return false;
         }
     }
-
-    public struct EntityArchetypes
-    {
-
-        public EntityArchetypes(params Type[] types)
-        {
-            typeNames = new string[types.Length];
-            for (int i = 0; i < types.Length; ++i)
-            {
-                typeNames[i] = types[i].FullName;
-            }
-        }
-
-        public string[] typeNames;
-    }
 }
