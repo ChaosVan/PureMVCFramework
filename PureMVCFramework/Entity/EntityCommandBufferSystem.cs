@@ -2,6 +2,7 @@ using PureMVCFramework.Advantages;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace PureMVCFramework.Entity
@@ -13,7 +14,7 @@ namespace PureMVCFramework.Entity
 
         public EntityCommandBuffer CreateCommandBuffer()
         {
-            var cmds = ReferencePool.Instance.SpawnInstance<EntityCommandBuffer>();
+            var cmds = ReferencePool.SpawnInstance<EntityCommandBuffer>();
             var world = World.Unmanaged;
             cmds.SystemID = world.ExecutingSystem.m_SystemId;
             cmds.OriginSystemHandle = world.ExecutingSystem;
@@ -61,21 +62,22 @@ namespace PureMVCFramework.Entity
 
         internal void FlushPendingBuffers(bool playBack)
         {
-            foreach (var buffer in m_PendingBuffers)
+            if (m_PendingBuffers.Count > 0)
             {
-                if (playBack)
+                var entities = EntityManager.BeginStructual(0);
+                foreach (var buffer in m_PendingBuffers)
                 {
-                    try
+                    if (playBack)
                     {
                         var system = GetSystemFromSystemID(World, buffer.SystemID);
-                        buffer.Playback();
+                        buffer.Playback(ref entities);
                     }
-                    catch (Exception e)
-                    {
-                        Debug.LogException(e);
-                    }
+
+                    ReferencePool.RecycleInstance(buffer);
                 }
+                EntityManager.EndStructual(entities);
             }
+
         }
     }
 }

@@ -1,31 +1,42 @@
+using PureMVCFramework.Advantages;
+using System.Diagnostics;
+using UnityEngine.Scripting;
+
 namespace PureMVCFramework.Entity
 {
-    public class LifeTime : IComponentData
+    public class LifeTime : IComponentData, IInitializable
     {
         public float Value;
+
+        public void OnInitialized(params object[] args)
+        {
+            if (args.Length > 0)
+                Value = (float)args[0];
+        }
     }
 
-    [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
+    [Preserve]
+    [UpdateInGroup(typeof(LateSimulationSystemGroup), OrderLast = true)]
     public class LifeTimeSystem : SystemBase<LifeTime>
     {
-        BeginSimulationEntityCommandBufferSystem m_EntityCommandBufferSystem;
-        EntityCommandBuffer ecb;
+        EndSimulationEntityCommandBufferSystem m_EntityCommandBufferSystem;
+        EntityCommandBuffer commandBuffer;
 
         protected override void OnCreate()
         {
             base.OnCreate();
 
-            m_EntityCommandBufferSystem = World.GetOrCreateSystem<BeginSimulationEntityCommandBufferSystem>();
-        }
-
-        protected override void OnDestroy()
-        {
-            base.OnDestroy();
+            m_EntityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
 
         protected override void PreUpdate()
         {
-            ecb = m_EntityCommandBufferSystem.CreateCommandBuffer();
+            commandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer();
+        }
+
+        protected override void PostUpdate()
+        {
+            commandBuffer = null;
         }
 
         protected override void OnUpdate(int index, Entity entity, LifeTime component)
@@ -34,13 +45,8 @@ namespace PureMVCFramework.Entity
 
             if (component.Value <= 0)
             {
-                ecb.DestroyEntity(entity);
+                commandBuffer.DestroyEntity(entity);
             }
-        }
-
-        protected override void PostUpdate()
-        {
-            ecb.Dispose();
         }
     }
 }

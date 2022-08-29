@@ -1,5 +1,6 @@
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 #if ENABLE_JOBS
 using Unity.Burst;
@@ -10,9 +11,10 @@ using UnityEngine.Jobs;
 
 namespace PureMVCFramework.Entity
 {
+    [Preserve]
     [UpdateInGroup(typeof(TransformSystemGroup))]
     [UpdateAfter(typeof(TRSToLocalToWorldSystem))]
-    public class CopyToTransformSystem : HybridSystemBase<Transform, LocalToWorld, CopyToTransformComponent>
+    public class CopyTransformToGameObjectSystem : HybridSystemBase<Transform, LocalToWorld, CopyTransformToGameObject>
     {
 #if ENABLE_JOBS
         [BurstCompile]
@@ -63,7 +65,7 @@ namespace PureMVCFramework.Entity
         }
 #endif
 
-        protected override void OnUpdate(int index, Entity entity, Transform component1, LocalToWorld component2, CopyToTransformComponent component3)
+        protected override void OnUpdate(int index, Entity entity, Transform component1, LocalToWorld component2, CopyTransformToGameObject component3)
         {
 #if ENABLE_JOBS
             Job.positions[index] = component2.Position;

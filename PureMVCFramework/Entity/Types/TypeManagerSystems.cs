@@ -51,7 +51,7 @@ namespace PureMVCFramework.Entity
 #if !NET_DOTS
             if (!typeof(ComponentSystemBase).IsAssignableFrom(systemType))
                 throw new ArgumentException($"'{systemType.FullName}' cannot be constructed as it does not inherit from ComponentSystemBase");
-            return (ComponentSystemBase)ReferencePool.Instance.SpawnInstance(systemType);
+            return (ComponentSystemBase)ReferencePool.SpawnInstance(systemType);
 #else
             throw new();
 #endif

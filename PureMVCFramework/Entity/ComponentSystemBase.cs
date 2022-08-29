@@ -136,7 +136,7 @@ namespace PureMVCFramework.Entity
             return null;
         }
 
-        public bool ShouldRunSystem() => CheckedState().ShouldRunSystem();
+        public virtual bool ShouldRunSystem() => CheckedState().ShouldRunSystem();
 
         internal virtual void OnBeforeCreateInternal(World world)
         {

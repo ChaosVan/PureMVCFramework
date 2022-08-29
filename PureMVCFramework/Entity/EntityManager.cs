@@ -3,7 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Assertions;
+using System.Runtime.InteropServices;
+using PureMVCFramework.Extensions;
+using static UnityEngine.EventSystems.EventTrigger;
+using static PureMVCFramework.Entity.ComponentType;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -11,363 +14,268 @@ using Sirenix.OdinInspector;
 
 namespace PureMVCFramework.Entity
 {
-    public class EntityManager : SingletonBehaviour<EntityManager>
+    public struct EntityData
+    {
+        public ulong index;
+
+        public static implicit operator EntityData(ulong index)
+        {
+            return new EntityData { index = index};
+        }
+
+        public static implicit operator EntityData(uint index)
+        {
+            return new EntityData { index = index };
+        }
+    }
+
+    public partial class EntityManager
     {
         [DomainReload(1000000UL)]
-        private static ulong GUID_COUNT = 1000000UL;
+        internal static ulong GUID_COUNT = 1000000UL;
 
-        public static Entity Create()
-        {
-            var entity = ReferencePool.Instance.SpawnInstance<Entity>();
+        internal static event Action<Entity> OnEntityCreated;
+        internal static event Action<ulong> OnEntityDestroyed;
 
-            entity.GUID = GUID_COUNT++;
+        internal static readonly SortedDictionary<ulong, Entity> Entities = new SortedDictionary<ulong, Entity>();
 
-            entity.IsAlive = true;
-            Instance.Entities.Add(entity.GUID, entity);
+        internal static GCHandle m_World;
 
-            return entity;
-        }
+        public static World World => (World) m_World.Target;
 
-        public static Entity Create(GameObject gameObject)
-        {
-            Assert.IsNotNull(gameObject);
-
-            if (Instance.GameObjectEntities.TryGetValue(gameObject, out var entity))
-            {
-                return entity;
-            }
-
-            entity = Create();
-            Instance.OnGameObjectLoaded(entity, gameObject);
-
-            return entity;
-        }
-
-
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
-#endif
-        internal readonly Dictionary<GameObject, Entity> GameObjectEntities = new Dictionary<GameObject, Entity>();
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
-#endif
-        internal readonly SortedDictionary<ulong, Entity> Entities = new SortedDictionary<ulong, Entity>();
-
-        public bool IsDataMode { get; private set; }
- 
-        protected override void OnDelete()
+        internal static void Initialize(World world)
         {
             GameObjectEntities.Clear();
             Entities.Clear();
-            base.OnDelete();
-        }
 
-        public void EnableDataMode(bool tf)
-        {
-            IsDataMode = tf;
+            m_World = GCHandle.Alloc(world);
         }
 
 
-        public SortedDictionary<ulong, Entity> GetAllEntities()
+        public static SortedDictionary<ulong, Entity> GetAllEntities()
         {
             return Entities;
         }
 
-        public SortedDictionary<long, IComponentData> GetAllComponentDatas(Entity entity)
-        {
-            return entity.components;
-        }
-
-        public bool TryGetEntity(GameObject obj, out Entity entity)
-        {
-            return GameObjectEntities.TryGetValue(obj, out entity);
-        }
-
-        public bool TryGetEntity(ulong key, out Entity entity)
+        public static bool TryGetEntity(ulong key, out Entity entity)
         {
             return Entities.TryGetValue(key, out entity);
         }
 
-        public List<Entity> QueryEntities(Func<Entity, bool> query)
+        internal static Entity[] BeginStructual(int count, params Entity[] entities)
         {
-            return Entities.Values.Where(query).ToList();
+            var array = new Entity[count];
+            if (entities != null && entities.Length >= count)
+                Array.Copy(entities, array, count);
+
+            return array;
         }
 
-        public List<T> QueryEntities<T>(Func<Entity, bool> query, Func<Entity, T> select)
+        internal static void EndStructual(IEnumerable<Entity> entities)
         {
-            return Entities.Values.Where(query).Select(select).ToList();
-        }
-
-        public List<GameObject> QueryEntityGameObjects(Func<Entity, bool> query)
-        {
-            return QueryEntities(query, (entity) => entity.gameObject);
-        }
-
-        internal void InternalAddComponentData(Entity entity, long typeHash, IComponentData comp)
-        {
-            if (entity.components.ContainsKey(typeHash))
+            var e = World.Systems.GetEnumerator();
+            while (e.MoveNext())
             {
-                throw new Exception("添加了重复类型的组件，或者组件的hash重复：" + comp.GetType().FullName);
+                if (e.Current is SystemBase system)
+                {
+                    foreach (var entity in entities)
+                    {
+                        system.InjectEntity(entity);
+                    }
+                }
+            }
+        }
+
+        public static Entity Create()
+        {
+            EntityArchetype archetype = default;
+            return Create(archetype);
+        }
+
+        public static Entity Create(params ComponentType[] componentTypes)
+        {
+            EntityArchetype archetype = new EntityArchetype(componentTypes);
+            return Create(archetype);
+        }
+
+        public static Entity Create(EntityArchetype archetype)
+        {
+            Create(archetype, 1, out var entities);
+            return entities[0];
+        }
+
+        public static void Create(EntityArchetype archetype, int count, out Entity[] entities)
+        {
+            entities = BeginStructual(count);
+            for (int i = 0; i < count; i++)
+            {
+                var entity = InternalCreate(GUID_COUNT++, archetype);
+                entities[i] = entity;
+            }
+            EndStructual(entities);
+        }
+
+        public static void DestroyAll()
+        {
+            var list = BeginStructual(Entities.Count, Entities.Values.ToArray());
+            foreach (var entity in list)
+            {
+                if (InternalDestroyEntity(entity.GUID, out _, out var gameObject))
+                {
+                    if (gameObject != null)
+                        gameObject.Recycle();
+                }
+            }
+            EndStructual(list);
+        }
+
+        public static void DestroyEntity(Entity entity)
+        {
+            DestroyEntity(entity, out var gameObject);
+            if (gameObject != null)
+                gameObject.Recycle();
+        }
+
+        public static void DestroyEntity(Entity entity, out GameObject gameObject)
+        {
+            var entities = BeginStructual(1, entity);
+            if (InternalDestroyEntity(entity.GUID, out _, out gameObject))
+                EndStructual(entities);
+
+        }
+
+        public static void AddComponentData(Entity entity, params ComponentType[] components)
+        {
+            if (entity.IsAlive)
+            {
+                var entities = BeginStructual(1, entity);
+                for (int i = 0; i < components.Length; i++)
+                {
+                    InternalAddComponentData(entity.GUID, (IComponentData)ReferencePool.SpawnInstance(TypeManager.GetType(components[i].TypeIndex)), out _);
+                }
+                EndStructual(entities);
+            }
+        }
+
+        public static T AddComponentData<T>(Entity entity) where T : IComponentData
+        {
+            return (T)AddComponentData(entity, ReferencePool.SpawnInstance<T>());
+        }
+
+        public static IComponentData AddComponentData(Entity entity, IComponentData componentData)
+        {
+            if (entity.IsAlive)
+            {
+                var entities = BeginStructual(1, entity);
+                if (InternalAddComponentData(entity.GUID, componentData, out _))
+                {
+                    EndStructual(entities);
+                    return componentData;
+                }
             }
 
-            entity.components.Add(typeHash, comp);
+            return null;
         }
 
-        internal bool InternalRemoveComponentData(Entity entity, long typeHash, out IComponentData comp)
+        public static void RemoveComponentData<T>(Entity entity) where T : IComponentData
         {
-            if (entity.components.TryGetValue(typeHash, out comp) && entity.components.Remove(typeHash))
+            RemoveComponentData(entity, typeof(T));
+        }
+
+        public static void RemoveComponentData(Entity entity, ComponentType componentType)
+        {
+            var entities = BeginStructual(1, entity);
+            if (InternalRemoveComponentData(entity.GUID, componentType, out _, out var componentData))
             {
+                ReferencePool.RecycleInstance(componentData);
+                EndStructual(entities);
+            }
+        }
+
+        public static T GetComponentData<T>(Entity entity) where T : IComponentData
+        {
+            return (T)GetComponentData(entity, typeof(T));
+        }
+
+        public static IComponentData GetComponentData(Entity entity, ComponentType componentType)
+        {
+            if (entity.IsAlive && entity.InternalGetComponentData(componentType, out var componentData))
+                return componentData;
+
+            return null;
+        }
+
+        public static bool GetComponentData(Entity entity, EntityQuery query, out IComponentData[] componentData)
+        {
+            if (entity.IsAlive && entity.InternalGetComponentData(query, out componentData))
+                return true;
+
+            componentData = null;
+            return false;
+        }
+
+        internal static Entity InternalCreate(EntityData data, EntityArchetype archetype)
+        {
+            var entity = ReferencePool.SpawnInstance<Entity>();
+            entity.GUID = data.index;
+            entity.IsAlive = true;
+            Entities.Add(entity.GUID, entity);
+
+            OnEntityCreated?.Invoke(entity);
+
+            if (archetype.TypesCount > 0)
+            {
+                foreach (var t in archetype.componentTypes)
+                {
+                    entity.InternalAddComponentData(t, (IComponentData)ReferencePool.SpawnInstance(TypeManager.GetType(t.TypeIndex)));
+                }
+            }
+
+            return entity;
+        }
+
+        internal static bool InternalDestroyEntity(EntityData data, out Entity entity, out GameObject gameObject)
+        {
+            gameObject = null;
+            if (Entities.TryGetValue(data.index, out entity))
+            {
+                OnEntityDestroyed?.Invoke(data.index);
+
+                if (entity.gameObject != null)
+                {
+                    GameObjectEntities.Remove(entity.gameObject);
+                    gameObject = entity.gameObject;
+
+                    OnEntityGameObjectDeleted?.Invoke(gameObject);
+                }
+                Entities.Remove(entity.GUID);
+                ReferencePool.RecycleInstance(entity);
+
                 return true;
             }
 
             return false;
         }
 
-        public T AddComponentData<T>(Entity entity) where T : IComponentData, new()
+        internal static bool InternalAddComponentData(EntityData data, IComponentData componentData, out Entity entity)
         {
-            T comp = ReferencePool.Instance.SpawnInstance<T>();
-            InternalAddComponentData(entity, Entity.StringToHash(typeof(T).FullName), comp);
-            WorldManager.Instance.ModifyEntity(entity);
-
-            return comp;
-        }
-
-        public IComponentData AddComponentData(Entity entity, Type type)
-        {
-            IComponentData comp = (IComponentData)ReferencePool.Instance.SpawnInstance(type);
-            InternalAddComponentData(entity, Entity.StringToHash(type.FullName), comp);
-            WorldManager.Instance.ModifyEntity(entity);
-
-            return comp;
-        }
-
-        public IComponentData AddComponentData(Entity entity, string typeName)
-        {
-            IComponentData comp = (IComponentData)ReferencePool.Instance.SpawnInstance(typeName);
-            InternalAddComponentData(entity, Entity.StringToHash(typeName), comp);
-            WorldManager.Instance.ModifyEntity(entity);
-
-            return comp;
-        }
-
-        public void AddComponentDataByArchetype(Entity entity, EntityArchetype archetype, out IComponentData[] components)
-        {
-            components = new IComponentData[archetype.typeNames.Length];
-            for (int i = 0; i < archetype.typeNames.Length; ++i)
+            if (Entities.TryGetValue(data.index, out entity))
             {
-                IComponentData comp = (IComponentData)ReferencePool.Instance.SpawnInstance(archetype.typeNames[i]);
-                InternalAddComponentData(entity, archetype.hash[i], comp);
-                components[i] = comp;
+                return entity.InternalAddComponentData(componentData.GetType(), componentData);
             }
 
-            WorldManager.Instance.ModifyEntity(entity);
+            return false;
         }
 
-        public T GetComponentData<T>(Entity entity) where T : IComponentData
+        internal static bool InternalRemoveComponentData(EntityData data, ComponentType type, out Entity entity, out IComponentData componentData)
         {
-            return (T)GetComponentData(entity, Entity.StringToHash(typeof(T).FullName));
-        }
-
-        public IComponentData GetComponentData(Entity entity, Type type)
-        {
-            return GetComponentData(entity, Entity.StringToHash(type.FullName));
-        }
-
-        public IComponentData GetComponentData(Entity entity, string typeName)
-        {
-            return GetComponentData(entity, Entity.StringToHash(typeName));
-        }
-
-        public IComponentData GetComponentData(Entity entity, long typeHash)
-        {
-            if (entity.components.TryGetValue(typeHash, out var c))
-                return c;
-
-            return null;
-        }
-
-        public void RemoveComponentData<T>(Entity entity) where T : IComponentData
-        {
-            RemoveComponentData(entity, Entity.StringToHash(typeof(T).FullName));
-        }
-
-        public void RemoveComponentData(Entity entity, Type type)
-        {
-            RemoveComponentData(entity, Entity.StringToHash(type.FullName));
-        }
-
-        public void RemoveComponentData(Entity entity, string typeName)
-        {
-            RemoveComponentData(entity, Entity.StringToHash(typeName));
-        }
-
-        public void RemoveComponentData(Entity entity, long typeHash)
-        {
-            if (InternalRemoveComponentData(entity, typeHash, out var comp))
-                ReferencePool.Instance.RecycleInstance(comp);
-
-            WorldManager.Instance.ModifyEntity(entity);
-        }
-
-        public void DestroyEntity(ulong key)
-        {
-            if (Entities.TryGetValue(key, out Entity e))
+            if (Entities.TryGetValue(data.index, out entity))
             {
-                DestroyEntity(e);
-            }
-        }
-
-        public void DestroyAll()
-        {
-            var list = Entities.Values.ToArray();
-            foreach (var entity in list)
-            {
-                DestroyEntity(entity);
-            }
-        }
-
-        public void DestroyEntity(Entity entity, out GameObject gameObject)
-        {
-            gameObject = null;
-            if (entity.IsAlive)
-            {
-                entity.IsAlive = false;
-
-                while (entity.components.Count > 0)
-                {
-                    var e = entity.components.GetEnumerator();
-                    if (e.MoveNext())
-                    {
-                        InternalRemoveComponentData(entity, e.Current.Key, out var comp);
-                        ReferencePool.Instance.RecycleInstance(comp);
-                    }
-                }
-
-                WorldManager.Instance.ModifyEntity(entity);
-
-                if (entity.gameObject != null)
-                {
-                    GameObjectEntities.Remove(entity.gameObject);
-                    gameObject = entity.gameObject;
-                }
-
-                Entities.Remove(entity.GUID);
-
-                entity.GUID = 0;
-                entity.gameObject = null;
-
-                if (!ReferencePool.applicationIsQuitting)
-                    ReferencePool.Instance.RecycleInstance(entity);
+                return entity.InternalRemoveComponentData(type, out componentData);
             }
 
-        }
-
-        public void DestroyEntity(Entity entity, float delay = 0)
-        {
-            DestroyEntity(entity, out var gameObject);
-
-            if (gameObject != null)
-            {
-                if (delay <= 0)
-                {
-                    gameObject.Recycle();
-                }
-                else
-                {
-                    TimerManager.Instance.AddOneShotTask(delay, gameObject.Recycle);
-                }
-            }
-        }
-
-        public void LoadGameObject(Entity entity, string assetPath, Transform parent = null, Action<Entity, object> callback = null, object userdata = null)
-        {
-            if (IsDataMode)
-                return;
-
-            ulong guid = entity.GUID;
-            AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, parent, (go, data) =>
-            {
-                if (entity.IsAlive && guid == entity.GUID)
-                {
-                    if (go != null)
-                    {
-                        OnGameObjectLoaded(entity, go);
-                        callback?.Invoke(entity, data);
-                    }
-                }
-                else
-                {
-                    go.Recycle();
-                }
-            }, userdata);
-        }
-
-        public void LoadGameObject(Entity entity, string assetPath, Vector3 position, Quaternion rotation, Action<Entity, object> callback = null, object userdata = null)
-        {
-            if (IsDataMode)
-                return;
-
-            ulong guid = entity.GUID;
-            AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, position, rotation, (go, data) =>
-            {
-                if (entity.IsAlive && guid == entity.GUID)
-                {
-                    if (go != null)
-                    {
-                        OnGameObjectLoaded(entity, go);
-                        callback?.Invoke(entity, data);
-                    }
-                }
-                else
-                {
-                    go.Recycle();
-                }
-            }, userdata);
-        } 
-
-        private void OnGameObjectLoaded(Entity entity, GameObject go)
-        {
-            if (go != null)
-            {
-                entity.gameObject = go;
-#if UNITY_EDITOR
-                entity.name = go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
-#endif
-
-                Instance.GameObjectEntities[entity.gameObject] = entity;
-                WorldManager.Instance.ModifyEntity(entity);
-            }
-        }
-
-        public T AddComponentObject<T>(Entity entity) where T : Component
-        {
-            if (entity.gameObject != null)
-            {
-                var comp = entity.gameObject.AddComponent<T>();
-                WorldManager.Instance.ModifyEntity(entity);
-
-                return comp;
-            }
-
-            return null;
-        }
-
-        public T GetComponentObject<T>(Entity entity) where T : Component
-        {
-            if (entity.gameObject != null)
-                return entity.gameObject.GetComponent<T>();
-
-            return null;
-        }
-
-        public void RemoveComponentObject<T>(Entity entity) where T : Component
-        {
-            var comp = GetComponentObject<T>(entity);
-            if (comp != null)
-            {
-                UnityEngine.Object.Destroy(comp);
-                WorldManager.Instance.ModifyEntity(entity);
-            }
+            componentData = null;
+            return false;
         }
     }
 
@@ -375,18 +283,18 @@ namespace PureMVCFramework.Entity
     {
         public static T GetOrAddComponentData<T>(this Entity entity) where T : IComponentData, new()
         {
-            var comp = EntityManager.Instance.GetComponentData<T>(entity);
+            var comp = EntityManager.GetComponentData<T>(entity);
             if (comp == null)
-                comp = EntityManager.Instance.AddComponentData<T>(entity);
+                return EntityManager.AddComponentData<T>(entity);
 
             return comp;
         }
 
         public static T GetOrAddObjectComponent<T>(this Entity entity) where T : Component
         {
-            var comp = EntityManager.Instance.GetComponentObject<T>(entity);
+            var comp = EntityManager.GetComponentObject<T>(entity);
             if (comp == null)
-                comp = EntityManager.Instance.AddComponentObject<T>(entity);
+                comp = EntityManager.AddComponentObject<T>(entity);
 
             return comp;
         }

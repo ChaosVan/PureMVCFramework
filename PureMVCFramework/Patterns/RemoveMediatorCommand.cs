@@ -24,7 +24,7 @@ namespace PureMVCFramework.Patterns
             if (mediator != null)
             {
                 mediator.ViewComponent = null;
-                ReferencePool.Instance.RecycleInstance(mediator);
+                ReferencePool.RecycleInstance(mediator);
             }
         }
     }

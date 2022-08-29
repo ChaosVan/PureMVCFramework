@@ -18,12 +18,18 @@ namespace PureMVCFramework.Entity
 
         protected virtual void PreUpdate()
         {
-
         }
 
         protected virtual void PostUpdate()
         {
+        }
 
+        public sealed override bool ShouldRunSystem()
+        {
+            if (Entities.Count == 0)
+                return false;
+
+            return base.ShouldRunSystem();
         }
 
         public sealed override void Update()
@@ -48,10 +54,9 @@ namespace PureMVCFramework.Entity
                 }
                 finally
                 {
+                    PostUpdate();
                     world.ExecutingSystem = oldExecutingSystem;
                 }
-
-                PostUpdate();
             }
             else if (m_State.PreviouslyEnabled)
             {

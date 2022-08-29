@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using UnityEngine;
 using PureMVCFramework.Providers;
+using static UnityEngine.Networking.UnityWebRequest;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -11,14 +12,15 @@ using Sirenix.OdinInspector;
 
 namespace PureMVCFramework.Advantages
 {
-    public interface IInitializeable
-    {
-        void OnCreate(params object[] args);
-    }
+    [Obsolete("Use IDisposable instead")]
+    public interface IRecycleable : IDisposable { }
 
-    public interface IRecycleable
+    [Obsolete("Renamed, Use IInitializable instead")]
+    public interface IInitializeable : IInitializable { }
+
+    public interface IInitializable
     {
-        void OnDestroy();
+        void OnInitialized(params object[] args);
     }
 
     public interface IReflectionProvider
@@ -30,117 +32,135 @@ namespace PureMVCFramework.Advantages
         void InvokeConstructor(object inst, string typeName, params object[] args);
     }
 
-    public class ReferencePool : SingletonBehaviour<ReferencePool>
+    public static class ReferencePool
     {
-        private readonly ConcurrentDictionary<string, ConcurrentQueue<object>> m_Cache = new ConcurrentDictionary<string, ConcurrentQueue<object>>();
+        internal static event Action<string> OnSpawned;
+        internal static event Action<string> OnRecycled;
 
-#if UNITY_EDITOR
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
-#endif
-        private readonly Dictionary<string, int> m_Counter = new Dictionary<string, int>();
-#endif
+        internal static readonly ConcurrentDictionary<string, ConcurrentQueue<object>> m_Cache = new ConcurrentDictionary<string, ConcurrentQueue<object>>();
 
+        private static IReflectionProvider provider;
+        public static IReflectionProvider Provider { get => provider; }
 
-        private IReflectionProvider provider;
-
-        public IReflectionProvider Provider { get => provider; }
-
-        protected override void OnInitialized()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        public static void Initialize()
         {
-            base.OnInitialized();
-
-            provider = new ReflectionProvider();
-
-            provider.LoadTypes("PureMVCFramework");
-            provider.LoadTypes("PureMVCFramework.Entity");
-            provider.LoadTypes("Assembly-CSharp");
-        }
-
-        protected override void OnDelete()
-        {
-            provider = null;
-
-            Clear();
-            base.OnDelete();
-        }
-
-        public void Clear()
-        {
-            foreach (var pair in m_Cache)
+            if (provider == null)
             {
-                while (pair.Value.TryDequeue(out var result))
-                {
-                    
-                }
+                provider = new ReflectionProvider();
+
+                provider.LoadTypes("PureMVCFramework");
+                provider.LoadTypes("PureMVCFramework.Entity");
+                provider.LoadTypes("Assembly-CSharp");
             }
 
             m_Cache.Clear();
+
 #if UNITY_EDITOR
-            m_Counter.Clear();
+            ReferencePoolDebugger.Instance.updateMode = SingletonBehaviour<ReferencePoolDebugger>.UpdateMode.LATE_UPDATE;
 #endif
         }
 
-        public void LoadTypes(string assemblyString)
+        public static void LoadTypes(string assemblyString)
         {
             provider.LoadTypes(assemblyString);
         }
 
-        public Type GetType(string fullTypeName)
+        public static Type GetType(string fullTypeName)
         {
             return provider.GetType(fullTypeName);
         }
 
-        public object SpawnInstance(string typeName, params object[] args)
+        private static object InternalSpawnInstance(string typeName, bool recallCtor, params object[] args)
         {
             if (m_Cache.TryGetValue(typeName, out var list) && list.TryDequeue(out var result))
             {
-#if UNITY_EDITOR
-                int count = m_Cache[typeName].Count;
-                m_Counter[typeName] = count;
-#endif
-                provider.InvokeConstructor(result, typeName, args);
+                if (recallCtor)
+                    provider.InvokeConstructor(result, typeName, args);
+
+                OnSpawned?.Invoke(typeName);
             }
             else
             {
                 result = provider.Spawn(typeName, args);
             }
 
-            if (result is IInitializeable o)
-                o.OnCreate(args);
+            if (result is IInitializable o)
+                o.OnInitialized(args);
 
             return result;
         }
 
-        public object SpawnInstance(Type type, params object[] args)
+        public static object SpawnInstance(string typeName, params object[] args)
+        {
+            return InternalSpawnInstance(typeName, false, args);
+        }
+
+        public static object SpawnInstance(Type type, params object[] args)
         {
             return SpawnInstance(type.FullName, args);
         }
 
-        public T SpawnInstance<T>(params object[] args)
+        public static T SpawnInstance<T>(params object[] args)
         {
             return (T)SpawnInstance(typeof(T).FullName, args);
         }
 
-        public void RecycleInstance(object inst)
+        public static void RecycleInstance(object inst)
         {
             var obj = provider.Recycle(inst, out var typeName);
 
             if (obj != null)
             {
-                if (obj is IRecycleable o)
-                    o.OnDestroy();
+                if (obj is IDisposable d)
+                    d.Dispose();
 
                 if (!m_Cache.ContainsKey(typeName))
                     m_Cache[typeName] = new ConcurrentQueue<object>();
 
                 m_Cache[typeName].Enqueue(obj);
-#if UNITY_EDITOR
-                int count = m_Cache[typeName].Count;
-                m_Counter[typeName] = count;
-#endif
+                OnRecycled?.Invoke(typeName);
             }
 
+        }
+    }
+
+    public class ReferencePoolDebugger : SingletonBehaviour<ReferencePoolDebugger>
+    {
+
+#if ODIN_INSPECTOR
+        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
+#endif
+        private readonly Dictionary<string, int> m_Counter = new Dictionary<string, int>();
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            ReferencePool.OnSpawned += ReferencePool_OnSpawned;
+            ReferencePool.OnRecycled += ReferencePool_OnRecycled;
+        }
+
+        protected override void OnDelete()
+        {
+            m_Counter.Clear();
+
+            ReferencePool.OnSpawned -= ReferencePool_OnSpawned;
+            ReferencePool.OnRecycled -= ReferencePool_OnRecycled;
+
+            base.OnDelete();
+        }
+
+        private void ReferencePool_OnRecycled(string typeName)
+        {
+            int count = ReferencePool.m_Cache[typeName].Count;
+            m_Counter[typeName] = count;
+        }
+
+        private void ReferencePool_OnSpawned(string typeName)
+        {
+            int count = ReferencePool.m_Cache[typeName].Count;
+            m_Counter[typeName] = count;
         }
     }
 }

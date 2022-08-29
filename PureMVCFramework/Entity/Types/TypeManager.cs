@@ -33,6 +33,8 @@ namespace PureMVCFramework.Entity
         static List<Type> s_Types;
         static List<string> s_TypeNames;
 
+        public static int TypeCount => s_TypeCount;
+
         internal static Type UnityEngineObjectType;
 
         [AttributeUsage(AttributeTargets.Struct | AttributeTargets.Class)]
@@ -44,6 +46,18 @@ namespace PureMVCFramework.Entity
             }
 
             public int TypeVersion;
+        }
+
+        public static TypeInfo[] GetAllTypes()
+        {
+            var res = new TypeInfo[s_TypeCount];
+
+            for (var i = 0; i < s_TypeCount; i++)
+            {
+                res[i] = s_TypeInfos[i];
+            }
+
+            return res;
         }
 
         public readonly struct TypeInfo
@@ -141,28 +155,42 @@ namespace PureMVCFramework.Entity
                 var componentTypeSet = new HashSet<Type>();
                 var assemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-                UnityEngineObjectType = typeof(UnityEngine.Object);
+                UnityEngineObjectType = typeof(UnityEngine.MonoBehaviour);
 
 #if UNITY_EDITOR
+                //foreach (var type in UnityEditor.TypeCache.GetTypesDerivedFrom<UnityEngine.MonoBehaviour>())
+                //    AddUnityEngineObjectTypeToListIfSupported(componentTypeSet, type);
                 foreach (var type in UnityEditor.TypeCache.GetTypesDerivedFrom<IComponentData>())
                     AddComponentTypeToListIfSupported(componentTypeSet, type);
 #else
                 foreach (var assembly in assemblies)
                 {
-                    IsAssemblyReferencingEntitiesOrUnityEngine(assembly, out var isAssemblyReferencingEntities);
-                    var isAssemblyRelevant = isAssemblyReferencingEntities;
+                    IsAssemblyReferencingEntitiesOrUnityEngine(assembly, out var isAssemblyReferencingEntities,
+                        out var isAssemblyReferencingUnityEngine);
+                    var isAssemblyRelevant = isAssemblyReferencingEntities/* || isAssemblyReferencingUnityEngine*/;
 
                     if (!isAssemblyRelevant)
                         continue;
 
                     var assemblyTypes = assembly.GetTypes();
 
+                    // Register UnityEngine types (Hybrid)
+                    //if (isAssemblyReferencingUnityEngine)
+                    //{
+                    //    foreach (var type in assemblyTypes)
+                    //    {
+                    //        if (UnityEngineObjectType.IsAssignableFrom(type))
+                    //            AddUnityEngineObjectTypeToListIfSupported(componentTypeSet, type);
+
+                    //    }
+                    //}
+
                     // Register ComponentData types
                     if (isAssemblyReferencingEntities)
                     {
                         foreach (var type in assemblyTypes)
                         {
-                            if (typeof(IComponent).IsAssignableFrom(type))
+                            if (typeof(IComponentData).IsAssignableFrom(type))
                                 AddComponentTypeToListIfSupported(componentTypeSet, type);
                         }
                     }
@@ -193,23 +221,19 @@ namespace PureMVCFramework.Entity
             }
         }
 
+        static void AddUnityEngineObjectTypeToListIfSupported(HashSet<Type> componentTypeSet, Type type)
+        {
+            if (type.ContainsGenericParameters)
+                return;
+            if (type.IsAbstract)
+                return;
+            componentTypeSet.Add(type);
+        }
+
         static void AddComponentTypeToListIfSupported(HashSet<Type> typeSet, Type type)
         {
             if (!IsInstantiableComponentType(type))
                 return;
-
-            // XXX There's a bug in the Unity Mono scripting backend where if the
-            // Mono type hasn't been initialized, the IsUnmanaged result is wrong.
-            // We force it to be fully initialized by creating an instance until
-            // that bug is fixed.
-            //try
-            //{
-            //    ReferencePool.Instance.RecycleInstance(Activator.CreateInstance(type));
-            //}
-            //catch (Exception e)
-            //{
-            //    Debug.LogException(e);
-            //}
 
             typeSet.Add(type);
         }
@@ -235,15 +259,20 @@ namespace PureMVCFramework.Entity
             return true;
         }
 
-        internal static void IsAssemblyReferencingEntitiesOrUnityEngine(Assembly assembly, out bool referencesEntities)
+        internal static void IsAssemblyReferencingEntitiesOrUnityEngine(Assembly assembly, out bool referencesEntities, out bool referencesUnityEngine)
         {
-            const string kEntitiesAssemblyName = "Entity";
+            const string kEntitiesAssemblyName = "PureMVCFramework.Entity";
+            //const string kUnityEngineAssemblyName = "UnityEngine";
             var assemblyName = assembly.GetName().Name;
 
             referencesEntities = false;
+            referencesUnityEngine = false;
 
             if (assemblyName.Contains(kEntitiesAssemblyName))
                 referencesEntities = true;
+
+            //if (assemblyName.Contains(kUnityEngineAssemblyName))
+            //    referencesUnityEngine = true;
 
             var referencedAssemblies = assembly.GetReferencedAssemblies();
             foreach (var referencedAssembly in referencedAssemblies)
@@ -252,6 +281,8 @@ namespace PureMVCFramework.Entity
 
                 if (!referencesEntities && referencedAssemblyName.Contains(kEntitiesAssemblyName))
                     referencesEntities = true;
+                //if (!referencesUnityEngine && referencedAssemblyName.Contains(kUnityEngineAssemblyName))
+                //    referencesUnityEngine = true;
             }
         }
 
@@ -293,6 +324,16 @@ namespace PureMVCFramework.Entity
             }
         }
 
+        public static TypeInfo GetTypeInfo(int typeIndex)
+        {
+            return s_TypeInfos[typeIndex & ClearFlagsMask];
+        }
+
+        public static TypeInfo GetTypeInfo<T>()
+        {
+            return s_TypeInfos[GetTypeIndex<T>() & ClearFlagsMask];
+        }
+
         private static int FindTypeIndex(Type type)
         {
 #if !UNITY_DOTSRUNTIME
@@ -316,14 +357,7 @@ namespace PureMVCFramework.Entity
 
         public static int GetTypeIndex<T>()
         {
-            var index = SharedTypeIndex<T>.Ref.Data;
-
-            if (index <= 0)
-            {
-                throw new();
-            }
-
-            return index;
+            return GetTypeIndex(typeof(T));
         }
 
         public static int GetTypeIndex(Type type)
@@ -334,6 +368,13 @@ namespace PureMVCFramework.Entity
                 throw new();
 
             return index;
+        }
+
+        public static int GetTypeIndexFromStableTypeHash(ulong stableTypeHash)
+        {
+            if (s_StableTypeHashToTypeIndex.TryGetValue(stableTypeHash, out var typeIndex))
+                return typeIndex;
+            return -1;
         }
 
         private static void AddTypeInfoToTables(Type type, TypeInfo typeInfo, string typeName)
@@ -354,7 +395,6 @@ namespace PureMVCFramework.Entity
 
             if (type != null)
             {
-                SharedTypeIndex.Get(type) = typeInfo.TypeIndex;
                 s_ManagedTypeToIndex.Add(type, typeInfo.TypeIndex);
             }
         }
@@ -370,26 +410,6 @@ namespace PureMVCFramework.Entity
                 if (referenced.Name.Contains(kEntitiesAssemblyName))
                     return true;
             return false;
-        }
-
-        private sealed class SharedTypeIndex
-        {
-            public static ref int Get(Type componentType)
-            {
-                return ref SharedStatic<int>.GetOrCreate(typeof(TypeManagerKeyContext), componentType).Data;
-            }
-        }
-
-        private sealed class TypeManagerKeyContext
-        {
-            private TypeManagerKeyContext()
-            {
-            }
-        }
-
-        internal sealed class SharedTypeIndex<TComponent>
-        {
-            public static readonly SharedStatic<int> Ref = SharedStatic<int>.GetOrCreate<TypeManagerKeyContext, TComponent>();
         }
     }
 }

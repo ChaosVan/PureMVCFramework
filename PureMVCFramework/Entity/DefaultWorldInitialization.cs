@@ -32,7 +32,7 @@ namespace PureMVCFramework.Entity
 
 #if !UNITY_DOTSRUNTIME
         [DomainReload(true)]
-        static bool s_UnloadOrPlayModeChangeShutdownRegistered = false;
+        static bool s_UnloadOrPlayModeChangeShutdownRegistered = true;
 
         /// <summary>
         /// Destroys Editor World when entering Play Mode without Domain Reload.
@@ -69,7 +69,7 @@ namespace PureMVCFramework.Entity
         public static World Initialize(string defaultWorldName, bool editorWorld = false)
         {
 #if UNITY_EDITOR
-            WorldManager.Instance.updateMode = SingletonBehaviour<WorldManager>.UpdateMode.LATE_UPDATE;
+            EntityDebugger.Instance.updateMode = SingletonBehaviour<EntityDebugger>.UpdateMode.LATE_UPDATE;
 #endif
 
             if (!editorWorld)

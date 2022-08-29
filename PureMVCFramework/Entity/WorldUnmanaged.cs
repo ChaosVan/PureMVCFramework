@@ -70,7 +70,7 @@ namespace PureMVCFramework.Entity
         }
     }
 
-    public struct WorldUnmanaged
+    public class WorldUnmanaged
     {
 //#if ENABLE_UNITY_COLLECTIONS_CHECKS
 //        private AtomicSafetyHandle m_Safety;
@@ -114,14 +114,14 @@ namespace PureMVCFramework.Entity
             Version = 0;
             ExecutingSystem = default;
 
-//#if ENABLE_UNITY_COLLECTIONS_CHECKS
-//            m_Safety = AtomicSafetyHandle.Create();
-//#endif
+            //#if ENABLE_UNITY_COLLECTIONS_CHECKS
+            //            m_Safety = AtomicSafetyHandle.Create();
+            //#endif
 
             // The EntityManager itself is only a handle to a data access and already performs safety checks, so it is
             // OK to keep it on this handle itself instead of in the actual implementation.
             //m_EntityManager = default;
-            //m_EntityManager.Initialize(world);
+            EntityManager.Initialize(world);
         }
 
         internal SystemState AllocateSystemStateForManagedSystem(World self, ComponentSystemBase system)

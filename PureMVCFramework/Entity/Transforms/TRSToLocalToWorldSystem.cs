@@ -1,8 +1,10 @@
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace PureMVCFramework.Entity
 {
+    [Preserve]
     [UpdateInGroup(typeof(TransformSystemGroup))]
     public class TRSToLocalToWorldSystem : SystemBase<LocalToWorld, Position, Rotation, Scale>
     {
@@ -11,7 +13,7 @@ namespace PureMVCFramework.Entity
             c1.Value = Matrix4x4.TRS(c2.Value, math.normalize(c3.Value), c4.Value);
 
 #if UNITY_EDITOR
-            if (EntityManager.Instance.IsDataMode)
+            if (EntityManager.IsDataMode)
             {
                 Debug.DrawLine(c1.Position, c1.Position + math.mul(c1.Rotation, math.right()) * 1, Color.red);
                 Debug.DrawLine(c1.Position, c1.Position + math.mul(c1.Rotation, math.up()) * 1, Color.green);
