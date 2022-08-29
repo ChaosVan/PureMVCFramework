@@ -27,7 +27,7 @@ namespace PureMVCFramework.Patterns
                 return;
             }
 
-            IMediator mediator = ReferencePool.Instance.SpawnInstance(mediatorName, viewComponent) as IMediator;
+            IMediator mediator = ReferencePool.SpawnInstance(mediatorName, viewComponent) as IMediator;
             if (mediator != null)
             {
                 mediator.ViewComponent = viewComponent;

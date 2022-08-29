@@ -1,10 +1,10 @@
 ﻿using PureMVCFramework.Advantages;
+using PureMVCFramework.Patterns;
+using static PureMVCFramework.UI.UIWindow;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
-using static PureMVCFramework.UI.UIWindow;
-using PureMVCFramework.Patterns;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -181,11 +181,11 @@ namespace PureMVCFramework.UI
             {
                 if (string.IsNullOrEmpty(param.windowClass))
                 {
-                    window = ReferencePool.Instance.SpawnInstance<UIWindow>();
+                    window = ReferencePool.SpawnInstance<UIWindow>();
                 }
                 else
                 {
-                    window = ReferencePool.Instance.SpawnInstance(param.windowClass) as UIWindow;
+                    window = ReferencePool.SpawnInstance(param.windowClass) as UIWindow;
                 }
 
                 // 避免重复打开
@@ -195,11 +195,11 @@ namespace PureMVCFramework.UI
 
             Assert.IsNotNull(window, param.name + " open failed!");
 
-            // 覆盖新的config
-            window.config = param;
-
             if (window.IsLoading || window.IsOpen)
                 return window;
+
+            // 覆盖新的config
+            window.config = param;
 
             // 创建Layer
             if (!m_ActiveWindows.ContainsKey(param.layer))
