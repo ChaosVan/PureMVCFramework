@@ -1,6 +1,7 @@
 using PureMVCFramework.Advantages;
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -14,6 +15,13 @@ namespace PureMVCFramework.Entity
         internal static event Action<GameObject> OnEntityGameObjectDeleted;
 
         public static bool IsDataMode { get; set; }
+
+        public static void Draw(LocalToWorld matrix)
+        {
+            UnityEngine.Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.right()) * 1, UnityEngine.Color.red);
+            UnityEngine.Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.up()) * 1, UnityEngine.Color.green);
+            UnityEngine.Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.forward()) * 1, UnityEngine.Color.blue);
+        }
 
         public static bool TryGetEntity(GameObject obj, out Entity entity)
         {

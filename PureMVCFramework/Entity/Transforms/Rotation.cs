@@ -16,5 +16,10 @@ namespace PureMVCFramework.Entity
         {
             Value = quaternion.identity;
         }
+
+        public static implicit operator quaternion(Rotation rotation)
+        {
+            return rotation.Value;
+        }
     }
 }

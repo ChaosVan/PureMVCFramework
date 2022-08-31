@@ -16,5 +16,10 @@ namespace PureMVCFramework.Entity
         {
             Value = 1;
         }
+
+        public static implicit operator float3(Scale scale)
+        {
+            return scale.Value;
+        }
     }
 }

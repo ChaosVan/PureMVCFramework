@@ -37,8 +37,9 @@ namespace PureMVCFramework.Entity
 
         private TransformAccessArray transofrms;
 
-        public override void PreUpdate()
+        protected override void PreUpdate()
         {
+            base.PreUpdate();
             if (Entities.Count > 0)
             {
                 handle = new JobHandle();
@@ -53,8 +54,9 @@ namespace PureMVCFramework.Entity
 
         }
 
-        public override void PostUpdate()
+        protected override void PostUpdate()
         {
+            base.PostUpdate();
             if (Entities.Count > 0)
             {
                 Job.Schedule(transofrms, handle);

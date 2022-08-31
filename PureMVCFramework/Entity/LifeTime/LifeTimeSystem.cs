@@ -4,15 +4,9 @@ using UnityEngine.Scripting;
 
 namespace PureMVCFramework.Entity
 {
-    public class LifeTime : IComponentData, IInitializable
+    public class LifeTime : IComponentData
     {
         public float Value;
-
-        public void OnInitialized(params object[] args)
-        {
-            if (args.Length > 0)
-                Value = (float)args[0];
-        }
     }
 
     [Preserve]

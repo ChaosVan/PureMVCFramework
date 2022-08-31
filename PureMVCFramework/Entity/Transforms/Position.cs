@@ -11,5 +11,10 @@ namespace PureMVCFramework.Entity
         {
             Value = float3.zero;
         }
+
+        public static implicit operator float3(Position position)
+        {
+            return position.Value;
+        }
     }
 }
