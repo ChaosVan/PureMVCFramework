@@ -163,14 +163,6 @@ namespace PureMVCFramework.Entity
 
                 m_systemsToRemove.Clear();
             }
-
-            //for (int i = 0; i < m_UnmanagedSystemsToRemove.Length; ++i)
-            //{
-            //    var sysHandle = m_UnmanagedSystemsToRemove[i];
-            //    m_UnmanagedSystemsToUpdate.RemoveAt(m_UnmanagedSystemsToUpdate.IndexOf(sysHandle));
-            //}
-
-            //m_UnmanagedSystemsToRemove.Clear();
         }
 
         private void RemoveSystemsFromUnsortedUpdateList()
@@ -187,10 +179,6 @@ namespace PureMVCFramework.Entity
             {
                 largestID = math.max(largestID, managedSystem.CheckedState().m_SystemID);
             }
-            //foreach (var unmanagedSystem in m_UnmanagedSystemsToUpdate)
-            //{
-            //    largestID = math.max(largestID, world.ResolveSystemState(unmanagedSystem)->m_SystemID);
-            //}
 
             var newListIndices = new NativeArray<int>(largestID + 1, Allocator.Temp);
             var systemIsRemoved = new NativeArray<byte>(largestID + 1, Allocator.Temp, NativeArrayOptions.ClearMemory);
@@ -200,11 +188,6 @@ namespace PureMVCFramework.Entity
             {
                 systemIsRemoved[managedSystem.CheckedState().m_SystemID] = 1;
             }
-
-            //foreach (var unmanagedSystem in m_UnmanagedSystemsToRemove)
-            //{
-            //    systemIsRemoved[world.ResolveSystemState(unmanagedSystem)->m_SystemID] = 1;
-            //}
 
             var newManagedUpdateList = new List<ComponentSystemBase>(m_systemsToUpdate.Count);
             //var newUnmanagedUpdateList = new UnsafeList<SystemHandleUntyped>(m_UnmanagedSystemsToUpdate.Length, Allocator.Persistent);
@@ -221,16 +204,6 @@ namespace PureMVCFramework.Entity
                 }
             }
 
-            //foreach (var unmanagedSystem in m_UnmanagedSystemsToUpdate)
-            //{
-            //    var systemID = world.ResolveSystemState(unmanagedSystem)->m_SystemID;
-            //    if (systemIsRemoved[systemID] == 0)
-            //    {
-            //        newListIndices[systemID] = newUnmanagedUpdateList.Length;
-            //        newUnmanagedUpdateList.Add(unmanagedSystem);
-            //    }
-            //}
-
             var newMasterUpdateList = new UnsafeList<UpdateIndex>(newManagedUpdateList.Count /*+ newUnmanagedUpdateList.Length*/, Allocator.Persistent);
 
             foreach (var updateIndex in m_MasterUpdateList)
@@ -245,15 +218,6 @@ namespace PureMVCFramework.Entity
                         newMasterUpdateList.Add(new UpdateIndex(newListIndices[systemID], true));
                     }
                 }
-                else
-                {
-                    //var system = m_UnmanagedSystemsToUpdate[updateIndex.Index];
-                    //var systemID = world.ResolveSystemState(system)->m_SystemID;
-                    //if (systemIsRemoved[systemID] == 0)
-                    //{
-                    //    newMasterUpdateList.Add(new UpdateIndex(newListIndices[systemID], false));
-                    //}
-                }
             }
 
             newListIndices.Dispose();
@@ -261,10 +225,6 @@ namespace PureMVCFramework.Entity
 
             m_systemsToUpdate = newManagedUpdateList;
             m_systemsToRemove.Clear();
-
-            //m_UnmanagedSystemsToUpdate.Dispose();
-            //m_UnmanagedSystemsToUpdate = newUnmanagedUpdateList;
-            //m_UnmanagedSystemsToRemove.Clear();
 
             m_MasterUpdateList.Dispose();
             m_MasterUpdateList = newMasterUpdateList;
@@ -314,20 +274,6 @@ namespace PureMVCFramework.Entity
                 };
                 systemsPerBucket[orderingBucket]++;
             }
-            //for (int i = 0; i < m_UnmanagedSystemsToUpdate.Length; ++i)
-            //{
-            //    var sysType = World.Unmanaged.GetTypeOfSystem(m_UnmanagedSystemsToUpdate[i]);
-            //    int orderingBucket = ComputeSystemOrdering(sysType, groupType);
-            //    allElems[m_systemsToUpdate.Count + i] = new ComponentSystemSorter.SystemElement
-            //    {
-            //        Type = sysType,
-            //        Index = new UpdateIndex(i, false),
-            //        OrderingBucket = orderingBucket,
-            //        updateBefore = new List<Type>(),
-            //        nAfter = 0,
-            //    };
-            //    systemsPerBucket[orderingBucket]++;
-            //}
 
             // Find & validate constraints between systems in the group
             ComponentSystemSorter.FindConstraints(groupType, allElems);
