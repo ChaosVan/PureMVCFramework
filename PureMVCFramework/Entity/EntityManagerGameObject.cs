@@ -56,10 +56,9 @@ namespace PureMVCFramework.Entity
                 entity.name = go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
 #endif
 
+                BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
                 GameObjectEntities[entity.gameObject] = entity;
                 OnEntityGameObjectLoaded?.Invoke(entity.gameObject, entity);
-
-                BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
             }
         }
 

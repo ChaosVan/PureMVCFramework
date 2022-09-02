@@ -222,8 +222,6 @@ namespace PureMVCFramework.Entity
             gameObject = null;
             if (TryGetEntity(data, out entity))
             {
-                OnEntityDestroyed?.Invoke(data);
-
                 if (entity.gameObject != null)
                 {
                     gameObject = entity.gameObject;
@@ -232,6 +230,7 @@ namespace PureMVCFramework.Entity
                 }
                 Entities.Remove(data);
                 ReferencePool.RecycleInstance(entity);
+                OnEntityDestroyed?.Invoke(data);
 
                 return true;
             }
