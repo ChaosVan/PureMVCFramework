@@ -1,16 +1,8 @@
 ﻿using PureMVCFramework.Advantages;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 using System.Runtime.InteropServices;
-using PureMVCFramework.Extensions;
-using static UnityEngine.EventSystems.EventTrigger;
-using static PureMVCFramework.Entity.ComponentType;
-
-#if ODIN_INSPECTOR
-using Sirenix.OdinInspector;
-#endif
+using UnityEngine;
 
 namespace PureMVCFramework.Entity
 {
@@ -20,12 +12,17 @@ namespace PureMVCFramework.Entity
 
         public static implicit operator EntityData(ulong index)
         {
-            return new EntityData { index = index};
+            return new EntityData { index = index };
         }
 
         public static implicit operator EntityData(uint index)
         {
             return new EntityData { index = index };
+        }
+
+        public static implicit operator ulong(EntityData entity)
+        {
+            return entity.index;
         }
     }
 
@@ -38,10 +35,11 @@ namespace PureMVCFramework.Entity
         internal static event Action<ulong> OnEntityDestroyed;
 
         internal static readonly SortedDictionary<ulong, Entity> Entities = new SortedDictionary<ulong, Entity>();
-
         internal static GCHandle m_World;
 
-        public static World World => (World) m_World.Target;
+        internal static EntityCommandBufferSystem BeginCommandBuffer, EndCommandBuffer;
+
+        public static World World => (World)m_World.Target;
 
         internal static void Initialize(World world)
         {
@@ -49,6 +47,9 @@ namespace PureMVCFramework.Entity
             Entities.Clear();
 
             m_World = GCHandle.Alloc(world);
+
+            BeginCommandBuffer = world.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+            EndCommandBuffer = world.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
 
 
@@ -60,6 +61,20 @@ namespace PureMVCFramework.Entity
         public static bool TryGetEntity(ulong key, out Entity entity)
         {
             return Entities.TryGetValue(key, out entity);
+        }
+
+        public static bool TryGetEntities(EntityQuery query, out Dictionary<ulong, IComponentData[]> entities)
+        {
+            entities = new();
+            foreach (var entity in Entities.Keys)
+            {
+                if (GetComponentData(entity, query, out var components))
+                {
+                    entities.Add(entity, components);
+                }
+            }
+
+            return entities.Count > 0;
         }
 
         internal static Entity[] BeginStructual(int count, params Entity[] entities)
@@ -86,110 +101,72 @@ namespace PureMVCFramework.Entity
             }
         }
 
-        public static Entity Create()
+        public static void DestroyAll()
+        {
+            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            foreach (var entity in Entities.Values)
+            {
+                commandBuffer.DestroyEntity(entity);
+            }
+        }
+
+        public static void DestroyEntity(Entity entity)
+        {
+            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
+        }
+
+        public static void DestroyEntity(EntityData data)
+        {
+            if (TryGetEntity(data, out var entity))
+                EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
+        }
+
+        public static EntityData Create()
         {
             EntityArchetype archetype = default;
             return Create(archetype);
         }
 
-        public static Entity Create(params ComponentType[] componentTypes)
+        public static EntityData Create(params ComponentType[] componentTypes)
         {
             EntityArchetype archetype = new EntityArchetype(componentTypes);
             return Create(archetype);
         }
 
-        public static Entity Create(EntityArchetype archetype)
+        public static EntityData Create(EntityArchetype archetype)
         {
             Create(archetype, 1, out var entities);
             return entities[0];
         }
 
-        public static void Create(EntityArchetype archetype, int count, out Entity[] entities)
+        public static void Create(EntityArchetype archetype, int count, out EntityData[] entities)
         {
-            entities = BeginStructual(count);
+            var commandBuffer = BeginCommandBuffer.CreateCommandBuffer();
+            entities = new EntityData[count];
             for (int i = 0; i < count; i++)
             {
-                var entity = InternalCreate(GUID_COUNT++, archetype);
-                entities[i] = entity;
+                entities[i] = commandBuffer.CreateEntity(archetype);
             }
-            EndStructual(entities);
         }
 
-        public static void DestroyAll()
+        public static T AddComponentData<T>(EntityData entity) where T : IComponentData
         {
-            var list = BeginStructual(Entities.Count, Entities.Values.ToArray());
-            foreach (var entity in list)
-            {
-                if (InternalDestroyEntity(entity.GUID, out _, out var gameObject))
-                {
-                    if (gameObject != null)
-                        gameObject.Recycle();
-                }
-            }
-            EndStructual(list);
-        }
-
-        public static void DestroyEntity(Entity entity)
-        {
-            DestroyEntity(entity, out var gameObject);
-            if (gameObject != null)
-                gameObject.Recycle();
-        }
-
-        public static void DestroyEntity(Entity entity, out GameObject gameObject)
-        {
-            var entities = BeginStructual(1, entity);
-            if (InternalDestroyEntity(entity.GUID, out _, out gameObject))
-                EndStructual(entities);
-
-        }
-
-        public static void AddComponentData(Entity entity, params ComponentType[] components)
-        {
-            if (entity.IsAlive)
-            {
-                var entities = BeginStructual(1, entity);
-                for (int i = 0; i < components.Length; i++)
-                {
-                    InternalAddComponentData(entity.GUID, (IComponentData)ReferencePool.SpawnInstance(TypeManager.GetType(components[i].TypeIndex)), out _);
-                }
-                EndStructual(entities);
-            }
+            return BeginCommandBuffer.CreateCommandBuffer().AddComponentData<T>(entity);
         }
 
         public static T AddComponentData<T>(Entity entity) where T : IComponentData
         {
-            return (T)AddComponentData(entity, ReferencePool.SpawnInstance<T>());
+            return BeginCommandBuffer.CreateCommandBuffer().AddComponentData<T>(entity);
         }
 
-        public static IComponentData AddComponentData(Entity entity, IComponentData componentData)
+        public static void RemoveComponentData<T>(EntityData entity) where T : IComponentData
         {
-            if (entity.IsAlive)
-            {
-                var entities = BeginStructual(1, entity);
-                if (InternalAddComponentData(entity.GUID, componentData, out _))
-                {
-                    EndStructual(entities);
-                    return componentData;
-                }
-            }
-
-            return null;
+            EndCommandBuffer.CreateCommandBuffer().RemoveComponentData<T>(entity);
         }
 
         public static void RemoveComponentData<T>(Entity entity) where T : IComponentData
         {
-            RemoveComponentData(entity, typeof(T));
-        }
-
-        public static void RemoveComponentData(Entity entity, ComponentType componentType)
-        {
-            var entities = BeginStructual(1, entity);
-            if (InternalRemoveComponentData(entity.GUID, componentType, out _, out var componentData))
-            {
-                ReferencePool.RecycleInstance(componentData);
-                EndStructual(entities);
-            }
+            EndCommandBuffer.CreateCommandBuffer().RemoveComponentData<T>(entity);
         }
 
         public static T GetComponentData<T>(Entity entity) where T : IComponentData
@@ -205,6 +182,12 @@ namespace PureMVCFramework.Entity
             return null;
         }
 
+        public static bool GetComponentData(EntityData entity, EntityQuery query, out IComponentData[] componentData)
+        {
+            componentData = null;
+            return TryGetEntity(entity, out var e) && GetComponentData(e, query, out componentData);
+        }
+
         public static bool GetComponentData(Entity entity, EntityQuery query, out IComponentData[] componentData)
         {
             if (entity.IsAlive && entity.InternalGetComponentData(query, out componentData))
@@ -217,9 +200,9 @@ namespace PureMVCFramework.Entity
         internal static Entity InternalCreate(EntityData data, EntityArchetype archetype)
         {
             var entity = ReferencePool.SpawnInstance<Entity>();
-            entity.GUID = data.index;
+            entity.GUID = data;
             entity.IsAlive = true;
-            Entities.Add(entity.GUID, entity);
+            Entities.Add(data, entity);
 
             OnEntityCreated?.Invoke(entity);
 
@@ -237,18 +220,17 @@ namespace PureMVCFramework.Entity
         internal static bool InternalDestroyEntity(EntityData data, out Entity entity, out GameObject gameObject)
         {
             gameObject = null;
-            if (Entities.TryGetValue(data.index, out entity))
+            if (TryGetEntity(data, out entity))
             {
-                OnEntityDestroyed?.Invoke(data.index);
+                OnEntityDestroyed?.Invoke(data);
 
                 if (entity.gameObject != null)
                 {
-                    GameObjectEntities.Remove(entity.gameObject);
                     gameObject = entity.gameObject;
-
+                    GameObjectEntities.Remove(gameObject);
                     OnEntityGameObjectDeleted?.Invoke(gameObject);
                 }
-                Entities.Remove(entity.GUID);
+                Entities.Remove(data);
                 ReferencePool.RecycleInstance(entity);
 
                 return true;
@@ -259,7 +241,7 @@ namespace PureMVCFramework.Entity
 
         internal static bool InternalAddComponentData(EntityData data, IComponentData componentData, out Entity entity)
         {
-            if (Entities.TryGetValue(data.index, out entity))
+            if (TryGetEntity(data, out entity))
             {
                 return entity.InternalAddComponentData(componentData.GetType(), componentData);
             }
@@ -269,7 +251,7 @@ namespace PureMVCFramework.Entity
 
         internal static bool InternalRemoveComponentData(EntityData data, ComponentType type, out Entity entity, out IComponentData componentData)
         {
-            if (Entities.TryGetValue(data.index, out entity))
+            if (TryGetEntity(data, out entity))
             {
                 return entity.InternalRemoveComponentData(type, out componentData);
             }

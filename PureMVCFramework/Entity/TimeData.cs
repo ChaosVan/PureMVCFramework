@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 
 namespace PureMVCFramework.Entity
 {
@@ -29,12 +28,7 @@ namespace PureMVCFramework.Entity
             DeltaTime = deltaTime;
         }
 
-#if !UNITY_DOTSRUNTIME
-
         // This member will be deprecated once a native fixed delta time is introduced in dots.
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public float fixedDeltaTime => UnityEngine.Time.fixedDeltaTime;
-
-#endif
+        public float FixedDeltaTime => UnityEngine.Time.fixedDeltaTime;
     }
 }

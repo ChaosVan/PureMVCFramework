@@ -1,13 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Mathematics;
-using UnityEngine;
 using UnityEngine.Scripting;
 
 namespace PureMVCFramework.Entity
 {
     [Preserve]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
     public class UpdateWorldTimeSystem : ComponentSystem
     {
         protected override void OnStartRunning()

@@ -9,7 +9,7 @@ namespace PureMVCFramework.Entity
     {
         protected override void OnUpdate(int index, Entity entity, LocalToWorld matrix, Position position, Rotation rotation, Scale scale)
         {
-            matrix.Value = math.mul(new float4x4(rotation, position), float4x4.Scale(scale));
+            matrix.Value = LocalToWorld.Compose(position, rotation, scale);
         }
     }
 }

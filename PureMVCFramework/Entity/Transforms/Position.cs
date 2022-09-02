@@ -7,6 +7,11 @@ namespace PureMVCFramework.Entity
     {
         public float3 Value;
 
+        public Position()
+        {
+            Value = float3.zero;
+        }
+
         public void Dispose()
         {
             Value = float3.zero;

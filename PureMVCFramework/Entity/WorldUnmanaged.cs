@@ -104,11 +104,6 @@ namespace PureMVCFramework.Entity
 
             Version = 0;
             ExecutingSystem = default;
-
-            // The EntityManager itself is only a handle to a data access and already performs safety checks, so it is
-            // OK to keep it on this handle itself instead of in the actual implementation.
-            //m_EntityManager = default;
-            EntityManager.Initialize(world);
         }
 
         internal SystemState AllocateSystemStateForManagedSystem(World self, ComponentSystemBase system)

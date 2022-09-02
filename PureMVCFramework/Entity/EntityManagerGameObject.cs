@@ -18,9 +18,9 @@ namespace PureMVCFramework.Entity
 
         public static void Draw(LocalToWorld matrix)
         {
-            UnityEngine.Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.right()) * 1, UnityEngine.Color.red);
-            UnityEngine.Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.up()) * 1, UnityEngine.Color.green);
-            UnityEngine.Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.forward()) * 1, UnityEngine.Color.blue);
+            Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.right()) * 1, Color.red);
+            Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.up()) * 1, Color.green);
+            Debug.DrawLine(matrix.Position, matrix.Position + math.mul(matrix.Rotation, math.forward()) * 1, Color.blue);
         }
 
         public static bool TryGetEntity(GameObject obj, out Entity entity)
@@ -38,9 +38,9 @@ namespace PureMVCFramework.Entity
         {
             Assert.IsNotNull(gameObject);
 
-            if (!GameObjectEntities.TryGetValue(gameObject, out var entity))
+            if (!TryGetEntity(gameObject, out var entity))
             {
-                entity = Create(archetype);
+                entity = InternalCreate(GUID_COUNT++, archetype);
                 OnGameObjectLoaded(entity, gameObject);
             }
 
@@ -51,19 +51,19 @@ namespace PureMVCFramework.Entity
         {
             if (go != null)
             {
-                var array = BeginStructual(1, entity);
                 entity.gameObject = go;
 #if UNITY_EDITOR
                 entity.name = go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
 #endif
-                EndStructual(array);
 
                 GameObjectEntities[entity.gameObject] = entity;
                 OnEntityGameObjectLoaded?.Invoke(entity.gameObject, entity);
+
+                BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
             }
         }
 
-        internal static void LoadGameObject(EntityData entity, string assetPath, Transform parent = null, Action<Entity, object> callback = null, object userdata = null)
+        internal static void InternalLoadGameObject(EntityData entity, string assetPath, Transform parent = null, Action<Entity, object> callback = null, object userdata = null)
         {
             if (IsDataMode)
                 return;
@@ -71,12 +71,12 @@ namespace PureMVCFramework.Entity
             ulong guid = entity.index;
             AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, parent, (go, data) =>
             {
-                if (Entities.TryGetValue(guid, out var entity) && entity.IsAlive)
+                if (TryGetEntity(guid, out var e) && e.IsAlive)
                 {
                     if (go != null)
                     {
-                        OnGameObjectLoaded(entity, go);
-                        callback?.Invoke(entity, data);
+                        OnGameObjectLoaded(e, go);
+                        callback?.Invoke(e, data);
                     }
                 }
                 else
@@ -86,12 +86,7 @@ namespace PureMVCFramework.Entity
             }, userdata);
         }
 
-        public static void LoadGameObject(Entity entity, string assetPath, Transform parent = null, Action<Entity, object> callback = null, object userdata = null)
-        {
-            LoadGameObject(entity.GUID, assetPath, parent, callback, userdata);
-        }
-
-        internal static void LoadGameObject(EntityData entity, string assetPath, Vector3 position, Quaternion rotation, Action<Entity, object> callback = null, object userdata = null)
+        internal static void InternalLoadGameObject(EntityData entity, string assetPath, Vector3 position, Quaternion rotation, Action<Entity, object> callback = null, object userdata = null)
         {
             if (IsDataMode)
                 return;
@@ -99,12 +94,12 @@ namespace PureMVCFramework.Entity
             ulong guid = entity.index;
             AutoReleaseManager.Instance.LoadGameObjectAsync(assetPath, position, rotation, (go, data) =>
             {
-                if (Entities.TryGetValue(guid, out var entity) && entity.IsAlive)
+                if (TryGetEntity(guid, out var e) && e.IsAlive)
                 {
                     if (go != null)
                     {
-                        OnGameObjectLoaded(entity, go);
-                        callback?.Invoke(entity, data);
+                        OnGameObjectLoaded(e, go);
+                        callback?.Invoke(e, data);
                     }
                 }
                 else
@@ -114,29 +109,31 @@ namespace PureMVCFramework.Entity
             }, userdata);
         }
 
-        public static void LoadGameObject(Entity entity, string assetPath, Vector3 position, Quaternion rotation, Action<Entity, object> callback = null, object userdata = null)
+        public static void LoadGameObject(EntityData entity, string assetPath, Transform parent = null, Action<Entity, object> callback = null, object userdata = null)
         {
-            LoadGameObject(entity.GUID, assetPath, position, rotation, callback, userdata);
+            if (IsDataMode)
+                return;
+
+            BeginCommandBuffer.CreateCommandBuffer().LoadGameObject(entity, assetPath, parent, callback, userdata);
+        }
+
+        public static void LoadGameObject(EntityData entity, string assetPath, Vector3 position, Quaternion rotation, Action<Entity, object> callback = null, object userdata = null)
+        {
+            if (IsDataMode)
+                return;
+
+            BeginCommandBuffer.CreateCommandBuffer().LoadGameObject(entity, assetPath, position, rotation, callback, userdata);
         }
 
         public static T AddComponentObject<T>(Entity entity) where T : Component
         {
             if (entity.IsAlive && entity.gameObject != null)
             {
-                var entities = BeginStructual(1, entity);
                 var comp = entity.gameObject.AddComponent<T>();
-                EndStructual(entities);
+                BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
 
                 return comp;
             }
-
-            return null;
-        }
-
-        public static T GetComponentObject<T>(Entity entity) where T : Component
-        {
-            if (entity.IsAlive && entity.gameObject != null)
-                return entity.gameObject.GetComponent<T>();
 
             return null;
         }
@@ -146,10 +143,17 @@ namespace PureMVCFramework.Entity
             var comp = GetComponentObject<T>(entity);
             if (comp != null)
             {
-                var entities = BeginStructual(1, entity);
                 UnityEngine.Object.Destroy(comp);
-                EndStructual(entities);
+                EndCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
             }
+        }
+
+        public static T GetComponentObject<T>(Entity entity) where T : Component
+        {
+            if (entity.IsAlive && entity.gameObject != null)
+                return entity.gameObject.GetComponent<T>();
+
+            return null;
         }
     }
 }

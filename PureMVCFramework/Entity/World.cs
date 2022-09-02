@@ -139,7 +139,7 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowInInspector]
 #endif
-        public TimeData Time {get => m_Unmanaged.CurrentTime; set => m_Unmanaged.CurrentTime = value; }
+        public TimeData Time { get => m_Unmanaged.CurrentTime; set => m_Unmanaged.CurrentTime = value; }
 
         public float MaximumDeltaTime
         {
@@ -161,6 +161,11 @@ namespace PureMVCFramework.Entity
 
             s_AllWorlds.Add(this);
             WorldCreated?.Invoke(this);
+
+            // The EntityManager itself is only a handle to a data access and already performs safety checks, so it is
+            // OK to keep it on this handle itself instead of in the actual implementation.
+            //m_EntityManager = default;
+            EntityManager.Initialize(this);
         }
 
         public void Dispose()

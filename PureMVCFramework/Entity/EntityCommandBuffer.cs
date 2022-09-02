@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace PureMVCFramework.Entity
@@ -96,6 +95,16 @@ namespace PureMVCFramework.Entity
             AddLoadGameObjectCommand(ECBCommand.LoadGameObjectWithCoordinates, entity, asset, null, position, rotation, callback, userdata);
         }
 
+        public void UpdateGameObject(EntityData entity)
+        {
+            UpdateGameObjectCommand(ECBCommand.UpdateGameObject, entity);
+        }
+
+        public void UpdateGameObject(Entity entity)
+        {
+            UpdateGameObjectCommand(ECBCommand.UpdateGameObject, entity.GUID);
+        }
+
         internal void AddCreateCommand(ECBCommand op, EntityData entity, EntityArchetype archetype)
         {
             var ecbd = new EntityCommandBufferData();
@@ -113,7 +122,7 @@ namespace PureMVCFramework.Entity
             ecbd.entity = entity;
             ecbd.destroyImmediately = destroy;
 
-            if (EntityManager.Entities.TryGetValue(entity.index, out var e))
+            if (EntityManager.TryGetEntity(entity, out var e))
             {
                 if (e != null)
                     e.IsAlive = false;
@@ -157,6 +166,15 @@ namespace PureMVCFramework.Entity
             m_Data.Add(ecbd);
         }
 
+        internal void UpdateGameObjectCommand(ECBCommand op, EntityData entity)
+        {
+            var ecbd = new EntityCommandBufferData();
+            ecbd.commandType = op;
+            ecbd.entity = entity;
+
+            m_Data.Add(ecbd);
+        }
+
         public void Playback(ref Entity[] entities)
         {
             PlaybackInternal(ref entities);
@@ -189,10 +207,13 @@ namespace PureMVCFramework.Entity
                         }
                         break;
                     case ECBCommand.LoadGameObjectWithParent:
-                        EntityManager.LoadGameObject(data.entity, data.asset, data.parent, data.callback, data.userdata);
+                        EntityManager.InternalLoadGameObject(data.entity, data.asset, data.parent, data.callback, data.userdata);
                         break;
                     case ECBCommand.LoadGameObjectWithCoordinates:
-                        EntityManager.LoadGameObject(data.entity, data.asset, data.position, data.rotation, data.callback, data.userdata);
+                        EntityManager.InternalLoadGameObject(data.entity, data.asset, data.position, data.rotation, data.callback, data.userdata);
+                        break;
+                    case ECBCommand.UpdateGameObject:
+                        EntityManager.TryGetEntity(data.entity, out entity);
                         break;
                     default:
                         break;
@@ -216,5 +237,7 @@ namespace PureMVCFramework.Entity
 
         LoadGameObjectWithParent,
         LoadGameObjectWithCoordinates,
+
+        UpdateGameObject,
     }
 }
