@@ -1,5 +1,4 @@
 using System;
-using Unity.Android.Types;
 
 namespace PureMVCFramework.Entity
 {
