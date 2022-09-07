@@ -65,7 +65,7 @@ namespace PureMVCFramework.Entity
 
         public static bool TryGetEntities(EntityQuery query, out Dictionary<ulong, IComponentData[]> entities)
         {
-            entities = new();
+            entities = new Dictionary<ulong, IComponentData[]>();
             foreach (var entity in Entities.Keys)
             {
                 if (GetComponentData(entity, query, out var components))
@@ -262,7 +262,7 @@ namespace PureMVCFramework.Entity
 
     public static class EntityExtensions
     {
-        public static T GetOrAddComponentData<T>(this Entity entity) where T : IComponentData, new()
+        public static T GetOrAddComponentData<T>(this Entity entity) where T : IComponentData
         {
             var comp = EntityManager.GetComponentData<T>(entity);
             if (comp == null)

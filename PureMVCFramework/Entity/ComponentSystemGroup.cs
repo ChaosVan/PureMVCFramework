@@ -437,7 +437,7 @@ namespace PureMVCFramework.Entity
                     if (!index.IsManaged)
                     {
                         // TODO
-                        throw new();
+                        throw new Exception();
                     }
                     else
                     {

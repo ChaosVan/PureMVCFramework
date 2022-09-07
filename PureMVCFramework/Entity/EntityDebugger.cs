@@ -11,19 +11,19 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
-        private readonly List<World> worlds = new();
+        private readonly List<World> worlds = new List<World>();
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true)]
 #endif
-        private readonly Dictionary<World, List<ComponentSystemGroup>> groups = new();
+        private readonly Dictionary<World, List<ComponentSystemGroup>> groups = new Dictionary<World, List<ComponentSystemGroup>>();
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif
-        private readonly Dictionary<ulong, Entity> Entities = new();
+        private readonly Dictionary<ulong, Entity> Entities = new Dictionary<ulong, Entity>();
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif
-        internal static readonly Dictionary<GameObject, Entity> GameObjectEntities = new();
+        internal static readonly Dictionary<GameObject, Entity> GameObjectEntities = new Dictionary<GameObject, Entity>();
 
         private DefaultWorldInitialization.DefaultRootGroups rootGroup;
 

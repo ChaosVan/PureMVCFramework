@@ -1,8 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
-using Unity.Burst;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Debug = UnityEngine.Debug;
@@ -29,7 +29,11 @@ namespace PureMVCFramework.Entity
 
         static int s_TypeCount;
         static List<TypeInfo> s_TypeInfos;
+#if UNITY_2021_3_OR_NEWER
         static Dictionary<ulong, int> s_StableTypeHashToTypeIndex;
+#else
+        static ConcurrentDictionary<ulong, int> s_StableTypeHashToTypeIndex;
+#endif
         static List<Type> s_Types;
         static List<string> s_TypeNames;
 
@@ -116,7 +120,11 @@ namespace PureMVCFramework.Entity
 
             s_TypeCount = 0;
             s_TypeInfos = new List<TypeInfo>(1000);
+#if UNITY_2021_3_OR_NEWER
             s_StableTypeHashToTypeIndex = new Dictionary<ulong, int>();
+#else
+            s_StableTypeHashToTypeIndex = new ConcurrentDictionary<ulong, int>();
+#endif
             s_Types = new List<Type>();
             s_TypeNames = new List<string>();
 
@@ -365,7 +373,7 @@ namespace PureMVCFramework.Entity
             var index = FindTypeIndex(type);
 
             if (index == -1)
-                throw new();
+                throw new Exception();
 
             return index;
         }

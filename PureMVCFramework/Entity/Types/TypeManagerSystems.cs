@@ -75,7 +75,6 @@ namespace PureMVCFramework.Entity
             if (s_SystemFilterTypeMap.TryGetValue(lookupFlags, out var systemTypes))
                 return systemTypes;
 
-#if !UNITY_DOTSRUNTIME
             var filteredSystemTypes = new List<Type>();
             foreach (var systemType in GetTypesDerivedFrom(typeof(ComponentSystemBase)))
             {
@@ -85,9 +84,6 @@ namespace PureMVCFramework.Entity
 
             s_SystemFilterTypeMap[lookupFlags] = filteredSystemTypes;
             return filteredSystemTypes;
-#else
-            throw new();
-#endif
         }
 
         public static bool IsSystemType(Type t)
