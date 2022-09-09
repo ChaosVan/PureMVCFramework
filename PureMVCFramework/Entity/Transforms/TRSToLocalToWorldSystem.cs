@@ -1,4 +1,3 @@
-using Unity.Mathematics;
 using UnityEngine.Scripting;
 
 namespace PureMVCFramework.Entity

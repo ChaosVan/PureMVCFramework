@@ -1,5 +1,4 @@
-﻿
-#if ODIN_INSPECTOR
+﻿#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
 using System;
@@ -11,10 +10,6 @@ namespace PureMVCFramework.Entity
 {
     public sealed class Entity : IDisposable
     {
-#if UNITY_EDITOR
-        public string name;
-#endif
-
         public GameObject gameObject;
 
 #if ODIN_INSPECTOR

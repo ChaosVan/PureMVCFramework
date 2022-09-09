@@ -53,7 +53,7 @@ namespace PureMVCFramework.Entity
             {
                 entity.gameObject = go;
 #if UNITY_EDITOR
-                entity.name = go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
+                go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
 #endif
 
                 BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
