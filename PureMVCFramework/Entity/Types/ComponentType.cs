@@ -1,4 +1,3 @@
-using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,9 +15,7 @@ namespace PureMVCFramework.Entity
             Exclude
         }
 
-        [InlineProperty]
         public int TypeIndex;
-        [InlineProperty]
         public AccessMode AccessModeType;
 
         public static ComponentType ReadWrite<T>()
