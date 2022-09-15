@@ -4,7 +4,7 @@
 
 ```json
 "dependencies": {
-    "com.chaosvan.puremvcframework": "http://git.gyyf.local.com/zhaochaofan/puremvcframework.git#[branch_name]",
+    "com.chaosvan.puremvcframework": "http://git.gyyf.local.com/zhaochaofan/puremvcframework.git#[tag_name]",
     ...
   },
 ```
