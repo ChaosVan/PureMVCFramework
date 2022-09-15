@@ -46,6 +46,9 @@ namespace PureMVCFramework.Entity
             GameObjectEntities.Clear();
             Entities.Clear();
 
+            if (m_World.IsAllocated)
+                m_World.Free();
+
             m_World = GCHandle.Alloc(world);
 
             BeginCommandBuffer = world.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();

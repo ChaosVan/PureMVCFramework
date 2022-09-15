@@ -45,7 +45,6 @@ namespace PureMVCFramework.Entity
         [NotBurstCompatible] // Because world
         internal void InitManaged(World world, Type managedType, ComponentSystemBase system, uint worldSeqNo)
         {
-
             UnmanagedMetaIndex = -1;
             m_ManagedSystem = GCHandle.Alloc(system, GCHandleType.Normal);
 
@@ -66,8 +65,6 @@ namespace PureMVCFramework.Entity
             Enabled = true;
             m_SystemID = ++ms_SystemIDAllocator;
             m_World = GCHandle.Alloc(world);
-
-
 
             //m_WorldUnmanaged = world.Unmanaged;
             //m_EntityManager = world.EntityManager;
