@@ -19,20 +19,20 @@ namespace PureMVCFramework
             public GameObject prefab;
         }
 
-        List<GameObject> tempList = new List<GameObject>();
+        static List<GameObject> tempList = new List<GameObject>();
 
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
 #endif
-        private readonly Dictionary<GameObject, List<GameObject>> pooledObjects = new Dictionary<GameObject, List<GameObject>>(); // prefab, List<obj>
+        private static readonly Dictionary<GameObject, List<GameObject>> pooledObjects = new Dictionary<GameObject, List<GameObject>>(); // prefab, List<obj>
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif
-        private readonly Dictionary<GameObject, GameObject> spawnedObjects = new Dictionary<GameObject, GameObject>(); // obj, prefab
+        private static readonly Dictionary<GameObject, GameObject> spawnedObjects = new Dictionary<GameObject, GameObject>(); // obj, prefab
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif
-        private readonly Dictionary<GameObject, float> pooledTimeStamps = new Dictionary<GameObject, float>();
+        private static readonly Dictionary<GameObject, float> pooledTimeStamps = new Dictionary<GameObject, float>();
 
         public StartupPoolMode startupPoolMode = StartupPoolMode.CallManually;
         public StartupPool[] startupPools;
@@ -57,6 +57,12 @@ namespace PureMVCFramework
                 CreateStartupPools();
 
             TimerManager.Instance.AddRealtimeRepeatTask(ExpiredTime, 1, -1, CheckExpiredObject);
+        }
+
+        void OnDestroy()
+        {
+            pooledObjects.Clear();
+            spawnedObjects.Clear();
         }
 
         bool CheckExpiredObject()
@@ -94,13 +100,13 @@ namespace PureMVCFramework
 
         private static void RecordTimeStamp(GameObject obj)
         {
-            Instance.pooledTimeStamps[obj] = Time.realtimeSinceStartup;
+            pooledTimeStamps[obj] = Time.realtimeSinceStartup;
         }
 
         private static void RemoveFromTimeStamp(GameObject obj)
         {
-            if (Instance.pooledTimeStamps.ContainsKey(obj))
-                Instance.pooledTimeStamps.Remove(obj);
+            if (pooledTimeStamps.ContainsKey(obj))
+                pooledTimeStamps.Remove(obj);
         }
 
         public static void CreateStartupPools()
@@ -121,10 +127,10 @@ namespace PureMVCFramework
         }
         public static void CreatePool(GameObject prefab, int initialPoolSize)
         {
-            if (prefab != null && !Instance.pooledObjects.ContainsKey(prefab))
+            if (prefab != null && !pooledObjects.ContainsKey(prefab))
             {
                 var list = new List<GameObject>();
-                Instance.pooledObjects[prefab] = list;
+                pooledObjects[prefab] = list;
 
                 if (initialPoolSize > 0)
                 {
@@ -174,7 +180,7 @@ namespace PureMVCFramework
         {
             Transform trans;
             GameObject obj;
-            if (Instance.pooledObjects.TryGetValue(prefab, out List<GameObject> list))
+            if (pooledObjects.TryGetValue(prefab, out List<GameObject> list))
             {
                 obj = null;
                 if (list.Count > 0)
@@ -192,7 +198,7 @@ namespace PureMVCFramework
                         trans.localPosition = position;
                         trans.localRotation = rotation;
                         obj.SetActive(true);
-                        Instance.spawnedObjects.Add(obj, prefab);
+                        spawnedObjects.Add(obj, prefab);
                         RemoveFromTimeStamp(obj);
                         return obj;
                     }
@@ -208,7 +214,7 @@ namespace PureMVCFramework
                 trans.localPosition = position;
                 trans.localRotation = rotation;
                 obj.SetActive(true);
-                Instance.spawnedObjects.Add(obj, prefab);
+                spawnedObjects.Add(obj, prefab);
 
                 return obj;
             }
@@ -253,12 +259,12 @@ namespace PureMVCFramework
             if (applicationIsQuitting)
                 return;
 
-            if (Instance != null && Instance.spawnedObjects.TryGetValue(obj, out GameObject prefab))
+            if (spawnedObjects.TryGetValue(obj, out GameObject prefab))
             {
                 if (obj != null)
                     Recycle(obj, prefab);
                 else
-                    Instance.spawnedObjects.Remove(obj);
+                    spawnedObjects.Remove(obj);
             }
             else
             {
@@ -268,8 +274,8 @@ namespace PureMVCFramework
         }
         static void Recycle(GameObject obj, GameObject prefab)
         {
-            Instance.spawnedObjects.Remove(obj);
-            if (Instance.pooledObjects.TryGetValue(prefab, out List<GameObject> list))
+            spawnedObjects.Remove(obj);
+            if (pooledObjects.TryGetValue(prefab, out List<GameObject> list))
             {
                 list.Add(obj);
 #if UNITY_EDITOR
@@ -295,25 +301,22 @@ namespace PureMVCFramework
             if (applicationIsQuitting)
                 return;
 
-            if (Instance != null)
+            foreach (var item in spawnedObjects)
             {
-                foreach (var item in Instance.spawnedObjects)
-                {
-                    if (item.Value == prefab)
-                        Instance.tempList.Add(item.Key);
-                }
-                for (int i = 0; i < Instance.tempList.Count; ++i)
-                {
-                    Recycle(Instance.tempList[i]);
-                }
-
-                Instance.tempList.Clear();
+                if (item.Value == prefab)
+                    tempList.Add(item.Key);
             }
+            for (int i = 0; i < tempList.Count; ++i)
+            {
+                Recycle(tempList[i]);
+            }
+
+            tempList.Clear();
         }
 
         public static bool IsSpawned(GameObject obj)
         {
-            return Instance.spawnedObjects.ContainsKey(obj);
+            return spawnedObjects.ContainsKey(obj);
         }
 
         public static int CountPooled<T>(T prefab) where T : Component
@@ -322,7 +325,7 @@ namespace PureMVCFramework
         }
         public static int CountPooled(GameObject prefab)
         {
-            return Instance.pooledObjects.TryGetValue(prefab, out List<GameObject> list) ? list.Count : 0;
+            return pooledObjects.TryGetValue(prefab, out List<GameObject> list) ? list.Count : 0;
         }
 
         public static int CountSpawned<T>(T prefab) where T : Component
@@ -332,7 +335,7 @@ namespace PureMVCFramework
         public static int CountSpawned(GameObject prefab)
         {
             int count = 0;
-            foreach (var instancePrefab in Instance.spawnedObjects.Values)
+            foreach (var instancePrefab in spawnedObjects.Values)
                 if (prefab == instancePrefab)
                     ++count;
             return count;
@@ -341,7 +344,7 @@ namespace PureMVCFramework
         public static int CountAllPooled()
         {
             int count = 0;
-            foreach (var list in Instance.pooledObjects.Values)
+            foreach (var list in pooledObjects.Values)
                 count += list.Count;
             return count;
         }
@@ -352,7 +355,7 @@ namespace PureMVCFramework
                 list = new List<GameObject>();
             if (!appendList)
                 list.Clear();
-            if (Instance.pooledObjects.TryGetValue(prefab, out List<GameObject> pooled))
+            if (pooledObjects.TryGetValue(prefab, out List<GameObject> pooled))
             {
                 list.AddRange(pooled);
             }
@@ -365,7 +368,7 @@ namespace PureMVCFramework
                 list = new List<T>();
             if (!appendList)
                 list.Clear();
-            if (Instance.pooledObjects.TryGetValue(prefab.gameObject, out List<GameObject> pooled))
+            if (pooledObjects.TryGetValue(prefab.gameObject, out List<GameObject> pooled))
             {
                 for (int i = 0; i < pooled.Count; ++i)
                     list.Add(pooled[i].GetComponent<T>());
@@ -380,7 +383,7 @@ namespace PureMVCFramework
                 list = new List<GameObject>();
             if (!appendList)
                 list.Clear();
-            foreach (var item in Instance.spawnedObjects)
+            foreach (var item in spawnedObjects)
                 if (item.Value == prefab)
                     list.Add(item.Key);
             return list;
@@ -392,7 +395,7 @@ namespace PureMVCFramework
             if (!appendList)
                 list.Clear();
             var prefabObj = prefab.gameObject;
-            foreach (var item in Instance.spawnedObjects)
+            foreach (var item in spawnedObjects)
                 if (item.Value == prefabObj)
                     list.Add(item.Key.GetComponent<T>());
             return list;
@@ -403,9 +406,9 @@ namespace PureMVCFramework
             if (applicationIsQuitting)
                 return;
 
-            if (Instance != null && Instance.pooledObjects.TryGetValue(prefab, out List<GameObject> pooled))
+            if (pooledObjects.TryGetValue(prefab, out List<GameObject> pooled))
             {
-                Instance.pooledObjects.Remove(prefab);
+                pooledObjects.Remove(prefab);
                 for (int i = 0; i < pooled.Count; ++i)
                 {
                     if (pooled[i] != null)
@@ -421,7 +424,7 @@ namespace PureMVCFramework
 
         public static GameObject GetPrefab(GameObject obj)
         {
-            return Instance.spawnedObjects.TryGetValue(obj, out GameObject prefab) ? prefab : null;
+            return spawnedObjects.TryGetValue(obj, out GameObject prefab) ? prefab : null;
         }
 
         public static GameObject GetPrefab<T>(T obj) where T : Component

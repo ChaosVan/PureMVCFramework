@@ -10,7 +10,7 @@ namespace PureMVCFramework
     [AttributeUsage(AttributeTargets.Field)]
     public class DomainReloadListAttribute : Attribute
     {
-        public string assemblyName;
+        private string assemblyName;
 
         public DomainReloadListAttribute(string assemblyName = "Assembly-CSharp")
         {
@@ -24,7 +24,7 @@ namespace PureMVCFramework
 #endif
         public static void Run()
         {
-            var assemblies = new string[] { "Assembly-CSharp", "PureMVCFramework", "Entity" };
+            var assemblies = new string[] { "Assembly-CSharp", "PureMVCFramework" };
             List<FieldInfo> list = new List<FieldInfo>();
             foreach (var assemblyName in assemblies)
             {

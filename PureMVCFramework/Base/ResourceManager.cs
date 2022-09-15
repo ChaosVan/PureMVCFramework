@@ -15,7 +15,6 @@ namespace PureMVCFramework
         void LoadAssetAsync<TObject>(object key, System.Action<TObject, object> callback = null, object userdata = null) where TObject : Object;
         void LoadAssetsAsync<TObject>(object key, System.Action<IList<TObject>> callbackAll, System.Action<TObject> callbackEach) where TObject : Object;
         void LoadSceneAsync(object key, System.Action<SceneInstance, object> callback, LoadSceneMode loadMode = LoadSceneMode.Single, bool activateOnLoad = true, object userdata = null);
-        void UnloadSceneAsync(Scene scene, System.Action<string> callback);
         void UnloadSceneAsync(string sceneName, System.Action<string> callback);
     }
 
@@ -149,7 +148,7 @@ namespace PureMVCFramework
 
         public void UnloadSceneAsync(Scene scene, System.Action<string> callback)
         {
-            Provider.UnloadSceneAsync(scene, callback);
+            Provider.UnloadSceneAsync(scene.name, callback);
         }
 
         public void UnloadSceneAsync(string key, System.Action<string> callback)

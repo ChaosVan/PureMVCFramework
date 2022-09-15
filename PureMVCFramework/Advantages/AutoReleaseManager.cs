@@ -1,10 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace PureMVCFramework.Advantages
 {
@@ -37,7 +36,7 @@ namespace PureMVCFramework.Advantages
 
         protected override void OnUpdate(float delta)
         {
-            if (m_AutoReleaseObjects != null)
+            if (m_AutoReleaseObjects.Count > 0)
             {
                 Dictionary<Object, Object>.Enumerator e = m_AutoReleaseObjects.GetEnumerator();
                 while (e.MoveNext())

@@ -144,8 +144,8 @@ namespace PureMVCFramework.UI
 
             if (ForceClosed)
             {
+                Close();
                 gameObject.Recycle();
-                ForceClosed = false;
                 return;
             }
 
@@ -217,6 +217,7 @@ namespace PureMVCFramework.UI
                 return;
             }
 
+            ForceClosed = false;
             IsOpen = false;
 
             if (!string.IsNullOrEmpty(config.mediatorName))
@@ -231,8 +232,8 @@ namespace PureMVCFramework.UI
             // Reset Canvas Layer
             ResetCanvas();
 
-            config = default;
-            worldParam = default;
+            config = null;
+            worldParam = null;
 
             if (gameObject != null)
                 gameObject.Recycle();

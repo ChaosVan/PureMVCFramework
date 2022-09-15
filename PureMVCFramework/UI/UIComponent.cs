@@ -4,12 +4,11 @@
     CreateTime: 2020/08/13 18:12:25
     Description:
 *****************************************************/
+using PureMVCFramework.Advantages;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Assertions;
-using PureMVCFramework.Advantages;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -47,21 +46,21 @@ namespace PureMVCFramework.UI
 
         public T AddComponent<T>(GameObject gameObject, object userdata = null) where T : UIComponent, new()
         {
-            T component = ReferencePool.Instance.SpawnInstance<T>();
+            T component = ReferencePool.SpawnInstance<T>();
             AddComponent(component, gameObject, userdata);
             return component;
         }
 
         public UIComponent AddComponent(Type type, GameObject gameObject, object userdata = null)
         {
-            UIComponent component = (UIComponent)ReferencePool.Instance.SpawnInstance(type);
+            UIComponent component = (UIComponent)ReferencePool.SpawnInstance(type);
             AddComponent(component, gameObject, userdata);
             return component;
         }
 
         public UIComponent AddComponent(string type, GameObject gameObject, object userdata = null)
         {
-            UIComponent component = (UIComponent)ReferencePool.Instance.SpawnInstance(type);
+            UIComponent component = (UIComponent)ReferencePool.SpawnInstance(type);
             AddComponent(component, gameObject, userdata);
             return component;
         }
@@ -92,7 +91,7 @@ namespace PureMVCFramework.UI
 
             EnableUpdate(false);
 
-            ReferencePool.Instance.RecycleInstance(this);
+            ReferencePool.RecycleInstance(this);
         }
     }
 }

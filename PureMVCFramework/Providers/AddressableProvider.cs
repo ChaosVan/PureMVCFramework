@@ -239,15 +239,6 @@ namespace PureMVCFramework.Providers
             };
         }
 
-        public void UnloadSceneAsync(Scene scene, System.Action<string> callback)
-        {
-            if (m_LoadedScene.TryGetValue(scene.name, out var inst))
-            {
-                UnloadSceneAsync(inst, _ => callback?.Invoke(scene.name));
-                m_LoadedScene.Remove(scene.name);
-            }
-        }
-
         public void UnloadSceneAsync(string key, System.Action<string> callback)
         {
             if (m_LoadedScene.TryGetValue(key, out var inst))

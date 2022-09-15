@@ -1,52 +1,85 @@
-﻿using PureMVC.Patterns.Observer;
-using System.Collections.Generic;
-using UnityEngine;
-using PureMVCFramework.Advantages;
-
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
+using System.Collections;
+using System.Collections.Generic;
 
 namespace PureMVCFramework.Entity
 {
-    public interface ISystemBase : IRecycleable, IInitializeable
+    public abstract class SystemBase : ComponentSystemBase
     {
-        void InjectEntity(Entity entity);
-        void Update();
-        void PreUpdate();
-        void PostUpdate();
-
-        IWorld World { get; set; }
-    }
-
-    public abstract class SystemBase : Notifier, ISystemBase
-    {
-#if ODIN_INSPECTOR && UNITY_EDITOR
-        [SerializeField]
-        protected bool showOdinInfo;
-#endif
-
 #if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
+        [ShowIf("showOdinInfo"), ShowInInspector, ListDrawerSettings(IsReadOnly = true)]
 #endif
         protected readonly List<Entity> Entities = new List<Entity>();
 
-        public IWorld World { get; set; }
+        public abstract void InjectEntity(Entity entity);
 
-        public virtual void OnRecycle() 
+        protected virtual void PreUpdate()
         {
+        }
+
+        protected virtual void PostUpdate()
+        {
+        }
+
+        public sealed override bool ShouldRunSystem()
+        {
+            if (Entities.Count == 0)
+                return false;
+
+            return base.ShouldRunSystem();
+        }
+
+        public sealed override void Update()
+        {
+            CheckedState();
+            if (Enabled && ShouldRunSystem())
+            {
+                if (!m_State.PreviouslyEnabled)
+                {
+                    m_State.PreviouslyEnabled = true;
+                    OnStartRunning();
+                }
+
+                var world = World.Unmanaged;
+                var oldExecutingSystem = world.ExecutingSystem;
+                world.ExecutingSystem = m_State.m_Handle;
+
+                try
+                {
+                    PreUpdate();
+                    OnUpdate();
+                }
+                finally
+                {
+                    PostUpdate();
+                    world.ExecutingSystem = oldExecutingSystem;
+                }
+            }
+            else if (m_State.PreviouslyEnabled)
+            {
+                m_State.PreviouslyEnabled = false;
+                OnStopRunningInternal();
+            }
+        }
+
+        internal sealed override void OnBeforeDestroyInternal()
+        {
+            base.OnBeforeDestroyInternal();
+        }
+
+        internal sealed override void OnBeforeCreateInternal(World world)
+        {
+            base.OnBeforeCreateInternal(world);
+        }
+
+        internal override void OnStopRunningInternal()
+        {
+            base.OnStopRunningInternal();
             Entities.Clear();
         }
 
-        public virtual void OnInitialized(params object[] args) { }
-
-
-        public abstract void InjectEntity(Entity entity);
-
-        public abstract void Update();
-
-        public virtual void PreUpdate() { }
-
-        public virtual void PostUpdate() { }
+        protected abstract void OnUpdate();
     }
 }

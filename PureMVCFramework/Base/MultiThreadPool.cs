@@ -14,13 +14,8 @@ namespace PureMVCFramework
 
     public class MultiThread
     {
-        public static int CurrentThreadCount = 0;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void RuntimeOnDisableDomainReload()
-        {
-            CurrentThreadCount = 0;
-        }
+        [DomainReload(0)]
+        public static int CurrentThreadCount;
 
         private Thread thread;
         private AutoResetEvent wakeupEvent = new AutoResetEvent(false);

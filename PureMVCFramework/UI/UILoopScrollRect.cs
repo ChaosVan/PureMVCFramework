@@ -67,7 +67,7 @@ namespace PureMVCFramework.UI
         public OnFetchTailDelegate OnFetchTail { get; set; }
         #endregion
 
-        public int HeadIndex { get; private set; }
+        public int HeadIndex { get; private set; } = -1;
         public int TailIndex { get; private set; } = -1;
 
         public ScrollRect ScrollRect
@@ -466,7 +466,7 @@ namespace PureMVCFramework.UI
 
         public void InsertItemWrap(int index, GameObject prefab, object userdata)
         {
-            if (index < 0 || index >= wraps.Count)
+            if (index < 0 || index > wraps.Count)
                 return;
 
             prefab.CreatePool();
@@ -481,10 +481,9 @@ namespace PureMVCFramework.UI
 
         public void AddItemToHead(GameObject prefab, object userdata)
         {
-            bool isHead = HeadIndex == 0;
-
             InsertItemWrap(0, prefab, userdata);
 
+            bool isHead = HeadIndex == 0;
             if (isHead)
                 CreateItem(wraps[0]);
 
@@ -493,10 +492,9 @@ namespace PureMVCFramework.UI
 
         public void AddItemToTail(GameObject prefab, object userdata)
         {
-            var isTail = TailIndex == wraps.Count - 1;
-
             AddItemWrap(prefab, userdata);
 
+            var isTail = TailIndex == wraps.Count - 1;
             if (isTail)
                 CreateItem(wraps[++TailIndex]);
 
