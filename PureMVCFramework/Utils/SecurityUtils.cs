@@ -1,13 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
 
 namespace PureMVCFramework
 {
@@ -123,59 +117,13 @@ namespace PureMVCFramework
                 {
                     return JsonUtility.FromJson<T>(jsonStr);
                 }
-            } catch (System.Exception e)
+            }
+            catch (System.Exception e)
             {
                 Debug.LogError(e);
             }
 
             return default;
         }
-
-#if UNITY_EDITOR
-        [MenuItem("Tools/GameTools/FindDuplicateFile", false, 1001)]
-        public static void FindDuplicateFile()
-        {
-            string[] files = Directory.GetFiles("Assets", "*", SearchOption.AllDirectories);
-            string dataPath = Application.dataPath.Replace("Assets", "");
-            Dictionary<string, string> dic = new Dictionary<string, string>();
-            int p = 0;
-
-            FileStream fs = new FileStream(Application.dataPath + "/FindDuplicateFile.log", FileMode.Create, FileAccess.Write);
-            StreamWriter writer = new StreamWriter(fs);
-
-            foreach (var file in files)
-            {
-                if (EditorUtility.DisplayCancelableProgressBar("FindDuplicateFile", file, p++ * 1f / files.Length))
-                {
-                    break;
-                }
-
-                if (Path.GetFileName(file).StartsWith(".", System.StringComparison.Ordinal) || Path.GetExtension(file) == ".meta")
-                    continue;
-
-                string path = dataPath + file;
-                string hashcode = SecurityUtils.FileMD5(path);
-
-                if (!string.IsNullOrEmpty(hashcode))
-                {
-                    if (dic.ContainsKey(hashcode))
-                    {
-                        string log = string.Format("{0} duplicate with {1}", file.PadRight(84, ' '), dic[hashcode]);
-                        Debug.Log(log);
-                        writer.WriteLine(log);
-                    }
-                    else
-                    {
-                        dic.Add(hashcode, file);
-                    }
-                }
-            }
-
-            writer.Close();
-            fs.Close();
-
-            EditorUtility.ClearProgressBar();
-        }
-#endif
     }
 }
