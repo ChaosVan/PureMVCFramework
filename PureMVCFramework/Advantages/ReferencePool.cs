@@ -12,12 +12,6 @@ using Sirenix.OdinInspector;
 
 namespace PureMVCFramework.Advantages
 {
-    [Obsolete("Use IDisposable instead")]
-    public interface IRecycleable : IDisposable { }
-
-    [Obsolete("Renamed, Use IInitializable instead")]
-    public interface IInitializeable : IInitializable { }
-
     public interface IInitializable
     {
         void OnInitialized(params object[] args);
