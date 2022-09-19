@@ -23,7 +23,7 @@ namespace PureMVCFramework.Advantages
         object Recycle(object obj, out string typeName);
         void LoadTypes(string assemblyString);
         Type GetType(string fullTypeName);
-        void InvokeConstructor(object inst, string typeName, params object[] args);
+        //void InvokeConstructor(object inst, string typeName, params object[] args);
     }
 
     public static class ReferencePool
@@ -69,9 +69,6 @@ namespace PureMVCFramework.Advantages
         {
             if (m_Cache.TryGetValue(typeName, out var list) && list.TryDequeue(out var result))
             {
-                if (recallCtor)
-                    provider.InvokeConstructor(result, typeName, args);
-
                 OnSpawned?.Invoke(typeName);
             }
             else

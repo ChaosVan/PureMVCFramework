@@ -36,20 +36,20 @@ namespace PureMVCFramework.Providers
             return null;
         }
 
-        public void InvokeConstructor(object inst, string typeName, params object[] args)
-        {
-            if (loadedTypes.TryGetValue(typeName, out var type))
-            {
-                var constructors = type.GetConstructors();
-                if (constructors != null && constructors.Length > 0)
-                    constructors[0].Invoke(inst, args);
-            }
-            else
-            {
-                customConstructor?.Invoke(inst, typeName, args);
-            }
+        //public void InvokeConstructor(object inst, string typeName, params object[] args)
+        //{
+        //    if (loadedTypes.TryGetValue(typeName, out var type))
+        //    {
+        //        var constructors = type.GetConstructors();
+        //        if (constructors != null && constructors.Length > 0)
+        //            constructors[0].Invoke(inst, args);
+        //    }
+        //    else
+        //    {
+        //        customConstructor?.Invoke(inst, typeName, args);
+        //    }
             
-        }
+        //}
 
         public object Recycle(object inst, out string typeName)
         {
