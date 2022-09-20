@@ -11,7 +11,7 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowIf("showOdinInfo"), ShowInInspector, ListDrawerSettings(IsReadOnly = true)]
 #endif
-        protected readonly List<Entity> Entities = new List<Entity>();
+        internal readonly List<Entity> Entities = new List<Entity>();
 
         public abstract void InjectEntity(Entity entity);
 

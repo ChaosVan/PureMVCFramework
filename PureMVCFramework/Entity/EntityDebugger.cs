@@ -19,7 +19,7 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif
-        private readonly Dictionary<ulong, Entity> Entities = new Dictionary<ulong, Entity>();
+        private readonly Dictionary<ulong, List<IComponentData>> Entities = new Dictionary<ulong, List<IComponentData>>();
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif
@@ -37,6 +37,8 @@ namespace PureMVCFramework.Entity
 
             EntityManager.OnEntityCreated += OnEntityCreated;
             EntityManager.OnEntityDestroyed += OnEntityDetroyed;
+            EntityManager.OnEntityAddComponentData += OnEntityAddComponentData;
+            EntityManager.OnEntityRemoveComponentData += OnEntityRemoveComponentData;
             EntityManager.OnEntityGameObjectLoaded += OnEntityGameObjectLoaded;
             EntityManager.OnEntityGameObjectDeleted += OnEntityGameObjectDeleted;
 
@@ -52,6 +54,8 @@ namespace PureMVCFramework.Entity
 
             EntityManager.OnEntityCreated -= OnEntityCreated;
             EntityManager.OnEntityDestroyed -= OnEntityDetroyed;
+            EntityManager.OnEntityAddComponentData -= OnEntityAddComponentData;
+            EntityManager.OnEntityRemoveComponentData -= OnEntityRemoveComponentData;
             EntityManager.OnEntityGameObjectLoaded -= OnEntityGameObjectLoaded;
             EntityManager.OnEntityGameObjectDeleted -= OnEntityGameObjectDeleted;
 
@@ -90,14 +94,37 @@ namespace PureMVCFramework.Entity
             }
         }
 
-        void OnEntityCreated(Entity entity)
+        void OnEntityCreated(ulong entity)
         {
-            Entities.Add(entity.GUID, entity);
+            Entities.Add(entity, new List<IComponentData>());
         }
 
-        void OnEntityDetroyed(ulong index)
+        void OnEntityDetroyed(ulong entity)
         {
-            Entities.Remove(index);
+            Entities.Remove(entity);
+        }
+
+        private void OnEntityAddComponentData(ulong entity, IComponentData component)
+        {
+            if (Entities.TryGetValue(entity, out var list))
+            {
+                list.Add(component);
+                list.Sort(ComponentDataSorter);
+            }
+        }
+
+        private void OnEntityRemoveComponentData(ulong entity, IComponentData component)
+        {
+            if (Entities.TryGetValue(entity, out var list))
+            {
+                list.Remove(component);
+                list.Sort(ComponentDataSorter);
+            }
+        }
+
+        private static int ComponentDataSorter(IComponentData a, IComponentData b)
+        {
+            return TypeManager.GetTypeIndex(a.GetType()) - TypeManager.GetTypeIndex(b.GetType());
         }
 
         void OnEntityGameObjectLoaded(GameObject go, Entity entity)
