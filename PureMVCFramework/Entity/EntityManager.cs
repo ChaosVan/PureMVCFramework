@@ -100,10 +100,32 @@ namespace PureMVCFramework.Entity
             EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
         }
 
-        public static void DestroyEntity(EntityData data)
+        public static void DestroyEntity(Entity entity, out GameObject gameObject)
         {
-            if (TryGetEntity(data, out var entity))
+            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity, out gameObject);
+        }
+
+        public static bool DestroyEntity(EntityData data)
+        {
+            if (TryGetEntity(data, out var entity) && entity.IsAlive)
+            {
                 EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool DestroyEntity(EntityData data, out GameObject gameObject)
+        {
+            if (TryGetEntity(data, out var entity) && entity.IsAlive)
+            {
+                EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity, out gameObject);
+                return true;
+            }
+
+            gameObject = null;
+            return false;
         }
 
         public static EntityData Create()
