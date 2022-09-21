@@ -36,7 +36,6 @@ namespace PureMVCFramework.Entity
         protected override void OnUpdate(int index, Entity entity, LifeTime component)
         {
             component.Value -= Time.DeltaTime;
-
             if (component.Value <= 0)
             {
                 commandBuffer.DestroyEntity(entity);
