@@ -6,35 +6,17 @@ using UnityEngine;
 
 namespace PureMVCFramework.Entity
 {
-    public struct EntityData
-    {
-        public ulong index;
-
-        public static implicit operator EntityData(ulong index)
-        {
-            return new EntityData { index = index };
-        }
-
-        public static implicit operator EntityData(uint index)
-        {
-            return new EntityData { index = index };
-        }
-
-        public static implicit operator ulong(EntityData entity)
-        {
-            return entity.index;
-        }
-    }
-
     public partial class EntityManager
     {
         [DomainReload(1000000UL)]
         internal static ulong GUID_COUNT = 1000000UL;
 
-        internal static event Action<Entity> OnEntityCreated;
+        internal static event Action<ulong> OnEntityCreated;
         internal static event Action<ulong> OnEntityDestroyed;
+        internal static event Action<ulong, IComponentData> OnEntityAddComponentData;
+        internal static event Action<ulong, IComponentData> OnEntityRemoveComponentData;
 
-        internal static readonly SortedDictionary<ulong, Entity> Entities = new SortedDictionary<ulong, Entity>();
+        internal static readonly Dictionary<ulong, Entity> Entities = new Dictionary<ulong, Entity>();
         internal static GCHandle m_World;
 
         internal static EntityCommandBufferSystem BeginCommandBuffer, EndCommandBuffer;
@@ -56,7 +38,7 @@ namespace PureMVCFramework.Entity
         }
 
 
-        public static SortedDictionary<ulong, Entity> GetAllEntities()
+        public static Dictionary<ulong, Entity> GetAllEntities()
         {
             return Entities;
         }
@@ -207,13 +189,16 @@ namespace PureMVCFramework.Entity
             entity.IsAlive = true;
             Entities.Add(data, entity);
 
-            OnEntityCreated?.Invoke(entity);
+            OnEntityCreated?.Invoke(data);
 
             if (archetype.TypesCount > 0)
             {
                 foreach (var t in archetype.componentTypes)
                 {
-                    entity.InternalAddComponentData(t, (IComponentData)ReferencePool.SpawnInstance(TypeManager.GetType(t.TypeIndex)));
+                    if (entity.InternalAddComponentData(t, (IComponentData)ReferencePool.SpawnInstance(TypeManager.GetType(t.TypeIndex))))
+                    {
+                        OnEntityAddComponentData?.Invoke(data, entity.m_AllComponentData[t.TypeIndex]);
+                    }
                 }
             }
 
@@ -233,6 +218,7 @@ namespace PureMVCFramework.Entity
                 }
                 Entities.Remove(data);
                 ReferencePool.RecycleInstance(entity);
+
                 OnEntityDestroyed?.Invoke(data);
 
                 return true;
@@ -243,9 +229,13 @@ namespace PureMVCFramework.Entity
 
         internal static bool InternalAddComponentData(EntityData data, IComponentData componentData, out Entity entity)
         {
-            if (TryGetEntity(data, out entity))
+            if (TryGetEntity(data, out entity) && entity.IsAlive)
             {
-                return entity.InternalAddComponentData(componentData.GetType(), componentData);
+                if (entity.InternalAddComponentData(componentData.GetType(), componentData))
+                {
+                    OnEntityAddComponentData?.Invoke(data, componentData);
+                    return true;
+                }
             }
 
             return false;
@@ -253,9 +243,13 @@ namespace PureMVCFramework.Entity
 
         internal static bool InternalRemoveComponentData(EntityData data, ComponentType type, out Entity entity, out IComponentData componentData)
         {
-            if (TryGetEntity(data, out entity))
+            if (TryGetEntity(data, out entity) && entity.IsAlive)
             {
-                return entity.InternalRemoveComponentData(type, out componentData);
+                if (entity.InternalRemoveComponentData(type, out componentData))
+                {
+                    OnEntityRemoveComponentData?.Invoke(data, componentData);
+                    return true;
+                }
             }
 
             componentData = null;

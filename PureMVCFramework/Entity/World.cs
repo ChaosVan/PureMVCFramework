@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace PureMVCFramework.Entity
 {
@@ -141,6 +142,8 @@ namespace PureMVCFramework.Entity
 #endif
         public TimeData Time { get => m_Unmanaged.CurrentTime; set => m_Unmanaged.CurrentTime = value; }
 
+        internal Stack<TimeData> m_WorldTimeQueue;
+
         public float MaximumDeltaTime
         {
             get => m_Unmanaged.MaximumDeltaTime;
@@ -160,12 +163,14 @@ namespace PureMVCFramework.Entity
             m_Unmanaged = new WorldUnmanaged(this, flags, backingAllocatorHandle);
 
             s_AllWorlds.Add(this);
-            WorldCreated?.Invoke(this);
+
+            m_WorldTimeQueue = new Stack<TimeData>();
 
             // The EntityManager itself is only a handle to a data access and already performs safety checks, so it is
             // OK to keep it on this handle itself instead of in the actual implementation.
-            //m_EntityManager = default;
             EntityManager.Initialize(this);
+
+            WorldCreated?.Invoke(this);
         }
 
         public void Dispose()
@@ -177,14 +182,7 @@ namespace PureMVCFramework.Entity
 
             m_Unmanaged.DisallowGetSystem();
 
-            // We don't want any jobs making changes to this world as we are disposing it.
-            // This could be particularly bad if we are destroying blobs referenced by Components as a job attempts to access them.
-            //EntityManager.ExclusiveEntityTransactionDependency.Complete();
-            //EntityManager.EndExclusiveEntityTransaction();
-            //EntityManager.CompleteAllJobs();
-
             DestroyAllSystemsAndLogException();
-            //m_Unmanaged.DestroyAllUnmanagedSystemsAndLogException();
 
             s_AllWorlds.Remove(this);
 
@@ -208,6 +206,19 @@ namespace PureMVCFramework.Entity
         public void SetTime(TimeData newTimeData)
         {
             Time = newTimeData;
+        }
+
+        public void PushTime(TimeData newTimeData)
+        {
+            m_WorldTimeQueue.Push(Time);
+            SetTime(newTimeData);
+        }
+
+        public void PopTime()
+        {
+            Assert.IsTrue(m_WorldTimeQueue.Count > 0, "PopTime without a matching PushTime");
+            var prevTime = m_WorldTimeQueue.Pop();
+            SetTime(prevTime);
         }
 
         ComponentSystemBase CreateSystemInternal(Type type)

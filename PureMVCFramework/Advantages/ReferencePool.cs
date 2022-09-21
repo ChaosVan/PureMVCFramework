@@ -12,12 +12,6 @@ using Sirenix.OdinInspector;
 
 namespace PureMVCFramework.Advantages
 {
-    [Obsolete("Use IDisposable instead")]
-    public interface IRecycleable : IDisposable { }
-
-    [Obsolete("Renamed, Use IInitializable instead")]
-    public interface IInitializeable : IInitializable { }
-
     public interface IInitializable
     {
         void OnInitialized(params object[] args);
@@ -29,7 +23,7 @@ namespace PureMVCFramework.Advantages
         object Recycle(object obj, out string typeName);
         void LoadTypes(string assemblyString);
         Type GetType(string fullTypeName);
-        void InvokeConstructor(object inst, string typeName, params object[] args);
+        //void InvokeConstructor(object inst, string typeName, params object[] args);
     }
 
     public static class ReferencePool
@@ -75,9 +69,6 @@ namespace PureMVCFramework.Advantages
         {
             if (m_Cache.TryGetValue(typeName, out var list) && list.TryDequeue(out var result))
             {
-                if (recallCtor)
-                    provider.InvokeConstructor(result, typeName, args);
-
                 OnSpawned?.Invoke(typeName);
             }
             else

@@ -1,33 +1,47 @@
-﻿#if ODIN_INSPECTOR
-using Sirenix.OdinInspector;
-#endif
+﻿using PureMVCFramework.Advantages;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace PureMVCFramework.Entity
 {
+    public struct EntityData
+    {
+        public ulong index;
+
+        public static implicit operator EntityData(ulong index)
+        {
+            return new EntityData { index = index };
+        }
+
+        public static implicit operator EntityData(uint index)
+        {
+            return new EntityData { index = index };
+        }
+
+        public static implicit operator ulong(EntityData entity)
+        {
+            return entity.index;
+        }
+    }
+
     public sealed class Entity : IDisposable
     {
         public GameObject gameObject;
 
 #if ODIN_INSPECTOR
-        [ShowInInspector]
+        [Sirenix.OdinInspector.ShowInInspector]
 #endif
         public ulong GUID { get; internal set; }    // Generic Unique Identifier  本地ID
 
 #if ODIN_INSPECTOR
-        [ShowInInspector]
+        [Sirenix.OdinInspector.ShowInInspector]
 #endif
         public bool IsAlive { get; internal set; }
 
-#if ODIN_INSPECTOR
-        [ShowInInspector]
-#endif
         internal readonly IComponentData[] m_AllComponentData;
 
-        public EntityArchetype archetype;
+        private EntityArchetype archetype;
 
         public Entity()
         {
@@ -41,48 +55,27 @@ namespace PureMVCFramework.Entity
 
             for (int i = 0; i < m_AllComponentData.Length; ++i)
             {
+                if (m_AllComponentData[i] != null)
+                    ReferencePool.RecycleInstance(m_AllComponentData[i]);
                 m_AllComponentData[i] = null;
             }
             archetype = default;
             gameObject = null;
+
+
         }
 
         internal bool InternalAddComponentData(ComponentType type, IComponentData component)
         {
-            if (!IsAlive)
-                return false;
-
             Assert.IsNull(m_AllComponentData[type.TypeIndex], $"Entity({GUID}) already has type: {TypeManager.GetType(type.TypeIndex).FullName}");
             archetype.AddComponentType(type);
             m_AllComponentData[type.TypeIndex] = component;
             return true;
         }
 
-        //internal bool InternalSetComponentData(ComponentType type, IComponentData component, out IComponentData removed)
-        //{
-        //    removed = null;
-        //    if (!IsAlive)
-        //        return false;
-
-        //    Assert.IsNotNull(m_AllComponentData[type.TypeIndex]);
-
-        //    if (component == null)
-        //        return InternalRemoveComponentData(type, out removed);
-
-        //    if (!archetype.TryGetComponentType(type.TypeIndex, out var t))
-        //        return false;
-
-        //    removed = m_AllComponentData[type.TypeIndex];
-        //    m_AllComponentData[type.TypeIndex] = component;
-        //    return true;
-        //}
-
         internal bool InternalRemoveComponentData(ComponentType type, out IComponentData removed)
         {
             removed = m_AllComponentData[type.TypeIndex];
-            if (!IsAlive)
-                return false;
-
             Assert.IsNotNull(removed, $"Entity({GUID}) doesn't has type: {TypeManager.GetType(type.TypeIndex).FullName}");
             archetype.RemoveComponentType(type);
             m_AllComponentData[type.TypeIndex] = null;
@@ -92,17 +85,11 @@ namespace PureMVCFramework.Entity
         internal bool InternalGetComponentData(ComponentType type, out IComponentData ret)
         {
             ret = m_AllComponentData[type.TypeIndex];
-            if (!IsAlive)
-                return false;
-
             return ret != null;
         }
 
         internal bool InternalGetComponentData(EntityQuery query, out IComponentData[] ret)
         {
-            ret = null;
-            if (!IsAlive)
-                return false;
 
             if (query.TypesCount > 0)
             {
@@ -126,6 +113,7 @@ namespace PureMVCFramework.Entity
                 return true;
             }
 
+            ret = null;
             return false;
         }
     }

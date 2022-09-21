@@ -117,18 +117,17 @@ namespace PureMVCFramework.Entity
 
         internal void AddDestroyCommand(ECBCommand op, EntityData entity, bool destroy)
         {
-            var ecbd = new EntityCommandBufferData();
-            ecbd.commandType = op;
-            ecbd.entity = entity;
-            ecbd.destroyImmediately = destroy;
-
-            if (EntityManager.TryGetEntity(entity, out var e))
+            if (EntityManager.TryGetEntity(entity, out var e) && e != null && e.IsAlive)
             {
-                if (e != null)
-                    e.IsAlive = false;
-            }
+                e.IsAlive = false; 
+                
+                var ecbd = new EntityCommandBufferData();
+                ecbd.commandType = op;
+                ecbd.entity = entity;
+                ecbd.destroyImmediately = destroy;
 
-            m_Data.Add(ecbd);
+                m_Data.Add(ecbd);
+            }
         }
 
         internal void AddEntityComponentCommand(ECBCommand op, EntityData entity, IComponentData componentData)

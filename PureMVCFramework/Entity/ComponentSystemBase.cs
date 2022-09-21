@@ -157,7 +157,7 @@ namespace PureMVCFramework.Entity
             }
         }
 
-        private IFacade Facade => PureMVC.Patterns.Facade.Facade.GetInstance(() => new PureMVC.Patterns.Facade.Facade());
+        protected IFacade Facade => PureMVC.Patterns.Facade.Facade.GetInstance(() => new PureMVC.Patterns.Facade.Facade());
         public void SendNotification(string notificationName, object body = null, string type = null)
         {
             Facade.SendNotification(notificationName, body, type);
