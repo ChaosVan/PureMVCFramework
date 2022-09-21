@@ -2,7 +2,7 @@
 	"name": "com.chaosvan.puremvcframework",
 	"displayName": "PureMVCFramework",
 	"description": "PureMVCFramework",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"unity": "2019.4",
 	"license": "MIT",
 	"author": {
@@ -15,11 +15,5 @@
 		"com.unity.burst": "1.6.6",
 		"com.unity.mathematics": "1.2.1"
 	},
-	"samples": [
-		{
-			"displayName": "ILRuntime Extensions",
-			"description": "ILRuntime Extensions",
-			"path": "Samples~/ILRuntimeExtensions"
-		}
-	]
+	"samples": []
 }
