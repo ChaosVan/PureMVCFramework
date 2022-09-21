@@ -13,14 +13,27 @@ namespace PureMVCFramework.Entity
 #endif
         internal readonly List<Entity> Entities = new List<Entity>();
 
+        protected EntityCommandBufferSystem CommandBufferSystem;
+        protected EntityCommandBuffer CommandBuffer;
+
         public abstract void InjectEntity(Entity entity);
 
         protected virtual void PreUpdate()
         {
+            if (CommandBufferSystem != null)
+                CommandBuffer = CommandBufferSystem.CreateCommandBuffer();
         }
 
         protected virtual void PostUpdate()
         {
+            CommandBuffer = null;
+        }
+
+        protected override void OnStopRunning()
+        {
+            base.OnStopRunning();
+
+            CommandBufferSystem = null;
         }
 
         public sealed override bool ShouldRunSystem()
@@ -74,7 +87,7 @@ namespace PureMVCFramework.Entity
             base.OnBeforeCreateInternal(world);
         }
 
-        internal override void OnStopRunningInternal()
+        internal sealed override void OnStopRunningInternal()
         {
             base.OnStopRunningInternal();
             Entities.Clear();
