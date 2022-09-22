@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-#if ODIN_INSPECTOR
+﻿#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using UnityEngine;
 
 namespace PureMVCFramework
 {
@@ -20,6 +20,8 @@ namespace PureMVCFramework
 
         public class TimerTask
         {
+            public string name;
+
             public TimerType timerType;
             public float startTime;
             public float interval;
@@ -159,13 +161,13 @@ namespace PureMVCFramework
         /// </summary>
         /// <param name="startDelay">Start delay.</param>
         /// <param name="executable">Executable.</param>
-        public TimerTask AddOneShotTask(float startDelay, Action executable)
+        public TimerTask AddOneShotTask(float startDelay, Action executable, string taskName = null)
         {
             return AddTask(TimerType.FIXED_DURATION, startDelay, 0, 1, () =>
             {
                 executable?.Invoke();
                 return true;
-            });
+            }, taskName);
         }
 
         /// <summary>
@@ -173,13 +175,13 @@ namespace PureMVCFramework
         /// </summary>
         /// <param name="startDelay">Start delay.</param>
         /// <param name="executable">Executable.</param>
-        public TimerTask AddRealtimeOneShotTask(float startDelay, Action executable)
+        public TimerTask AddRealtimeOneShotTask(float startDelay, Action executable, string taskName = null)
         {
             return AddTask(TimerType.FIXED_REALTIME_DURATION, Time.realtimeSinceStartup + startDelay, 0, 1, () =>
             {
                 executable?.Invoke();
                 return true;
-            });
+            }, taskName);
         }
 
         /// <summary>
@@ -189,9 +191,9 @@ namespace PureMVCFramework
         /// <param name="interval">Interval.</param>
         /// <param name="repeatTimes">Repeat times, -1 means always.</param>
         /// <param name="executable">Executable.</param>
-        public TimerTask AddRepeatTask(float startDelay, float interval, int repeatTimes, Func<bool> executable)
+        public TimerTask AddRepeatTask(float startDelay, float interval, int repeatTimes, Func<bool> executable, string taskName = null)
         {
-            return AddTask(TimerType.FIXED_DURATION, startDelay, interval, repeatTimes, executable);
+            return AddTask(TimerType.FIXED_DURATION, startDelay, interval, repeatTimes, executable, taskName);
         }
 
         /// <summary>
@@ -201,18 +203,18 @@ namespace PureMVCFramework
         /// <param name="interval">Interval.</param>
         /// <param name="repeatTimes">Repeat times, -1 means always.</param>
         /// <param name="executable">Executable.</param>
-        public TimerTask AddRealtimeRepeatTask(float startDelay, float interval, int repeatTimes, Func<bool> executable)
+        public TimerTask AddRealtimeRepeatTask(float startDelay, float interval, int repeatTimes, Func<bool> executable, string taskName = null)
         {
-            return AddTask(TimerType.FIXED_REALTIME_DURATION, Time.realtimeSinceStartup + startDelay, interval, repeatTimes, executable);
+            return AddTask(TimerType.FIXED_REALTIME_DURATION, Time.realtimeSinceStartup + startDelay, interval, repeatTimes, executable, taskName);
         }
 
         /// <summary>
         /// Adds the frame execute task.
         /// </summary>
         /// <param name="executable">Executable.</param>
-        public TimerTask AddFrameExecuteTask(Func<bool> executable)
+        public TimerTask AddFrameExecuteTask(Func<bool> executable, string taskName = null)
         {
-            return AddTask(TimerType.EVERY_FRAME, 0, 0, 0, executable);
+            return AddTask(TimerType.EVERY_FRAME, 0, 0, 0, executable, taskName);
         }
 
         /// <summary>
@@ -224,13 +226,24 @@ namespace PureMVCFramework
         /// <param name="interval">Interval.</param>
         /// <param name="repeatTimes">Repeat times.</param>
         /// <param name="executable">Executable.</param>
-        private TimerTask AddTask(TimerType timerType, float startTime, float interval, int repeatTimes, Func<bool> executable)
+        private TimerTask AddTask(TimerType timerType, float startTime, float interval, int repeatTimes, Func<bool> executable, string taskName)
         {
             TimerTask task = new TimerTask { timerType = timerType, startTime = startTime, interval = interval, repeatTimes = repeatTimes, executable = executable };
-
+#if UNITY_EDITOR
+            task.name = string.IsNullOrEmpty(taskName) ? DefaultTaskName(executable) : taskName;
+#endif
             m_TaskList.Add(task);
 
             return task;
         }
+
+#if UNITY_EDITOR
+        private static string DefaultTaskName(Func<bool> executable)
+        {
+            var methodInfo = executable.GetMethodInfo();
+
+            return methodInfo.DeclaringType.Name + "." + methodInfo.Name;
+        }
+#endif
     }
 }
