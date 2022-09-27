@@ -73,13 +73,17 @@ namespace PureMVCFramework.Entity
             return true;
         }
 
-        internal bool InternalRemoveComponentData(ComponentType type, out IComponentData removed)
+        internal bool InternalRemoveComponentData(ComponentType type, out IComponentData ret)
         {
-            removed = m_AllComponentData[type.TypeIndex];
-            Assert.IsNotNull(removed, $"Entity({GUID}) doesn't has type: {TypeManager.GetType(type.TypeIndex).FullName}");
-            archetype.RemoveComponentType(type);
-            m_AllComponentData[type.TypeIndex] = null;
-            return true;
+            ret = m_AllComponentData[type.TypeIndex];
+            if (ret != null)
+            {
+                archetype.RemoveComponentType(type);
+                m_AllComponentData[type.TypeIndex] = null;
+                return true;
+            }
+
+            return false;
         }
 
         internal bool InternalGetComponentData(ComponentType type, out IComponentData ret)
@@ -90,7 +94,6 @@ namespace PureMVCFramework.Entity
 
         internal bool InternalGetComponentData(EntityQuery query, out IComponentData[] ret)
         {
-
             if (query.TypesCount > 0)
             {
                 ret = new IComponentData[query.TypesCount];
