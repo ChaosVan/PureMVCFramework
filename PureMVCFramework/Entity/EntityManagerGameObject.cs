@@ -51,14 +51,22 @@ namespace PureMVCFramework.Entity
         {
             if (go != null)
             {
-                entity.gameObject = go;
+                if (entity.gameObject != null)
+                {
+                    OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
+                    GameObjectEntities[entity.gameObject] = null;
+                    entity.gameObject.Recycle();
+                }
+
 #if UNITY_EDITOR
                 go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
 #endif
 
-                BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
+                entity.gameObject = go;
                 GameObjectEntities[entity.gameObject] = entity;
                 OnEntityGameObjectLoaded?.Invoke(entity.gameObject, entity);
+
+                BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
             }
         }
 
