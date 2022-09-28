@@ -23,7 +23,7 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.OneLine)]
 #endif
-        internal static readonly Dictionary<GameObject, Entity> GameObjectEntities = new Dictionary<GameObject, Entity>();
+        private readonly Dictionary<GameObject, Entity> GameObjectEntities = new Dictionary<GameObject, Entity>();
 
         private DefaultWorldInitialization.DefaultRootGroups rootGroup;
 

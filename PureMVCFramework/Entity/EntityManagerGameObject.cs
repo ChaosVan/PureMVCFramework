@@ -54,7 +54,7 @@ namespace PureMVCFramework.Entity
                 if (entity.gameObject != null)
                 {
                     OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
-                    GameObjectEntities[entity.gameObject] = null;
+                    GameObjectEntities.Remove(entity.gameObject);
                     entity.gameObject.Recycle();
                 }
 

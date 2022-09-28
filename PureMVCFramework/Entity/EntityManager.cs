@@ -95,6 +95,46 @@ namespace PureMVCFramework.Entity
             }
         }
 
+        public static void DestroyEntities(IEnumerable<EntityData> entities)
+        {
+            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            foreach (var entity in entities)
+            {
+                commandBuffer.DestroyEntity(entity);
+            }
+        }
+
+        public static void DestroyEntities(EntityQuery query)
+        {
+            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            if (TryGetEntities(query, out var entities))
+            {
+                foreach (var entity in entities.Keys)
+                {
+                    commandBuffer.DestroyEntity(entity);
+                }
+            }
+        }
+
+        public static void DestroyEntities(EntityQuery query, out GameObject[] gameObjects)
+        {
+            gameObjects = null;
+            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            if (TryGetEntities(query, out var entities))
+            {
+                gameObjects = new GameObject[entities.Count];
+                int index = 0;
+                foreach (var e in entities.Keys)
+                {
+                    if (TryGetEntity(e, out var entity))
+                    {
+                        gameObjects[index++] = entity.gameObject;
+                        commandBuffer.DestroyEntity(entity, false);
+                    }
+                }
+            }
+        }
+
         public static void DestroyEntity(Entity entity)
         {
             EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
@@ -102,30 +142,25 @@ namespace PureMVCFramework.Entity
 
         public static void DestroyEntity(Entity entity, out GameObject gameObject)
         {
-            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity, out gameObject);
-        }
-
-        public static bool DestroyEntity(EntityData data)
-        {
-            if (TryGetEntity(data, out var entity) && entity.IsAlive)
-            {
-                EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
-                return true;
-            }
-
-            return false;
-        }
-
-        public static bool DestroyEntity(EntityData data, out GameObject gameObject)
-        {
-            if (TryGetEntity(data, out var entity) && entity.IsAlive)
-            {
-                EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity, out gameObject);
-                return true;
-            }
-
             gameObject = null;
-            return false;
+            if (entity.IsAlive)
+                gameObject = entity.gameObject;
+            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity, false);
+        }
+
+        public static void DestroyEntity(EntityData entity)
+        {
+            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
+        }
+
+        public static void DestroyEntity(EntityData entity, out GameObject gameObject)
+        {
+            gameObject = null;
+            if (TryGetEntity(entity, out var e) && e.IsAlive)
+            {
+                gameObject = e.gameObject;
+                EndCommandBuffer.CreateCommandBuffer().DestroyEntity(e, false);
+            }
         }
 
         public static EntityData Create(out EntityCommandBuffer commandBuffer)
@@ -228,14 +263,14 @@ namespace PureMVCFramework.Entity
             {
                 if (entity.gameObject != null)
                 {
+                    OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
+                    GameObjectEntities.Remove(entity.gameObject);
                     gameObject = entity.gameObject;
-                    GameObjectEntities.Remove(gameObject);
-                    OnEntityGameObjectDeleted?.Invoke(gameObject);
                 }
-                Entities.Remove(data);
-                ReferencePool.RecycleInstance(entity);
 
                 OnEntityDestroyed?.Invoke(data);
+                Entities.Remove(data);
+                ReferencePool.RecycleInstance(entity);
 
                 return true;
             }
