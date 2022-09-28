@@ -51,11 +51,11 @@ namespace PureMVCFramework.Entity
         public static bool TryGetEntities(EntityQuery query, out Dictionary<ulong, IComponentData[]> entities)
         {
             entities = new Dictionary<ulong, IComponentData[]>();
-            foreach (var entity in Entities.Keys)
+            foreach (var entity in Entities.Values)
             {
                 if (GetComponentData(entity, query, out var components))
                 {
-                    entities.Add(entity, components);
+                    entities.Add(entity.GUID, components);
                 }
             }
 
@@ -128,27 +128,27 @@ namespace PureMVCFramework.Entity
             return false;
         }
 
-        public static EntityData Create()
+        public static EntityData Create(out EntityCommandBuffer commandBuffer)
         {
             EntityArchetype archetype = default;
-            return Create(archetype);
+            return Create(archetype, out commandBuffer);
         }
 
-        public static EntityData Create(params ComponentType[] componentTypes)
+        public static EntityData Create(out EntityCommandBuffer commandBuffer, params ComponentType[] componentTypes)
         {
             EntityArchetype archetype = new EntityArchetype(componentTypes);
-            return Create(archetype);
+            return Create(archetype, out commandBuffer);
         }
 
-        public static EntityData Create(EntityArchetype archetype)
+        public static EntityData Create(EntityArchetype archetype, out EntityCommandBuffer commandBuffer)
         {
-            Create(archetype, 1, out var entities);
+            Create(archetype, 1, out var entities, out commandBuffer);
             return entities[0];
         }
 
-        public static void Create(EntityArchetype archetype, int count, out EntityData[] entities)
+        public static void Create(EntityArchetype archetype, int count, out EntityData[] entities, out EntityCommandBuffer commandBuffer)
         {
-            var commandBuffer = BeginCommandBuffer.CreateCommandBuffer();
+            commandBuffer = BeginCommandBuffer.CreateCommandBuffer();
             entities = new EntityData[count];
             for (int i = 0; i < count; i++)
             {
@@ -187,12 +187,6 @@ namespace PureMVCFramework.Entity
                 return componentData;
 
             return null;
-        }
-
-        public static bool GetComponentData(EntityData entity, EntityQuery query, out IComponentData[] componentData)
-        {
-            componentData = null;
-            return TryGetEntity(entity, out var e) && GetComponentData(e, query, out componentData);
         }
 
         public static bool GetComponentData(Entity entity, EntityQuery query, out IComponentData[] componentData)

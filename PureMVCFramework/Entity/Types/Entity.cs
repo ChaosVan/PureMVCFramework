@@ -99,18 +99,9 @@ namespace PureMVCFramework.Entity
                 ret = new IComponentData[query.TypesCount];
                 for (int i = 0; i < query.TypesCount; i++)
                 {
-                    ret[i] = m_AllComponentData[query.types[i].TypeIndex];
-
-                    if (query.types[i].AccessModeType < ComponentType.AccessMode.Exclude)
-                    {
-                        if (ret[i] == null)
-                            return false;
-                    }
-                    else if (query.types[i].AccessModeType == ComponentType.AccessMode.Exclude)
-                    {
-                        if (ret[i] != null)
-                            return false;
-                    }
+                    var tf = InternalGetComponentData(query.types[i], out ret[i]);
+                    if (tf.Equals(query.types[i].AccessModeType == ComponentType.AccessMode.Exclude))
+                        return false;
                 }
 
                 return true;
