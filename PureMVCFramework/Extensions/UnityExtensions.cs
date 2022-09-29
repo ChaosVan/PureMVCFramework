@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PureMVCFramework.Extensions
@@ -96,13 +94,13 @@ namespace PureMVCFramework.Extensions
 
     public static class TransformExtentions
     {
-        public static Transform GetOrAddTransform(this Transform parent, string childName, Vector3 position, Vector3 roll)
+        public static Transform GetOrAddTransform(this Transform parent, string childName, Vector3 position, Vector3 eulerAngle)
         {
             Transform t = GetOrAddTransform(parent, childName);
             if (t != null)
             {
                 t.position = position;
-                t.rotation = Quaternion.Euler(roll);
+                t.rotation = Quaternion.Euler(eulerAngle);
             }
 
             return t;
@@ -138,7 +136,6 @@ namespace PureMVCFramework.Extensions
                     t.SetParent(parent, false);
                 }
             }
-
 
             return t;
         }
