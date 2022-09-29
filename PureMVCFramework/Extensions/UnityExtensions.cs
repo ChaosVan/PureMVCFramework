@@ -13,19 +13,22 @@ namespace PureMVCFramework.Extensions
             return o == null;
         }
 
-        public static void SetLayer(this GameObject go, int layer)
+        public static void SetLayer(this GameObject go, int layer, bool recursively = true)
         {
-            foreach (Transform tran in go.transform)
+            if (recursively)
             {
-                SetLayer(tran.gameObject, layer);
+                foreach (Transform tran in go.transform)
+                {
+                    SetLayer(tran.gameObject, layer, recursively);
+                }
             }
 
             go.layer = layer;
         }
 
-        public static void SetLayer(this GameObject go, string layerName = "Default")
+        public static void SetLayer(this GameObject go, string layerName = "Default", bool recursively = true)
         {
-            SetLayer(go, LayerMask.NameToLayer(layerName));
+            SetLayer(go, LayerMask.NameToLayer(layerName), recursively);
         }
 
         public static void Active(this GameObject go)
