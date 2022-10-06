@@ -4,6 +4,10 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2022-10-06
+- 改进：Entity的一些接口
+- 改进：TimerTask增加调试用的Name
+- 改进：SetLayer增加递归参数
 ## [1.1.1] - 2022-09-21
 - 修复：使用自定义的RateManager后，World.Time.DeltaTime不对的问题
 - 修复：删除Entity后，组件没有回收的问题
