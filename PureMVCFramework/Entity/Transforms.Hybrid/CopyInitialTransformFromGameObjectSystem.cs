@@ -7,24 +7,11 @@ namespace PureMVCFramework.Entity
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public class CopyInitialTransformFromGameObjectSystem : HybridSystemBase<Transform, LocalToWorld, CopyInitialTransformFromGameObject>
     {
-        private EndInitializationEntityCommandBufferSystem m_EntityCommandBufferSystem;
-        private EntityCommandBuffer commandBuffer;
-
-        protected override void OnCreate()
+        protected override void OnStartRunning()
         {
-            base.OnCreate();
-
-            m_EntityCommandBufferSystem = World.GetOrCreateSystem<EndInitializationEntityCommandBufferSystem>();
-        }
-
-        protected override void PreUpdate()
-        {
-            commandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer();
-        }
-
-        protected override void PostUpdate()
-        {
-            commandBuffer = null;
+            base.OnStartRunning(); 
+            
+            CommandBufferSystem = World.GetExistingSystem<EndInitializationEntityCommandBufferSystem>();
         }
 
         protected override void OnUpdate(int index, Entity entity, Transform component1, LocalToWorld component2, CopyInitialTransformFromGameObject component3)
@@ -32,7 +19,7 @@ namespace PureMVCFramework.Entity
             if (component1 != null)
                 component2.Value = component1.localToWorldMatrix;
 
-            commandBuffer.RemoveComponentData<CopyInitialTransformFromGameObject>(entity);
+            CommandBuffer.RemoveComponentData<CopyInitialTransformFromGameObject>(entity);
 
             var position = EntityManager.GetComponentData<Position>(entity);
             if (position != null)

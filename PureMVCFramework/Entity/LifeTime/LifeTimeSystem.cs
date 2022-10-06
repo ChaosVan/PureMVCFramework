@@ -13,24 +13,11 @@ namespace PureMVCFramework.Entity
     [UpdateInGroup(typeof(LateSimulationSystemGroup), OrderLast = true)]
     public class LifeTimeSystem : SystemBase<LifeTime>
     {
-        EndSimulationEntityCommandBufferSystem m_EntityCommandBufferSystem;
-        EntityCommandBuffer commandBuffer;
-
-        protected override void OnCreate()
+        protected override void OnStartRunning()
         {
-            base.OnCreate();
+            base.OnStartRunning();
 
-            m_EntityCommandBufferSystem = World.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
-        }
-
-        protected override void PreUpdate()
-        {
-            commandBuffer = m_EntityCommandBufferSystem.CreateCommandBuffer();
-        }
-
-        protected override void PostUpdate()
-        {
-            commandBuffer = null;
+            CommandBufferSystem = World.GetExistingSystem<EndSimulationEntityCommandBufferSystem>();
         }
 
         protected override void OnUpdate(int index, Entity entity, LifeTime component)
@@ -38,7 +25,7 @@ namespace PureMVCFramework.Entity
             component.Value -= Time.DeltaTime;
             if (component.Value <= 0)
             {
-                commandBuffer.DestroyEntity(entity);
+                CommandBuffer.DestroyEntity(entity);
             }
         }
     }

@@ -52,15 +52,14 @@ namespace PureMVCFramework.Entity
             return entity;
         }
 
-        public void DestroyEntity(Entity entity)
+        public void DestroyEntity(EntityData entity, bool destroy = true)
         {
-            AddDestroyCommand(ECBCommand.DestroyEntity, entity.GUID, true);
+            AddDestroyCommand(ECBCommand.DestroyEntity, entity, destroy);
         }
 
-        public void DestroyEntity(Entity entity, out GameObject gameObject)
+        public void DestroyEntity(Entity entity, bool destroy = true)
         {
-            gameObject = entity.gameObject;
-            AddDestroyCommand(ECBCommand.DestroyEntity, entity.GUID, false);
+            AddDestroyCommand(ECBCommand.DestroyEntity, entity, destroy);
         }
 
         public T AddComponentData<T>(EntityData entity) where T : IComponentData
@@ -117,13 +116,28 @@ namespace PureMVCFramework.Entity
 
         internal void AddDestroyCommand(ECBCommand op, EntityData entity, bool destroy)
         {
-            if (EntityManager.TryGetEntity(entity, out var e) && e != null && e.IsAlive)
+            if (EntityManager.TryGetEntity(entity, out var e) && e.IsAlive)
             {
                 e.IsAlive = false; 
                 
                 var ecbd = new EntityCommandBufferData();
                 ecbd.commandType = op;
                 ecbd.entity = entity;
+                ecbd.destroyImmediately = destroy;
+
+                m_Data.Add(ecbd);
+            }
+        }
+
+        internal void AddDestroyCommand(ECBCommand op, Entity entity, bool destroy)
+        {
+            if (entity.IsAlive)
+            {
+                entity.IsAlive = false;
+
+                var ecbd = new EntityCommandBufferData();
+                ecbd.commandType = op;
+                ecbd.entity = entity.GUID;
                 ecbd.destroyImmediately = destroy;
 
                 m_Data.Add(ecbd);

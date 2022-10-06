@@ -1,13 +1,5 @@
-using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Scripting;
-
-#if ENABLE_JOBS
-using Unity.Burst;
-using Unity.Collections;
-using Unity.Jobs;
-using UnityEngine.Jobs;
-#endif
 
 namespace PureMVCFramework.Entity
 {
@@ -69,17 +61,13 @@ namespace PureMVCFramework.Entity
 
         protected override void OnUpdate(int index, Entity entity, Transform component1, LocalToWorld component2, CopyTransformToGameObject component3)
         {
-#if ENABLE_JOBS
-            Job.positions[index] = component2.Position;
-            Job.rotations[index] = component2.Rotation;
-            transofrms.Add(component1);
-#else
             if (component1 != null)
             {
-                component1.SetPositionAndRotation(component2.Position, component2.Rotation);
+                var mat = (Matrix4x4)component2.Value;
+                component1.position = component2.Position;
+                component1.rotation = mat.rotation;
+                component1.localScale = mat.lossyScale;
             }
-#endif
-
         }
     }
 }

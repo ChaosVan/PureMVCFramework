@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PureMVCFramework.Extensions
@@ -13,19 +11,22 @@ namespace PureMVCFramework.Extensions
             return o == null;
         }
 
-        public static void SetLayer(this GameObject go, int layer)
+        public static void SetLayer(this GameObject go, int layer, bool recursively = true)
         {
-            foreach (Transform tran in go.transform)
+            if (recursively)
             {
-                SetLayer(tran.gameObject, layer);
+                foreach (Transform tran in go.transform)
+                {
+                    SetLayer(tran.gameObject, layer, recursively);
+                }
             }
 
             go.layer = layer;
         }
 
-        public static void SetLayer(this GameObject go, string layerName = "Default")
+        public static void SetLayer(this GameObject go, string layerName = "Default", bool recursively = true)
         {
-            SetLayer(go, LayerMask.NameToLayer(layerName));
+            SetLayer(go, LayerMask.NameToLayer(layerName), recursively);
         }
 
         public static void Active(this GameObject go)
@@ -93,13 +94,13 @@ namespace PureMVCFramework.Extensions
 
     public static class TransformExtentions
     {
-        public static Transform GetOrAddTransform(this Transform parent, string childName, Vector3 position, Vector3 roll)
+        public static Transform GetOrAddTransform(this Transform parent, string childName, Vector3 position, Vector3 eulerAngle)
         {
             Transform t = GetOrAddTransform(parent, childName);
             if (t != null)
             {
                 t.position = position;
-                t.rotation = Quaternion.Euler(roll);
+                t.rotation = Quaternion.Euler(eulerAngle);
             }
 
             return t;
@@ -135,7 +136,6 @@ namespace PureMVCFramework.Extensions
                     t.SetParent(parent, false);
                 }
             }
-
 
             return t;
         }

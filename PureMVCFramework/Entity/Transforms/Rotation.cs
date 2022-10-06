@@ -5,12 +5,7 @@ namespace PureMVCFramework.Entity
 {
     public class Rotation : IComponentData, IDisposable
     {
-        public quaternion Value;
-
-        public Rotation()
-        {
-            Value = quaternion.identity;
-        }
+        public quaternion Value = quaternion.identity;
 
         public void Dispose()
         {

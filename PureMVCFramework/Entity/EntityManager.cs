@@ -51,11 +51,11 @@ namespace PureMVCFramework.Entity
         public static bool TryGetEntities(EntityQuery query, out Dictionary<ulong, IComponentData[]> entities)
         {
             entities = new Dictionary<ulong, IComponentData[]>();
-            foreach (var entity in Entities.Keys)
+            foreach (var entity in Entities.Values)
             {
                 if (GetComponentData(entity, query, out var components))
                 {
-                    entities.Add(entity, components);
+                    entities.Add(entity.GUID, components);
                 }
             }
 
@@ -95,38 +95,95 @@ namespace PureMVCFramework.Entity
             }
         }
 
+        public static void DestroyEntities(IEnumerable<EntityData> entities)
+        {
+            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            foreach (var entity in entities)
+            {
+                commandBuffer.DestroyEntity(entity);
+            }
+        }
+
+        public static void DestroyEntities(EntityQuery query)
+        {
+            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            if (TryGetEntities(query, out var entities))
+            {
+                foreach (var entity in entities.Keys)
+                {
+                    commandBuffer.DestroyEntity(entity);
+                }
+            }
+        }
+
+        public static void DestroyEntities(EntityQuery query, out GameObject[] gameObjects)
+        {
+            gameObjects = null;
+            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            if (TryGetEntities(query, out var entities))
+            {
+                gameObjects = new GameObject[entities.Count];
+                int index = 0;
+                foreach (var e in entities.Keys)
+                {
+                    if (TryGetEntity(e, out var entity))
+                    {
+                        gameObjects[index++] = entity.gameObject;
+                        commandBuffer.DestroyEntity(entity, false);
+                    }
+                }
+            }
+        }
+
         public static void DestroyEntity(Entity entity)
         {
             EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
         }
 
-        public static void DestroyEntity(EntityData data)
+        public static void DestroyEntity(Entity entity, out GameObject gameObject)
         {
-            if (TryGetEntity(data, out var entity))
-                EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
+            gameObject = null;
+            if (entity.IsAlive)
+                gameObject = entity.gameObject;
+            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity, false);
         }
 
-        public static EntityData Create()
+        public static void DestroyEntity(EntityData entity)
+        {
+            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
+        }
+
+        public static void DestroyEntity(EntityData entity, out GameObject gameObject)
+        {
+            gameObject = null;
+            if (TryGetEntity(entity, out var e) && e.IsAlive)
+            {
+                gameObject = e.gameObject;
+                EndCommandBuffer.CreateCommandBuffer().DestroyEntity(e, false);
+            }
+        }
+
+        public static EntityData Create(out EntityCommandBuffer commandBuffer)
         {
             EntityArchetype archetype = default;
-            return Create(archetype);
+            return Create(archetype, out commandBuffer);
         }
 
-        public static EntityData Create(params ComponentType[] componentTypes)
+        public static EntityData Create(out EntityCommandBuffer commandBuffer, params ComponentType[] componentTypes)
         {
             EntityArchetype archetype = new EntityArchetype(componentTypes);
-            return Create(archetype);
+            return Create(archetype, out commandBuffer);
         }
 
-        public static EntityData Create(EntityArchetype archetype)
+        public static EntityData Create(EntityArchetype archetype, out EntityCommandBuffer commandBuffer)
         {
-            Create(archetype, 1, out var entities);
+            Create(archetype, 1, out var entities, out commandBuffer);
             return entities[0];
         }
 
-        public static void Create(EntityArchetype archetype, int count, out EntityData[] entities)
+        public static void Create(EntityArchetype archetype, int count, out EntityData[] entities, out EntityCommandBuffer commandBuffer)
         {
-            var commandBuffer = BeginCommandBuffer.CreateCommandBuffer();
+            commandBuffer = BeginCommandBuffer.CreateCommandBuffer();
             entities = new EntityData[count];
             for (int i = 0; i < count; i++)
             {
@@ -165,12 +222,6 @@ namespace PureMVCFramework.Entity
                 return componentData;
 
             return null;
-        }
-
-        public static bool GetComponentData(EntityData entity, EntityQuery query, out IComponentData[] componentData)
-        {
-            componentData = null;
-            return TryGetEntity(entity, out var e) && GetComponentData(e, query, out componentData);
         }
 
         public static bool GetComponentData(Entity entity, EntityQuery query, out IComponentData[] componentData)
@@ -212,14 +263,14 @@ namespace PureMVCFramework.Entity
             {
                 if (entity.gameObject != null)
                 {
+                    OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
+                    GameObjectEntities.Remove(entity.gameObject);
                     gameObject = entity.gameObject;
-                    GameObjectEntities.Remove(gameObject);
-                    OnEntityGameObjectDeleted?.Invoke(gameObject);
                 }
-                Entities.Remove(data);
-                ReferencePool.RecycleInstance(entity);
 
                 OnEntityDestroyed?.Invoke(data);
+                Entities.Remove(data);
+                ReferencePool.RecycleInstance(entity);
 
                 return true;
             }

@@ -5,12 +5,7 @@ namespace PureMVCFramework.Entity
 {
     public class Scale : IComponentData, IDisposable
     {
-        public float3 Value;
-
-        public Scale()
-        {
-            Value = 1;
-        }
+        public float3 Value = 1;
 
         public void Dispose()
         {

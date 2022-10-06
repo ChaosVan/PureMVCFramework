@@ -1,3 +1,4 @@
+using Unity.Mathematics;
 using UnityEngine.Scripting;
 
 namespace PureMVCFramework.Entity
@@ -6,9 +7,9 @@ namespace PureMVCFramework.Entity
     [UpdateInGroup(typeof(TransformSystemGroup))]
     public class TRSToLocalToWorldSystem : SystemBase<LocalToWorld, Position, Rotation, Scale>
     {
-        protected override void OnUpdate(int index, Entity entity, LocalToWorld matrix, Position position, Rotation rotation, Scale scale)
+        protected override void OnUpdate(int index, Entity entity, LocalToWorld localToWorld, Position position, Rotation rotation, Scale scale)
         {
-            matrix.Value = LocalToWorld.Compose(position, rotation, scale);
+            localToWorld.Value = float4x4.TRS(position, rotation, scale);
         }
     }
 }
