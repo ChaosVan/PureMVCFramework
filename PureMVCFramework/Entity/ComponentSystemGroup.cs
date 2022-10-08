@@ -11,12 +11,6 @@ using UnityEngine;
 
 namespace PureMVCFramework.Entity
 {
-    public interface IRateManager
-    {
-        bool ShouldGroupUpdate(ComponentSystemGroup group);
-        float Timestep { get; set; }
-    }
-
     internal struct UpdateIndex
     {
         private ushort Data;

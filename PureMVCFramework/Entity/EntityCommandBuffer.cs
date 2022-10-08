@@ -197,43 +197,50 @@ namespace PureMVCFramework.Entity
         {
             foreach (var data in m_Data)
             {
-                Entity entity = null;
-                switch (data.commandType)
+                try
                 {
-                    case ECBCommand.CreateEntity:
-                        entity = EntityManager.InternalCreate(data.entity, data.archetype);
-                        break;
-                    case ECBCommand.DestroyEntity:
-                        if (EntityManager.InternalDestroyEntity(data.entity, out entity, out var gameObject))
-                        {
-                            if (data.destroyImmediately && gameObject != null)
-                                gameObject.Recycle();
-                        }
-                        break;
-                    case ECBCommand.AddComponent:
-                        EntityManager.InternalAddComponentData(data.entity, data.componentData, out entity);
-                        break;
-                    case ECBCommand.RemoveComponent:
-                        if (EntityManager.InternalRemoveComponentData(data.entity, data.componentType, out entity, out var componentData))
-                        {
-                            ReferencePool.RecycleInstance(componentData);
-                        }
-                        break;
-                    case ECBCommand.LoadGameObjectWithParent:
-                        EntityManager.InternalLoadGameObject(data.entity, data.asset, data.parent, data.callback, data.userdata);
-                        break;
-                    case ECBCommand.LoadGameObjectWithCoordinates:
-                        EntityManager.InternalLoadGameObject(data.entity, data.asset, data.position, data.rotation, data.callback, data.userdata);
-                        break;
-                    case ECBCommand.UpdateGameObject:
-                        EntityManager.TryGetEntity(data.entity, out entity);
-                        break;
-                    default:
-                        break;
-                }
+                    Entity entity = null;
+                    switch (data.commandType)
+                    {
+                        case ECBCommand.CreateEntity:
+                            entity = EntityManager.InternalCreate(data.entity, data.archetype);
+                            break;
+                        case ECBCommand.DestroyEntity:
+                            if (EntityManager.InternalDestroyEntity(data.entity, out entity, out var gameObject))
+                            {
+                                if (data.destroyImmediately && gameObject != null)
+                                    gameObject.Recycle();
+                            }
+                            break;
+                        case ECBCommand.AddComponent:
+                            EntityManager.InternalAddComponentData(data.entity, data.componentData, out entity);
+                            break;
+                        case ECBCommand.RemoveComponent:
+                            if (EntityManager.InternalRemoveComponentData(data.entity, data.componentType, out entity, out var componentData))
+                            {
+                                ReferencePool.RecycleInstance(componentData);
+                            }
+                            break;
+                        case ECBCommand.LoadGameObjectWithParent:
+                            EntityManager.InternalLoadGameObject(data.entity, data.asset, data.parent, data.callback, data.userdata);
+                            break;
+                        case ECBCommand.LoadGameObjectWithCoordinates:
+                            EntityManager.InternalLoadGameObject(data.entity, data.asset, data.position, data.rotation, data.callback, data.userdata);
+                            break;
+                        case ECBCommand.UpdateGameObject:
+                            EntityManager.TryGetEntity(data.entity, out entity);
+                            break;
+                        default:
+                            break;
+                    }
 
-                if (entity != null && !entities.Contains(entity))
-                    entities = entities.Expand(entity);
+                    if (entity != null && !entities.Contains(entity))
+                        entities = entities.Expand(entity);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
             }
 
             m_Data.Clear();
