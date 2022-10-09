@@ -1,11 +1,13 @@
 using PureMVCFramework.Advantages;
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
+using UnityEngine.Scripting;
+using Object = UnityEngine.Object;
 
 namespace PureMVCFramework.Providers
 {
-    [System.Serializable]
+    [Preserve]
+    [Serializable]
     public class BgmProvider : Updatable, IAudioProvider
     {
         public struct BgmParams

@@ -1,11 +1,15 @@
 using PureMVCFramework.Advantages;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Scripting;
+using Object = UnityEngine.Object;
 
 namespace PureMVCFramework.Providers
 {
-    [System.Serializable]
+    [Preserve]
+    [Serializable]
     public class SfxProvider : IAudioProvider
     {
         public struct SfxParams
