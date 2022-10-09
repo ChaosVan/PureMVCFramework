@@ -67,7 +67,7 @@ namespace PureMVCFramework.Entity
 
         internal bool InternalAddComponentData(ComponentType type, IComponentData component)
         {
-            Assert.IsNull(m_AllComponentData[type.TypeIndex], $"Entity({GUID}) already has type: {TypeManager.GetType(type.TypeIndex).FullName}");
+            Assert.IsNull(m_AllComponentData[type.TypeIndex], $"Entity({GUID}) already has type: {TypeManager.GetType(type.TypeIndex).FullName}, {component}, {m_AllComponentData[type.TypeIndex]}");
             archetype.AddComponentType(type);
             m_AllComponentData[type.TypeIndex] = component;
             return true;

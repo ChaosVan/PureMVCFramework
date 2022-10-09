@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2022-10-09
+- 改进：增加通过Archetype增加组件的接口
+- 改进：增加通过EntityQuery删除组件的接口
+- 改进：修改音乐音效Provider的属性
+- 改进：增加固定帧率的Group
 ## [1.1.2] - 2022-10-06
 - 改进：Entity的一些接口
 - 改进：TimerTask增加调试用的Name

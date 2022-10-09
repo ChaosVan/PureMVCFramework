@@ -1,11 +1,13 @@
 using PureMVCFramework.Advantages;
-using System.Collections;
-using System.Collections.Generic;
+using System;
 using UnityEngine;
+using UnityEngine.Scripting;
+using Object = UnityEngine.Object;
 
 namespace PureMVCFramework.Providers
 {
-    [System.Serializable]
+    [Preserve]
+    [Serializable]
     public class BgmProvider : Updatable, IAudioProvider
     {
         public struct BgmParams
@@ -137,7 +139,7 @@ namespace PureMVCFramework.Providers
             switch (state)
             {
                 case State.Stop:
-                    if (!Mathf.Approximately(audioSource.volume, 0))
+                    if (audioSource.volume > 0.1f)
                     {
                         audioSource.volume = Mathf.SmoothDamp(audioSource.volume, 0, ref smoothDampVelocity, 1);
                     }
