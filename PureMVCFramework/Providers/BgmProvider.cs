@@ -139,7 +139,7 @@ namespace PureMVCFramework.Providers
             switch (state)
             {
                 case State.Stop:
-                    if (!Mathf.Approximately(audioSource.volume, 0))
+                    if (audioSource.volume > 0.1f)
                     {
                         audioSource.volume = Mathf.SmoothDamp(audioSource.volume, 0, ref smoothDampVelocity, 1);
                     }
