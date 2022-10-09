@@ -13,8 +13,8 @@ namespace PureMVCFramework.Entity
 
         protected virtual void Start()
         {
-            entity = EntityManager.Create(gameObject);
-            self = entity.GetOrAddComponentData<T>();
+            entity = EntityManager.Create(gameObject, out var buffer);
+            self = entity.GetOrAddComponentData<T>(buffer);
             started = true;
         }
 
@@ -39,9 +39,9 @@ namespace PureMVCFramework.Entity
 
         protected virtual void Start()
         {
-            entity = EntityManager.Create(gameObject);
-            t1 = entity.GetOrAddComponentData<T1>();
-            t2 = entity.GetOrAddComponentData<T2>();
+            entity = EntityManager.Create(gameObject, out var buffer);
+            t1 = entity.GetOrAddComponentData<T1>(buffer);
+            t2 = entity.GetOrAddComponentData<T2>(buffer);
             started = true;
         }
 

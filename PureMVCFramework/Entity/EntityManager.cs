@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace PureMVCFramework.Entity
 {
-    public partial class EntityManager
+    public static partial class EntityManager
     {
         [DomainReload(1000000UL)]
         internal static ulong GUID_COUNT = 1000000UL;
@@ -19,7 +19,7 @@ namespace PureMVCFramework.Entity
         internal static readonly Dictionary<ulong, Entity> Entities = new Dictionary<ulong, Entity>();
         internal static GCHandle m_World;
 
-        internal static EntityCommandBufferSystem BeginCommandBuffer, EndCommandBuffer;
+        internal static EntityCommandBufferSystem ecbs_begin, ecbs_end;
 
         public static World World => (World)m_World.Target;
 
@@ -33,8 +33,8 @@ namespace PureMVCFramework.Entity
 
             m_World = GCHandle.Alloc(world);
 
-            BeginCommandBuffer = world.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
-            EndCommandBuffer = world.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
+            ecbs_begin = world.GetOrCreateSystem<BeginInitializationEntityCommandBufferSystem>();
+            ecbs_end = world.GetOrCreateSystem<EndSimulationEntityCommandBufferSystem>();
         }
 
 
@@ -88,7 +88,7 @@ namespace PureMVCFramework.Entity
 
         public static void DestroyAll()
         {
-            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            var commandBuffer = ecbs_end.CreateCommandBuffer();
             foreach (var entity in Entities.Values)
             {
                 commandBuffer.DestroyEntity(entity);
@@ -97,7 +97,7 @@ namespace PureMVCFramework.Entity
 
         public static void DestroyEntities(IEnumerable<EntityData> entities)
         {
-            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            var commandBuffer = ecbs_end.CreateCommandBuffer();
             foreach (var entity in entities)
             {
                 commandBuffer.DestroyEntity(entity);
@@ -106,7 +106,7 @@ namespace PureMVCFramework.Entity
 
         public static void DestroyEntities(EntityQuery query)
         {
-            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            var commandBuffer = ecbs_end.CreateCommandBuffer();
             if (TryGetEntities(query, out var entities))
             {
                 foreach (var entity in entities.Keys)
@@ -119,7 +119,7 @@ namespace PureMVCFramework.Entity
         public static void DestroyEntities(EntityQuery query, out GameObject[] gameObjects)
         {
             gameObjects = null;
-            var commandBuffer = EndCommandBuffer.CreateCommandBuffer();
+            var commandBuffer = ecbs_end.CreateCommandBuffer();
             if (TryGetEntities(query, out var entities))
             {
                 gameObjects = new GameObject[entities.Count];
@@ -137,7 +137,7 @@ namespace PureMVCFramework.Entity
 
         public static void DestroyEntity(Entity entity)
         {
-            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
+            ecbs_end.CreateCommandBuffer().DestroyEntity(entity);
         }
 
         public static void DestroyEntity(Entity entity, out GameObject gameObject)
@@ -145,12 +145,12 @@ namespace PureMVCFramework.Entity
             gameObject = null;
             if (entity.IsAlive)
                 gameObject = entity.gameObject;
-            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity, false);
+            ecbs_end.CreateCommandBuffer().DestroyEntity(entity, false);
         }
 
         public static void DestroyEntity(EntityData entity)
         {
-            EndCommandBuffer.CreateCommandBuffer().DestroyEntity(entity);
+            ecbs_end.CreateCommandBuffer().DestroyEntity(entity);
         }
 
         public static void DestroyEntity(EntityData entity, out GameObject gameObject)
@@ -159,7 +159,7 @@ namespace PureMVCFramework.Entity
             if (TryGetEntity(entity, out var e) && e.IsAlive)
             {
                 gameObject = e.gameObject;
-                EndCommandBuffer.CreateCommandBuffer().DestroyEntity(e, false);
+                ecbs_end.CreateCommandBuffer().DestroyEntity(e, false);
             }
         }
 
@@ -183,7 +183,7 @@ namespace PureMVCFramework.Entity
 
         public static void Create(EntityArchetype archetype, int count, out EntityData[] entities, out EntityCommandBuffer commandBuffer)
         {
-            commandBuffer = BeginCommandBuffer.CreateCommandBuffer();
+            commandBuffer = ecbs_begin.CreateCommandBuffer();
             entities = new EntityData[count];
             for (int i = 0; i < count; i++)
             {
@@ -193,22 +193,42 @@ namespace PureMVCFramework.Entity
 
         public static T AddComponentData<T>(EntityData entity) where T : IComponentData
         {
-            return BeginCommandBuffer.CreateCommandBuffer().AddComponentData<T>(entity);
+            return ecbs_begin.CreateCommandBuffer().AddComponentData<T>(entity);
         }
 
         public static T AddComponentData<T>(Entity entity) where T : IComponentData
         {
-            return BeginCommandBuffer.CreateCommandBuffer().AddComponentData<T>(entity);
+            return ecbs_begin.CreateCommandBuffer().AddComponentData<T>(entity);
+        }
+
+        public static void AddComponentData(EntityData entity, EntityArchetype archetype)
+        {
+            ecbs_begin.CreateCommandBuffer().AddComponentData(entity, archetype);
+        }
+
+        public static void AddComponentData(Entity entity, EntityArchetype archetype)
+        {
+            ecbs_begin.CreateCommandBuffer().AddComponentData(entity, archetype);
         }
 
         public static void RemoveComponentData<T>(EntityData entity) where T : IComponentData
         {
-            EndCommandBuffer.CreateCommandBuffer().RemoveComponentData<T>(entity);
+            ecbs_end.CreateCommandBuffer().RemoveComponentData<T>(entity);
         }
 
         public static void RemoveComponentData<T>(Entity entity) where T : IComponentData
         {
-            EndCommandBuffer.CreateCommandBuffer().RemoveComponentData<T>(entity);
+            ecbs_end.CreateCommandBuffer().RemoveComponentData<T>(entity);
+        }
+
+        public static void RemoveComponentData(EntityData entity, EntityQuery query)
+        {
+            ecbs_end.CreateCommandBuffer().RemoveComponentData(entity, query);
+        }
+
+        public static void RemoveComponentData(Entity entity, EntityQuery query)
+        {
+            ecbs_end.CreateCommandBuffer().RemoveComponentData(entity, query);
         }
 
         public static T GetComponentData<T>(Entity entity) where T : IComponentData
@@ -278,18 +298,29 @@ namespace PureMVCFramework.Entity
             return false;
         }
 
-        internal static bool InternalAddComponentData(EntityData data, IComponentData componentData, out Entity entity)
+        internal static void InternalAddComponentData(EntityData data, IComponentData componentData, out Entity entity)
         {
             if (TryGetEntity(data, out entity) && entity.IsAlive)
             {
                 if (entity.InternalAddComponentData(componentData.GetType(), componentData))
                 {
                     OnEntityAddComponentData?.Invoke(data, componentData);
-                    return true;
                 }
             }
+        }
 
-            return false;
+        internal static void InternalAddComponentData(EntityData data, EntityArchetype archetype, out Entity entity)
+        {
+            if (TryGetEntity(data, out entity) && entity.IsAlive && archetype.TypesCount > 0)
+            {
+                foreach (var t in archetype.componentTypes)
+                {
+                    if (entity.InternalAddComponentData(t, (IComponentData)ReferencePool.SpawnInstance(TypeManager.GetType(t.TypeIndex))))
+                    {
+                        OnEntityAddComponentData?.Invoke(data, entity.m_AllComponentData[t.TypeIndex]);
+                    }
+                }
+            }
         }
 
         internal static bool InternalRemoveComponentData(EntityData data, ComponentType type, out Entity entity, out IComponentData componentData)
@@ -306,6 +337,24 @@ namespace PureMVCFramework.Entity
             componentData = null;
             return false;
         }
+
+        internal static bool InternalRemoveComponentData(EntityData data, EntityQuery query, out Entity entity, out IComponentData[] componentDatas)
+        {
+            if (TryGetEntity(data, out entity) && entity.IsAlive && query.TypesCount > 0)
+            {
+                componentDatas = new IComponentData[query.TypesCount];
+                for (int i = 0; i < query.TypesCount; i++)
+                {
+                    if (entity.InternalRemoveComponentData(query.types[i], out componentDatas[i]))
+                    {
+                        OnEntityRemoveComponentData?.Invoke(data, componentDatas[i]);
+                    }
+                }
+            }
+
+            componentDatas = null;
+            return false;
+        }
     }
 
     public static class EntityExtensions
@@ -315,6 +364,15 @@ namespace PureMVCFramework.Entity
             var comp = EntityManager.GetComponentData<T>(entity);
             if (comp == null)
                 return EntityManager.AddComponentData<T>(entity);
+
+            return comp;
+        }
+
+        public static T GetOrAddComponentData<T>(this Entity entity, EntityCommandBuffer commandBuffer) where T : IComponentData
+        {
+            var comp = EntityManager.GetComponentData<T>(entity);
+            if (comp == null)
+                return commandBuffer.AddComponentData<T>(entity);
 
             return comp;
         }

@@ -7,7 +7,7 @@ using UnityEngine.Assertions;
 
 namespace PureMVCFramework.Entity
 {
-    public partial class EntityManager
+    public static partial class EntityManager
     {
         internal static readonly Dictionary<GameObject, Entity> GameObjectEntities = new Dictionary<GameObject, Entity>();
 
@@ -28,46 +28,49 @@ namespace PureMVCFramework.Entity
             return GameObjectEntities.TryGetValue(obj, out entity);
         }
 
-        public static Entity Create(GameObject gameObject)
+        public static Entity Create(GameObject gameObject, out EntityCommandBuffer commandBuffer)
         {
             EntityArchetype archetype = default;
-            return Create(gameObject, archetype);
+            return Create(gameObject, archetype, out commandBuffer);
         }
 
-        public static Entity Create(GameObject gameObject, EntityArchetype archetype)
+        public static Entity Create(GameObject gameObject, EntityArchetype archetype, out EntityCommandBuffer commandBuffer)
         {
             Assert.IsNotNull(gameObject);
 
             if (!TryGetEntity(gameObject, out var entity))
             {
                 entity = InternalCreate(GUID_COUNT++, archetype);
-                OnGameObjectLoaded(entity, gameObject);
+                OnGameObjectLoaded(entity, gameObject, out commandBuffer);
+            }
+            else
+            {
+                commandBuffer = ecbs_begin.CreateCommandBuffer();
+                commandBuffer.AddComponentData(entity, archetype);
             }
 
             return entity;
         }
 
-        private static void OnGameObjectLoaded(Entity entity, GameObject go)
+        private static void OnGameObjectLoaded(Entity entity, GameObject go, out EntityCommandBuffer commandBuffer)
         {
-            if (go != null)
+            if (entity.gameObject != null)
             {
-                if (entity.gameObject != null)
-                {
-                    OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
-                    GameObjectEntities.Remove(entity.gameObject);
-                    entity.gameObject.Recycle();
-                }
+                OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
+                GameObjectEntities.Remove(entity.gameObject);
+                entity.gameObject.Recycle();
+            }
 
 #if UNITY_EDITOR
-                go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
+            go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
 #endif
 
-                entity.gameObject = go;
-                GameObjectEntities[entity.gameObject] = entity;
-                OnEntityGameObjectLoaded?.Invoke(entity.gameObject, entity);
+            entity.gameObject = go;
+            GameObjectEntities[entity.gameObject] = entity;
+            OnEntityGameObjectLoaded?.Invoke(entity.gameObject, entity);
 
-                BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
-            }
+            commandBuffer = ecbs_begin.CreateCommandBuffer();
+            commandBuffer.UpdateGameObject(entity);
         }
 
         internal static void InternalLoadGameObject(EntityData entity, string assetPath, Transform parent = null, Action<Entity, object> callback = null, object userdata = null)
@@ -82,7 +85,7 @@ namespace PureMVCFramework.Entity
                 {
                     if (go != null)
                     {
-                        OnGameObjectLoaded(e, go);
+                        OnGameObjectLoaded(e, go, out _);
                         callback?.Invoke(e, data);
                     }
                 }
@@ -105,7 +108,7 @@ namespace PureMVCFramework.Entity
                 {
                     if (go != null)
                     {
-                        OnGameObjectLoaded(e, go);
+                        OnGameObjectLoaded(e, go, out _);
                         callback?.Invoke(e, data);
                     }
                 }
@@ -121,7 +124,7 @@ namespace PureMVCFramework.Entity
             if (IsDataMode)
                 return;
 
-            BeginCommandBuffer.CreateCommandBuffer().LoadGameObject(entity, assetPath, parent, callback, userdata);
+            ecbs_begin.CreateCommandBuffer().LoadGameObject(entity, assetPath, parent, callback, userdata);
         }
 
         public static void LoadGameObject(EntityData entity, string assetPath, Vector3 position, Quaternion rotation, Action<Entity, object> callback = null, object userdata = null)
@@ -129,7 +132,7 @@ namespace PureMVCFramework.Entity
             if (IsDataMode)
                 return;
 
-            BeginCommandBuffer.CreateCommandBuffer().LoadGameObject(entity, assetPath, position, rotation, callback, userdata);
+            ecbs_begin.CreateCommandBuffer().LoadGameObject(entity, assetPath, position, rotation, callback, userdata);
         }
 
         public static T AddComponentObject<T>(Entity entity) where T : Component
@@ -137,7 +140,7 @@ namespace PureMVCFramework.Entity
             if (entity.IsAlive && entity.gameObject != null)
             {
                 var comp = entity.gameObject.AddComponent<T>();
-                BeginCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
+                ecbs_begin.CreateCommandBuffer().UpdateGameObject(entity);
 
                 return comp;
             }
@@ -151,7 +154,7 @@ namespace PureMVCFramework.Entity
             if (comp != null)
             {
                 UnityEngine.Object.Destroy(comp);
-                EndCommandBuffer.CreateCommandBuffer().UpdateGameObject(entity);
+                ecbs_end.CreateCommandBuffer().UpdateGameObject(entity);
             }
         }
 
