@@ -31,7 +31,7 @@ namespace PureMVCFramework
 #endif
         private readonly Dictionary<string, IAudioProvider> audioProviders = new Dictionary<string, IAudioProvider>();
 
-        public T CreateProvider<T>(string tag, object userdata) where T : IAudioProvider, new()
+        public T CreateProvider<T>(string tag, object userdata) where T : IAudioProvider
         {
             if (!audioProviders.TryGetValue(tag, out var provider))
             {
@@ -51,7 +51,7 @@ namespace PureMVCFramework
             }
         }
 
-        public bool TryGetProvider<T>(string tag, out T provider) where T : IAudioProvider, new()
+        public bool TryGetProvider<T>(string tag, out T provider) where T : IAudioProvider
         {
             if (audioProviders.TryGetValue(tag, out var result))
             {
