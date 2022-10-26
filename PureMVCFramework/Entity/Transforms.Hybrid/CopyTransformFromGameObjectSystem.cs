@@ -4,7 +4,6 @@ using UnityEngine.Scripting;
 namespace PureMVCFramework.Entity
 {
     [Preserve]
-    [ExecuteAlways]
     [UpdateInGroup(typeof(TransformSystemGroup))]
     [UpdateBefore(typeof(TRSToLocalToWorldSystem))]
     public class CopyTransformFromGameObjectSystem : HybridSystemBase<Transform, LocalToWorld, CopyTransformFromGameObject>

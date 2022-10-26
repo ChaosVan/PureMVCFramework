@@ -2,14 +2,15 @@ using UnityEngine.Scripting;
 
 namespace PureMVCFramework.Entity
 {
-    [UnityEngine.ExecuteAlways]
+    [Preserve]
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
     public class BeginInitializationEntityCommandBufferSystem : EntityCommandBufferSystem { }
 
-    [UnityEngine.ExecuteAlways]
+    [Preserve]
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderLast = true)]
     public class EndInitializationEntityCommandBufferSystem : EntityCommandBufferSystem { }
 
+    [Preserve]
     public class InitializationSystemGroup : ComponentSystemGroup
     {
         [Preserve]
@@ -18,14 +19,15 @@ namespace PureMVCFramework.Entity
         }
     }
 
-    [UnityEngine.ExecuteAlways]
+    [Preserve]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup), OrderFirst = true)]
     public class BeginFixedStepSimulationEntityCommandBufferSystem : EntityCommandBufferSystem { }
 
-    [UnityEngine.ExecuteAlways]
+    [Preserve]
     [UpdateInGroup(typeof(FixedStepSimulationSystemGroup), OrderLast = true)]
     public class EndFixedStepSimulationEntityCommandBufferSystem : EntityCommandBufferSystem { }
 
+    [Preserve]
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
     [UpdateAfter(typeof(BeginSimulationEntityCommandBufferSystem))]
     public class FixedStepSimulationSystemGroup : ComponentSystemGroup
@@ -52,19 +54,20 @@ namespace PureMVCFramework.Entity
         }
     }
 
-    [UnityEngine.ExecuteAlways]
+    [Preserve]
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
     public class BeginSimulationEntityCommandBufferSystem : EntityCommandBufferSystem { }
 
-    [UnityEngine.ExecuteAlways]
+    [Preserve]
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
     public class EndSimulationEntityCommandBufferSystem : EntityCommandBufferSystem { }
 
-    [UnityEngine.ExecuteAlways]
+    [Preserve]
     [UpdateInGroup(typeof(SimulationSystemGroup), OrderLast = true)]
     [UpdateBefore(typeof(EndSimulationEntityCommandBufferSystem))]
     public class LateSimulationSystemGroup : ComponentSystemGroup { }
 
+    [Preserve]
     public class SimulationSystemGroup : ComponentSystemGroup
     {
         [Preserve]
