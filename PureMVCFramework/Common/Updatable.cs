@@ -7,13 +7,13 @@ namespace PureMVCFramework
         private bool enabled;
         private TimerManager.TimerTask updateTask;
 
-        public void EnableUpdate(bool tf)
+        public void EnableUpdate(bool tf, string taskName = "")
         {
             if (tf != enabled)
             {
                 enabled = tf;
                 if (enabled)
-                    updateTask = TimerManager.Instance.AddFrameExecuteTask(Update);
+                    updateTask = TimerManager.Instance.AddFrameExecuteTask(Update, taskName);
                 else
                     updateTask.Stop();
             }
