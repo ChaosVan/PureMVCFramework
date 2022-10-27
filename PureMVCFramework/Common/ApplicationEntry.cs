@@ -1,8 +1,4 @@
-﻿using PureMVC.Interfaces;
-using PureMVC.Patterns.Facade;
-using PureMVCFramework.Advantages;
-using PureMVCFramework.Patterns;
-using PureMVCFramework.Providers;
+﻿using PureMVCFramework.Providers;
 using UnityEngine;
 
 namespace PureMVCFramework
