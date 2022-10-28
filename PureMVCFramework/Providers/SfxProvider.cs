@@ -25,6 +25,7 @@ namespace PureMVCFramework.Providers
         [SerializeField]
         private int audioSourceMax;
 
+        [Preserve]
         public SfxProvider(string tag, object userdata)
         {
             providerTag = tag;

@@ -36,7 +36,7 @@ namespace PureMVCFramework.Providers
 
         private float smoothDampVelocity;
 
-
+        [Preserve]
         public BgmProvider(string tag, object userdata)
         {
             providerTag = tag;

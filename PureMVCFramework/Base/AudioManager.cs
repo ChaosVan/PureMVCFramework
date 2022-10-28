@@ -1,10 +1,9 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-#if ODIN_INSPECTOR
+﻿#if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace PureMVCFramework
 {
@@ -50,6 +49,18 @@ namespace PureMVCFramework
                 provider.Release();
                 audioProviders.Remove(tag);
             }
+        }
+
+        public bool TryGetProvider<T>(string tag, out T provider) where T : IAudioProvider
+        {
+            if (audioProviders.TryGetValue(tag, out var result))
+            {
+                provider = (T)result;
+                return true;
+            }
+
+            provider = default;
+            return false;
         }
 
         public void SetVolume(string tag, float volume)
