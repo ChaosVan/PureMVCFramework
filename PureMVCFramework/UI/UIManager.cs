@@ -14,11 +14,11 @@ namespace PureMVCFramework.UI
 {
     public enum UILayer
     {
-        SceneLayer = -2,
         Background = -1,
         Default = 0,
-        Info = 1,
-        Top = 2,
+        SceneLayer,
+        Info,
+        Top,
     }
 
     public class UIManager : SingletonBehaviour<UIManager>
