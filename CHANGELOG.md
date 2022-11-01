@@ -4,6 +4,11 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.4] - 2022-11-01
+- 改进：EnableUpdate可以自定义TaskName
+- 改进：通过反射创建的类，添加Preserve属性
+- 改进：修改SceneLayer的排序
+- 改进：移除Entity时，不对GameObject判空
 ## [1.1.3] - 2022-10-09
 - 改进：增加通过Archetype增加组件的接口
 - 改进：增加通过EntityQuery删除组件的接口
