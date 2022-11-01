@@ -281,12 +281,10 @@ namespace PureMVCFramework.Entity
             gameObject = null;
             if (TryGetEntity(data, out entity))
             {
-                if (entity.gameObject != null)
-                {
-                    OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
-                    GameObjectEntities.Remove(entity.gameObject);
-                    gameObject = entity.gameObject;
-                }
+                gameObject = entity.gameObject;
+
+                OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
+                GameObjectEntities.Remove(entity.gameObject);
 
                 OnEntityDestroyed?.Invoke(data);
                 Entities.Remove(data);
