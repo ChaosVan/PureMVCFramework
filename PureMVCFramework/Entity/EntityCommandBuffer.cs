@@ -1,8 +1,6 @@
 using PureMVCFramework.Advantages;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Security.AccessControl;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -15,11 +13,15 @@ namespace PureMVCFramework.Entity
             internal ECBCommand commandType;
             internal EntityArchetype archetype;
             internal EntityData entity;
-            internal bool destroyImmediately;
             internal ComponentType componentType;
             internal IComponentData componentData;
             internal EntityQuery query;
 
+            internal object userdata;
+        }
+
+        internal struct EntityGameObjectParams
+        {
             internal float3 position;
             internal quaternion rotation;
             internal Transform parent;
@@ -54,14 +56,36 @@ namespace PureMVCFramework.Entity
             return entity;
         }
 
-        public void DestroyEntity(EntityData entity, bool destroy = true)
+        public void DestroyEntity(EntityData data)
         {
-            AddEntityDestroyCommand(ECBCommand.DestroyEntity, entity, destroy);
+            if (EntityManager.TryGetEntity(data, out var entity))
+                DestroyEntity(entity);
         }
 
-        public void DestroyEntity(Entity entity, bool destroy = true)
+        public void DestroyEntity(EntityData data, out GameObject gameObject)
         {
-            DestroyEntity(entity.GUID, destroy);
+            gameObject = null;
+            if (EntityManager.TryGetEntity(data, out var entity))
+                DestroyEntity(entity, out gameObject);
+        }
+
+        public void DestroyEntity(Entity entity)
+        {
+            DestroyEntity(entity, out var gameObject);
+            if (gameObject != null)
+                gameObject.Recycle();
+        }
+
+        public void DestroyEntity(Entity entity, out GameObject gameObject)
+        {
+            gameObject = null;
+            if (entity.IsAlive)
+            {
+                gameObject = entity.gameObject;
+                EntityManager.OnGameObjectUnloaded(entity);
+
+                AddEntityDestroyCommand(ECBCommand.DestroyEntity, entity.GUID);
+            }
         }
 
         public T AddComponentData<T>(EntityData entity) where T : IComponentData
@@ -118,7 +142,7 @@ namespace PureMVCFramework.Entity
 
         public void UpdateGameObject(EntityData entity)
         {
-            UpdateGameObjectCommand(ECBCommand.UpdateGameObject, entity);
+            AddUpdateGameObjectCommand(ECBCommand.UpdateGameObject, entity);
         }
 
         public void UpdateGameObject(Entity entity)
@@ -126,16 +150,15 @@ namespace PureMVCFramework.Entity
             UpdateGameObject(entity.GUID);
         }
 
-        internal void AddEntityDestroyCommand(ECBCommand op, EntityData entity, bool destroy)
+        internal void AddEntityDestroyCommand(ECBCommand op, EntityData entity)
         {
             if (EntityManager.TryGetEntity(entity, out var e) && e.IsAlive)
             {
-                e.IsAlive = false; 
-                
+                e.IsAlive = false;
+
                 var ecbd = new EntityCommandBufferData();
                 ecbd.commandType = op;
                 ecbd.entity = entity;
-                ecbd.destroyImmediately = destroy;
 
                 m_Data.Add(ecbd);
             }
@@ -181,22 +204,35 @@ namespace PureMVCFramework.Entity
             m_Data.Add(ecbd);
         }
 
-        internal void AddLoadGameObjectCommand(ECBCommand op, EntityData entity, string asset, Transform transform, float3 position, quaternion rotation, Action<Entity, object> callback, object userdata)
+        internal void AddLoadGameObjectCommand(ECBCommand op, EntityData entity, string asset, Transform parent, float3 position, quaternion rotation, Action<Entity, object> callback, object userdata)
         {
             var ecbd = new EntityCommandBufferData();
             ecbd.commandType = op;
             ecbd.entity = entity;
-            ecbd.parent = transform;
-            ecbd.position = position;
-            ecbd.rotation = rotation;
-            ecbd.asset = asset;
-            ecbd.callback = callback;
-            ecbd.userdata = userdata;
+
+            ecbd.userdata = new EntityGameObjectParams
+            {
+                parent = parent,
+                position = position,
+                rotation = rotation,
+                asset = asset,
+                callback = callback,
+                userdata = userdata,
+            };
 
             m_Data.Add(ecbd);
         }
 
-        internal void UpdateGameObjectCommand(ECBCommand op, EntityData entity)
+        internal void AddUnloadGameObjectCommand(ECBCommand op, EntityData entity)
+        {
+            var ecbd = new EntityCommandBufferData();
+            ecbd.commandType = op;
+            ecbd.entity = entity;
+
+            m_Data.Add(ecbd);
+        }
+
+        internal void AddUpdateGameObjectCommand(ECBCommand op, EntityData entity)
         {
             var ecbd = new EntityCommandBufferData();
             ecbd.commandType = op;
@@ -223,11 +259,7 @@ namespace PureMVCFramework.Entity
                             entity = EntityManager.InternalCreate(data.entity, data.archetype);
                             break;
                         case ECBCommand.DestroyEntity:
-                            if (EntityManager.InternalDestroyEntity(data.entity, out entity, out var gameObject))
-                            {
-                                if (data.destroyImmediately && gameObject != null)
-                                    gameObject.Recycle();
-                            }
+                            EntityManager.InternalDestroyEntity(data.entity, out entity);
                             break;
                         case ECBCommand.AddComponent:
                             EntityManager.InternalAddComponentData(data.entity, data.componentData, out entity);
@@ -251,10 +283,16 @@ namespace PureMVCFramework.Entity
                             }
                             break;
                         case ECBCommand.LoadGameObjectWithParent:
-                            EntityManager.InternalLoadGameObject(data.entity, data.asset, data.parent, data.callback, data.userdata);
+                            if (data.userdata is EntityGameObjectParams p1)
+                            {
+                                EntityManager.InternalLoadGameObject(data.entity, p1.asset, p1.parent, p1.callback, p1.userdata);
+                            }
                             break;
                         case ECBCommand.LoadGameObjectWithCoordinates:
-                            EntityManager.InternalLoadGameObject(data.entity, data.asset, data.position, data.rotation, data.callback, data.userdata);
+                            if (data.userdata is EntityGameObjectParams p2)
+                            {
+                                EntityManager.InternalLoadGameObject(data.entity, p2.asset, p2.position, p2.rotation, p2.callback, p2.userdata);
+                            }
                             break;
                         case ECBCommand.UpdateGameObject:
                             EntityManager.TryGetEntity(data.entity, out entity);

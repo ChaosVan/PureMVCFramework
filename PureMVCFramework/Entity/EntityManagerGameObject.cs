@@ -52,14 +52,9 @@ namespace PureMVCFramework.Entity
             return entity;
         }
 
-        private static void OnGameObjectLoaded(Entity entity, GameObject go, out EntityCommandBuffer commandBuffer)
+        internal static void OnGameObjectLoaded(Entity entity, GameObject go, out EntityCommandBuffer commandBuffer)
         {
-            if (entity.gameObject != null)
-            {
-                OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
-                GameObjectEntities.Remove(entity.gameObject);
-                entity.gameObject.Recycle();
-            }
+            OnGameObjectUnloaded(entity);
 
 #if UNITY_EDITOR
             go.name = go.name.Replace("(Spawn)", $"({entity.GUID})");
@@ -71,6 +66,16 @@ namespace PureMVCFramework.Entity
 
             commandBuffer = ecbs_begin.CreateCommandBuffer();
             commandBuffer.UpdateGameObject(entity);
+        }
+
+        internal static void OnGameObjectUnloaded(Entity entity)
+        {
+            if (entity.gameObject != null)
+            {
+                OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
+                GameObjectEntities.Remove(entity.gameObject);
+                entity.gameObject = null;
+            }
         }
 
         internal static void InternalLoadGameObject(EntityData entity, string assetPath, Transform parent = null, Action<Entity, object> callback = null, object userdata = null)
@@ -133,6 +138,42 @@ namespace PureMVCFramework.Entity
                 return;
 
             ecbs_begin.CreateCommandBuffer().LoadGameObject(entity, assetPath, position, rotation, callback, userdata);
+        }
+
+        public static void UnloadGameObject(EntityData data)
+        {
+            if (TryGetEntity(data, out var entity))
+                UnloadGameObject(entity);
+        }
+
+        public static void UnloadGameObject(EntityData data, out GameObject gameObject)
+        {
+            gameObject = null;
+            if (TryGetEntity(data, out var entity))
+                UnloadGameObject(entity, out gameObject);
+        }
+
+        public static void UnloadGameObject(Entity entity)
+        {
+            UnloadGameObject(entity, out var gameObject);
+            if (gameObject != null)
+                gameObject.Recycle();
+        }
+
+        public static void UnloadGameObject(Entity entity, out GameObject gameObject)
+        {
+            gameObject = null;
+            if (IsDataMode)
+                return;
+
+            if (entity.IsAlive)
+            {
+                gameObject = entity.gameObject;
+                OnGameObjectUnloaded(entity);
+
+                var commandBuffer = ecbs_end.CreateCommandBuffer();
+                commandBuffer.UpdateGameObject(entity);
+            }
         }
 
         public static T AddComponentObject<T>(Entity entity) where T : Component

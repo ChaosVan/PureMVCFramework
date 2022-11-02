@@ -106,9 +106,9 @@ namespace PureMVCFramework.Entity
 
         public static void DestroyEntities(EntityQuery query)
         {
-            var commandBuffer = ecbs_end.CreateCommandBuffer();
             if (TryGetEntities(query, out var entities))
             {
+                var commandBuffer = ecbs_end.CreateCommandBuffer();
                 foreach (var entity in entities.Keys)
                 {
                     commandBuffer.DestroyEntity(entity);
@@ -119,47 +119,44 @@ namespace PureMVCFramework.Entity
         public static void DestroyEntities(EntityQuery query, out GameObject[] gameObjects)
         {
             gameObjects = null;
-            var commandBuffer = ecbs_end.CreateCommandBuffer();
             if (TryGetEntities(query, out var entities))
             {
+                var commandBuffer = ecbs_end.CreateCommandBuffer();
                 gameObjects = new GameObject[entities.Count];
                 int index = 0;
-                foreach (var e in entities.Keys)
+                foreach (var entity in entities.Keys)
                 {
-                    if (TryGetEntity(e, out var entity))
-                    {
-                        gameObjects[index++] = entity.gameObject;
-                        commandBuffer.DestroyEntity(entity, false);
-                    }
+                    commandBuffer.DestroyEntity(entity, out gameObjects[index++]);
                 }
             }
         }
 
+        public static void DestroyEntity(EntityData data)
+        {
+            if (TryGetEntity(data, out var entity))
+                DestroyEntity(entity);
+        }
+
+        public static void DestroyEntity(EntityData data, out GameObject gameObject)
+        {
+            gameObject = null;
+            if (TryGetEntity(data, out var entity))
+                DestroyEntity(entity, out gameObject);
+        }
+
         public static void DestroyEntity(Entity entity)
         {
-            ecbs_end.CreateCommandBuffer().DestroyEntity(entity);
+            DestroyEntity(entity, out var gameObject);
+            if (gameObject != null)
+                gameObject.Recycle();
         }
 
         public static void DestroyEntity(Entity entity, out GameObject gameObject)
         {
             gameObject = null;
             if (entity.IsAlive)
-                gameObject = entity.gameObject;
-            ecbs_end.CreateCommandBuffer().DestroyEntity(entity, false);
-        }
-
-        public static void DestroyEntity(EntityData entity)
-        {
-            ecbs_end.CreateCommandBuffer().DestroyEntity(entity);
-        }
-
-        public static void DestroyEntity(EntityData entity, out GameObject gameObject)
-        {
-            gameObject = null;
-            if (TryGetEntity(entity, out var e) && e.IsAlive)
             {
-                gameObject = e.gameObject;
-                ecbs_end.CreateCommandBuffer().DestroyEntity(e, false);
+                ecbs_end.CreateCommandBuffer().DestroyEntity(entity, out gameObject);
             }
         }
 
@@ -276,16 +273,10 @@ namespace PureMVCFramework.Entity
             return entity;
         }
 
-        internal static bool InternalDestroyEntity(EntityData data, out Entity entity, out GameObject gameObject)
+        internal static bool InternalDestroyEntity(EntityData data, out Entity entity)
         {
-            gameObject = null;
             if (TryGetEntity(data, out entity))
             {
-                gameObject = entity.gameObject;
-
-                OnEntityGameObjectDeleted?.Invoke(entity.gameObject);
-                GameObjectEntities.Remove(entity.gameObject);
-
                 OnEntityDestroyed?.Invoke(data);
                 Entities.Remove(data);
                 ReferencePool.RecycleInstance(entity);
