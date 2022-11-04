@@ -5,6 +5,7 @@ namespace PureMVCFramework.Entity
 {
     [Preserve]
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
+    [UpdateAfter(typeof(BeginInitializationEntityCommandBufferSystem))]
     public class UpdateWorldTimeSystem : ComponentSystem
     {
         protected override void OnStartRunning()
