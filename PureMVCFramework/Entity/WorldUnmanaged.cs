@@ -1,7 +1,5 @@
 using System;
 using System.Runtime.InteropServices;
-using Unity.Burst;
-using Unity.Collections;
 
 namespace PureMVCFramework.Entity
 {
@@ -91,14 +89,14 @@ namespace PureMVCFramework.Entity
         public bool AllowGetSystem { get; private set; }
         internal void DisallowGetSystem() => AllowGetSystem = false;
 
-        internal static readonly SharedStatic<ulong> ms_NextSequenceNumber = SharedStatic<ulong>.GetOrCreate<World>();
+        internal static ulong ms_NextSequenceNumber = 0;
 
-        internal WorldUnmanaged(World world, WorldFlags flags, AllocatorManager.AllocatorHandle backingAllocatorHandle)
+        internal WorldUnmanaged(WorldFlags flags)
         {
             CurrentTime = default;
             AllowGetSystem = true;
 
-            SequenceNumber = ++ms_NextSequenceNumber.Data;
+            SequenceNumber = ++ms_NextSequenceNumber;
             MaximumDeltaTime = 1.0f / 3.0f;
             Flags = flags;
 

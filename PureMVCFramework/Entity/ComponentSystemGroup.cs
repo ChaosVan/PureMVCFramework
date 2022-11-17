@@ -2,10 +2,8 @@
 using Sirenix.OdinInspector;
 #endif
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -97,20 +95,20 @@ namespace PureMVCFramework.Entity
         internal List<ComponentSystemBase> m_systemsToUpdate = new List<ComponentSystemBase>();
         internal List<ComponentSystemBase> m_systemsToRemove = new List<ComponentSystemBase>();
 
-        internal UnsafeList<UpdateIndex> m_MasterUpdateList;
+        internal List<UpdateIndex> m_MasterUpdateList;
 
         public virtual IReadOnlyList<ComponentSystemBase> Systems => m_systemsToUpdate;
 
         protected override void OnCreate()
         {
-            base.OnCreate(); 
-            m_MasterUpdateList = new UnsafeList<UpdateIndex>(0, Allocator.Persistent);
+            base.OnCreate();
+            m_MasterUpdateList = new List<UpdateIndex>(0);
             Created = true;
         }
 
         protected override void OnDestroy()
         {
-            m_MasterUpdateList.Dispose();
+            m_MasterUpdateList.Clear();
             base.OnDestroy();
             Created = false;
         }
@@ -198,7 +196,7 @@ namespace PureMVCFramework.Entity
                 }
             }
 
-            var newMasterUpdateList = new UnsafeList<UpdateIndex>(newManagedUpdateList.Count /*+ newUnmanagedUpdateList.Length*/, Allocator.Persistent);
+            var newMasterUpdateList = new List<UpdateIndex>(newManagedUpdateList.Count);
 
             foreach (var updateIndex in m_MasterUpdateList)
             {
@@ -220,7 +218,7 @@ namespace PureMVCFramework.Entity
             m_systemsToUpdate = newManagedUpdateList;
             m_systemsToRemove.Clear();
 
-            m_MasterUpdateList.Dispose();
+            m_MasterUpdateList.Clear();
             m_MasterUpdateList = newMasterUpdateList;
         }
 
@@ -313,7 +311,7 @@ namespace PureMVCFramework.Entity
 
             // Commit results to master update list
             m_MasterUpdateList.Clear();
-            m_MasterUpdateList.SetCapacity(allElems.Length);
+            m_MasterUpdateList.Capacity = allElems.Length;
 
             // Append buckets in order, but replace managed indices with incrementing indices
             // into the newly sorted m_systemsToUpdate list
@@ -369,7 +367,7 @@ namespace PureMVCFramework.Entity
 
         protected override void OnStopRunning()
         {
-            
+
         }
 
         internal override void OnStopRunningInternal()
@@ -421,7 +419,7 @@ namespace PureMVCFramework.Entity
 
             // Cache the update list length before updating; any new systems added mid-loop will change the length and
             // should not be processed until the subsequent group update, to give SortSystems() a chance to run.
-            int updateListLength = m_MasterUpdateList.Length;
+            int updateListLength = m_MasterUpdateList.Count;
             for (int i = 0; i < updateListLength; ++i)
             {
                 try
