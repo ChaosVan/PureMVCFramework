@@ -1,7 +1,6 @@
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
-using System.Collections;
 using System.Collections.Generic;
 
 namespace PureMVCFramework.Entity
@@ -11,12 +10,51 @@ namespace PureMVCFramework.Entity
 #if ODIN_INSPECTOR
         [ShowIf("showOdinInfo"), ShowInInspector, ListDrawerSettings(IsReadOnly = true)]
 #endif
-        internal readonly List<Entity> Entities = new List<Entity>();
+        protected readonly List<Entity> Entities = new List<Entity>();
 
         protected EntityCommandBufferSystem CommandBufferSystem;
         protected EntityCommandBuffer CommandBuffer;
 
-        public abstract void InjectEntity(Entity entity);
+        private EntityQuery queries;
+
+        protected void OverwriteEntityQuery(params ComponentType[] types)
+        {
+            queries = new EntityQuery(types);
+        }
+
+        protected virtual bool CheckEntityVaild(Entity entity, out IComponentData[] components)
+        {
+            return EntityManager.GetComponentData(entity, queries, out components);
+        }
+
+        public void InjectEntity(Entity entity)
+        {
+            bool tf = CheckEntityVaild(entity, out var components);
+            if (Entities.Contains(entity))
+            {
+                if (!tf)
+                {
+                    var i = Entities.IndexOf(entity);
+                    ClearComponents(i);
+                    Entities.RemoveAt(i);
+                }
+            }
+            else if (tf)
+            {
+                CollectComponents(entity, components);
+                Entities.Add(entity);
+            }
+        }
+
+        protected virtual void CollectComponents(Entity entity, IComponentData[] components)
+        {
+
+        }
+
+        protected virtual void ClearComponents(int index)
+        {
+
+        }
 
         protected virtual void PreUpdate()
         {
