@@ -1,9 +1,7 @@
 using PureMVCFramework.Advantages;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using Unity.Burst;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -94,11 +92,6 @@ namespace PureMVCFramework.Entity
         public static string GetSystemName(Type t)
         {
             return t.FullName;
-        }
-
-        internal static long GetSystemTypeHash(Type t)
-        {
-            return BurstRuntime.GetHashCode64(t);
         }
 
         internal static int GetSystemTypeIndexNoThrow(Type t)

@@ -1,7 +1,5 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Collections;
+using System.Text;
 
 namespace PureMVCFramework.Entity
 {
@@ -118,20 +116,17 @@ namespace PureMVCFramework.Entity
             return lhs.TypeIndex != rhs.TypeIndex || lhs.AccessModeType != rhs.AccessModeType;
         }
 
-        [NotBurstCompatible]
         public override string ToString()
         {
             if (TypeIndex == 0)
                 return "None";
 
             var info = TypeManager.GetTypeInfo(TypeIndex);
-            FixedString512Bytes ns = default;
+            StringBuilder ns = new StringBuilder();
             ns.Append(info.DebugTypeName);
 
-            //if (AccessModeType == AccessMode.Exclude)
-            //    ns.Append(" [Exclude]");
-            //if (AccessModeType == AccessMode.ReadOnly)
-            //    ns.Append(" [ReadOnly]");
+            if (AccessModeType == AccessMode.Exclude)
+                ns.Append(" [Exclude]");
 
             return ns.ToString();
 

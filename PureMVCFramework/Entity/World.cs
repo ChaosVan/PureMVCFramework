@@ -4,7 +4,6 @@ using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -155,12 +154,12 @@ namespace PureMVCFramework.Entity
             Name = name;
             Systems = new NoAllocReadOnlyCollection<ComponentSystemBase>(m_Systems);
 
-            Init(flags, Allocator.Persistent);
+            Init(flags);
         }
 
-        void Init(WorldFlags flags, AllocatorManager.AllocatorHandle backingAllocatorHandle)
+        void Init(WorldFlags flags)
         {
-            m_Unmanaged = new WorldUnmanaged(this, flags, backingAllocatorHandle);
+            m_Unmanaged = new WorldUnmanaged(flags);
 
             s_AllWorlds.Add(this);
 
