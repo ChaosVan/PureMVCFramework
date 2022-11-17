@@ -2,7 +2,6 @@
 using Sirenix.OdinInspector;
 #endif
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
@@ -18,7 +17,7 @@ namespace PureMVCFramework
             EVERY_FRAME,
         }
 
-        public class TimerTask
+        public class TimerTask : IDisposable
         {
             public string name;
 
@@ -29,66 +28,61 @@ namespace PureMVCFramework
             public Func<bool> executable;
 
             private int executeTimes;
-            private float deltaTime;
+            private float elapsedTime;
+            private float nextExecuteTime;
             private bool started;
             private bool stopped;
 
             public bool IsStopped { get => stopped; }
+
+#if ODIN_INSPECTOR
+            [ShowInInspector]
+#endif
+            public float ElapsedTime => elapsedTime;
 
             public void Stop()
             {
                 stopped = true;
             }
 
+            public void Dispose()
+            {
+                executeTimes = 0;
+                elapsedTime = 0;
+                nextExecuteTime = 0;
+                started = false;
+                stopped = false;
+            }
+
             internal bool Update(float delta)
             {
-                if (timerType == TimerType.FIXED_DURATION)
-                    deltaTime += delta;
+                //if (timerType == TimerType.FIXED_DURATION)
+                //    elapsedTime += delta;
+
+                elapsedTime += delta;
+
+                float time = Time.time;
+                if (timerType == TimerType.FIXED_REALTIME_DURATION)
+                    time = Time.realtimeSinceStartup;
 
                 if (!started)
                 {
-                    if (timerType == TimerType.FIXED_REALTIME_DURATION)
+                    if (time >= startTime)
                     {
-                        if (Time.realtimeSinceStartup >= startTime)
-                        {
-                            started = true;
-                            deltaTime = startTime + interval;
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        if (deltaTime >= startTime)
-                        {
-                            started = true;
-                            deltaTime -= startTime;
-                            return true;
-                        }
+                        started = true;
+                        nextExecuteTime = startTime + interval;
+                        return true;
                     }
                 }
                 else
                 {
                     if (timerType == TimerType.EVERY_FRAME)
-                    {
-                        deltaTime = 0;
                         return true;
-                    }
 
-                    if (timerType == TimerType.FIXED_REALTIME_DURATION)
+                    if (time >= nextExecuteTime)
                     {
-                        if (Time.realtimeSinceStartup >= deltaTime)
-                        {
-                            deltaTime += interval;
-                            return true;
-                        }
-                    }
-                    else
-                    {
-                        if (deltaTime >= interval)
-                        {
-                            deltaTime -= interval;
-                            return true;
-                        }
+                        nextExecuteTime += interval;
+                        return true;
                     }
                 }
 
@@ -111,11 +105,10 @@ namespace PureMVCFramework
                     catch (Exception e)
                     {
                         Debug.LogError(e);
-                        return true;
                     }
                 }
-                else
-                    return true;
+
+                return true;
             }
         }
 
@@ -151,6 +144,7 @@ namespace PureMVCFramework
                 for (int i = 0; i < m_ToBeRemoved.Count; ++i)
                 {
                     m_TaskList.Remove(m_ToBeRemoved[i]);
+                    ReferencePool.RecycleInstance(m_ToBeRemoved[i]);
                 }
                 m_ToBeRemoved.Clear();
             }
@@ -163,7 +157,7 @@ namespace PureMVCFramework
         /// <param name="executable">Executable.</param>
         public TimerTask AddOneShotTask(float startDelay, Action executable, string taskName = null)
         {
-            return AddTask(TimerType.FIXED_DURATION, startDelay, 0, 1, () =>
+            return AddTask(TimerType.FIXED_DURATION, Time.time + startDelay, 0, 1, () =>
             {
                 executable?.Invoke();
                 return true;
@@ -193,7 +187,7 @@ namespace PureMVCFramework
         /// <param name="executable">Executable.</param>
         public TimerTask AddRepeatTask(float startDelay, float interval, int repeatTimes, Func<bool> executable, string taskName = null)
         {
-            return AddTask(TimerType.FIXED_DURATION, startDelay, interval, repeatTimes, executable, taskName);
+            return AddTask(TimerType.FIXED_DURATION, Time.time + startDelay, interval, repeatTimes, executable, taskName);
         }
 
         /// <summary>
@@ -214,7 +208,7 @@ namespace PureMVCFramework
         /// <param name="executable">Executable.</param>
         public TimerTask AddFrameExecuteTask(Func<bool> executable, string taskName = null)
         {
-            return AddTask(TimerType.EVERY_FRAME, 0, 0, 0, executable, taskName);
+            return AddTask(TimerType.EVERY_FRAME, Time.time, 0, 0, executable, taskName);
         }
 
         /// <summary>
@@ -228,7 +222,14 @@ namespace PureMVCFramework
         /// <param name="executable">Executable.</param>
         private TimerTask AddTask(TimerType timerType, float startTime, float interval, int repeatTimes, Func<bool> executable, string taskName)
         {
-            TimerTask task = new TimerTask { timerType = timerType, startTime = startTime, interval = interval, repeatTimes = repeatTimes, executable = executable };
+            TimerTask task = ReferencePool.SpawnInstance<TimerTask>();
+            task.timerType = timerType;
+            task.startTime = startTime;
+            task.interval = interval;
+            task.repeatTimes = repeatTimes;
+            task.executable = executable;
+
+            // TimerTask task = new TimerTask { timerType = timerType, startTime = startTime, interval = interval, repeatTimes = repeatTimes, executable = executable };
 #if UNITY_EDITOR
             task.name = string.IsNullOrEmpty(taskName) ? DefaultTaskName(executable) : taskName;
 #endif

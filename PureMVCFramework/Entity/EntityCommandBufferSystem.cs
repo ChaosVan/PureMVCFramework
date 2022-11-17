@@ -1,4 +1,3 @@
-using PureMVCFramework.Advantages;
 using System.Collections.Generic;
 
 namespace PureMVCFramework.Entity
