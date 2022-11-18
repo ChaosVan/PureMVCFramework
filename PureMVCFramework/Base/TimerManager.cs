@@ -13,6 +13,10 @@ namespace PureMVCFramework
         bool Update(float deltaTime);
         bool Execute();
         void Stop();
+
+        public bool IsStopped { get; }
+
+        public float ElapsedTime { get; }
     }
 
     public enum TimerType
@@ -160,7 +164,7 @@ namespace PureMVCFramework
 #endif
     }
 
-    internal struct TimerTask : ITimerTask, IDisposable
+    internal class TimerTask : ITimerTask, IDisposable
     {
         public string name;
 
