@@ -4,6 +4,12 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.6] - 2022-11-18
+- 改进：删除Entity时，优化GameObject处理方式
+- 改进：WorldTime更新顺序
+- 改进：移除不需要的依赖包
+- 改进：Timer
+- 改进：GenericSystemBase生成的代码
 ## [1.1.4] - 2022-11-01
 - 改进：EnableUpdate可以自定义TaskName
 - 改进：通过反射创建的类，添加Preserve属性
