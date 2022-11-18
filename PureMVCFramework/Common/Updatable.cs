@@ -5,7 +5,7 @@ namespace PureMVCFramework
     public class Updatable : Notifier
     {
         private bool enabled;
-        private TimerManager.TimerTask updateTask;
+        private ITimerTask updateTask;
 
         public void EnableUpdate(bool tf, string taskName = "")
         {

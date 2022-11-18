@@ -1,7 +1,6 @@
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -30,7 +29,7 @@ namespace PureMVCFramework.Advantages
         protected override void OnDelete()
         {
             m_AutoReleaseObjects.Clear();
-            
+
             base.OnDelete();
         }
 
