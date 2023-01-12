@@ -75,14 +75,9 @@ namespace PureMVCFramework.UI
 
         }
 
-        protected virtual void OnShow()
+        public void ShowCanvas(bool tf)
         {
-            Canvas.enabled = true;
-        }
-
-        public void Show()
-        {
-            OnShow();
+            Canvas.enabled = tf;
         }
 
         private void SetCanvas(GameObject gameObject)
@@ -130,8 +125,6 @@ namespace PureMVCFramework.UI
                     default:
                         break;
                 }
-
-                Canvas.enabled = false;
             }
         }
 
@@ -213,8 +206,7 @@ namespace PureMVCFramework.UI
                 {
                     SendNotification(RegistMediatorCommand.Name, this, config.mediatorName);
 
-                    if (config.manualShow == 0)
-                        Show();
+                    Canvas.enabled = config.manualShow == 0;
                 }
                 else
                 {
