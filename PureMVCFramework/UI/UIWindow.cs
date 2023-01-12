@@ -25,6 +25,7 @@ namespace PureMVCFramework.UI
             public string windowClass;
             public string mediatorName;
             public string prefabPath;
+            public int manualShow;
 
             public override string ToString()
             {
@@ -119,6 +120,8 @@ namespace PureMVCFramework.UI
                     default:
                         break;
                 }
+
+                Canvas.enabled = false;
             }
         }
 
@@ -199,6 +202,8 @@ namespace PureMVCFramework.UI
                 if (config.windowMode != WindowMode.Multiple)
                 {
                     SendNotification(RegistMediatorCommand.Name, this, config.mediatorName);
+                    if (config.manualShow != 1)
+                        OnShow();
                 }
                 else
                 {
@@ -245,6 +250,11 @@ namespace PureMVCFramework.UI
             {
                 Debug.LogError(e);
             }
+        }
+
+        protected void OnShow()
+        {
+            Canvas.enabled = true;
         }
     }
 }
