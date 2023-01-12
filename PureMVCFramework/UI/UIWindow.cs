@@ -25,6 +25,7 @@ namespace PureMVCFramework.UI
             public string windowClass;
             public string mediatorName;
             public string prefabPath;
+            public int manualShow;
 
             public override string ToString()
             {
@@ -72,6 +73,11 @@ namespace PureMVCFramework.UI
         protected virtual void ApplySafeArea(Rect area)
         {
 
+        }
+
+        public void ShowCanvas(bool tf)
+        {
+            Canvas.enabled = tf;
         }
 
         private void SetCanvas(GameObject gameObject)
@@ -199,6 +205,8 @@ namespace PureMVCFramework.UI
                 if (config.windowMode != WindowMode.Multiple)
                 {
                     SendNotification(RegistMediatorCommand.Name, this, config.mediatorName);
+
+                    Canvas.enabled = config.manualShow == 0;
                 }
                 else
                 {
