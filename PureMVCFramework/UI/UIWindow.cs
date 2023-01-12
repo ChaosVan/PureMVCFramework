@@ -75,6 +75,16 @@ namespace PureMVCFramework.UI
 
         }
 
+        protected virtual void OnShow()
+        {
+            Canvas.enabled = true;
+        }
+
+        public void Show()
+        {
+            OnShow();
+        }
+
         private void SetCanvas(GameObject gameObject)
         {
             Canvas = gameObject.GetComponent<Canvas>();
@@ -202,8 +212,9 @@ namespace PureMVCFramework.UI
                 if (config.windowMode != WindowMode.Multiple)
                 {
                     SendNotification(RegistMediatorCommand.Name, this, config.mediatorName);
-                    if (config.manualShow != 1)
-                        OnShow();
+
+                    if (config.manualShow == 0)
+                        Show();
                 }
                 else
                 {
@@ -250,11 +261,6 @@ namespace PureMVCFramework.UI
             {
                 Debug.LogError(e);
             }
-        }
-
-        protected void OnShow()
-        {
-            Canvas.enabled = true;
         }
     }
 }
