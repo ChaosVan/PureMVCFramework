@@ -228,16 +228,7 @@ namespace PureMVCFramework.UI
 
         public UIWindow OpenWindow(UIWindowParams param, object userdata = null)
         {
-            var window = InternalOpenWindow(param);
-
-            if (!window.IsLoading && !window.IsOpen)
-            {
-                window.IsLoading = true;
-                // 加载Prefab
-                AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, window.Open, userdata);
-            }
-
-            return window;
+            return OpenWindow(param, null, userdata);
         }
 
         public UIWindow OpenWindow(UIWindowParams param, System.Action<UIWindow, object> callback, object userdata = null)
@@ -250,12 +241,39 @@ namespace PureMVCFramework.UI
                 // 加载Prefab
                 AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, (obj, data) =>
                 {
-                    window.Open(obj, data);
-                    callback?.Invoke(window, data);
+                    delayCallback.Enqueue(new DelayCallback
+                    {
+                        window = window,
+                        obj = obj,
+                        callback = callback,
+                        userdata = data
+                    });
+                    //window.Open(obj, data);
+                    //callback?.Invoke(window, data);
                 }, userdata);
             }
 
             return window;
+        }
+
+        private struct DelayCallback
+        {
+            public UIWindow window;
+            public GameObject obj;
+            public System.Action<UIWindow, object> callback;
+            public object userdata;
+        }
+
+        private Queue<DelayCallback> delayCallback = new Queue<DelayCallback>();
+
+        protected override void OnUpdate(float delta)
+        {
+            if (!ResourceManager.Instance.IsSpriteAtlasRequesting && delayCallback.Count > 0)
+            {
+                var evt = delayCallback.Dequeue();
+                evt.window.Open(evt.obj, evt.userdata);
+                evt.callback?.Invoke(evt.window, evt.userdata);
+            }
         }
 
         public void CloseWindow(UIWindow window)
