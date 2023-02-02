@@ -220,7 +220,7 @@ namespace PureMVCFramework.UI
 
         internal void Open()
         {
-            if (IsClosed)
+            if (IsClosed || ForceClosed)
                 return;
 
             Debug.Log(gameObject.name + " Open");
