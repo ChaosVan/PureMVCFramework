@@ -322,6 +322,9 @@ namespace PureMVCFramework.UI
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
+                    if (window.config.name == "SyncWindow")
+                        Debug.Log("############ " + window.IsLoading + " " + window.IsOpen);
+
                     window.Close();
                 }
 
@@ -342,6 +345,9 @@ namespace PureMVCFramework.UI
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
+                    if (window.config.name == "SyncWindow")
+                        Debug.Log("############ " + window.IsLoading + " " + window.IsOpen);
+
                     window.Close();
                 }
 
@@ -359,6 +365,9 @@ namespace PureMVCFramework.UI
                 {
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
+
+                    if (window.config.name == "SyncWindow")
+                        Debug.Log("############ " + window.IsLoading + " " + window.IsOpen);
 
                     window.Close();
                 }
