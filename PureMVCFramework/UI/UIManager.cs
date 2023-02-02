@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
+using UnityEditor.PackageManager.UI;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
@@ -165,7 +166,7 @@ namespace PureMVCFramework.UI
                 {
                     if (window.config == null)
                     {
-                        Debug.Log(window.userdata);
+                        Debug.Log("GetWindow " + windows.Count);
                     }
                     if (window.config.name == windowName)
                         return window;
@@ -202,6 +203,8 @@ namespace PureMVCFramework.UI
             if (window.IsLoading || window.IsOpen)
                 return window;
 
+            window.IsClosed = false;
+
             // 覆盖新的config
             window.config = param;
 
@@ -211,6 +214,7 @@ namespace PureMVCFramework.UI
 
             m_ActiveWindows[param.layer].Add(window);
 
+            Debug.Log(param.layer + " " + m_ActiveWindows[param.layer].Count);
 
             return window;
         }
@@ -239,7 +243,7 @@ namespace PureMVCFramework.UI
         {
             var window = InternalOpenWindow(param);
 
-            if (!window.IsLoading && !window.IsOpen)
+            if (!window.IsLoading && !window.IsOpen && !window.IsClosed)
             {
                 window.IsLoading = true;
                 // 加载Prefab
@@ -284,6 +288,8 @@ namespace PureMVCFramework.UI
 
             if (window.config.windowMode != WindowMode.Multiple)
                 m_SingleWindows.Remove(window.config.name);
+
+            Debug.Log(window.config.layer + " " + m_ActiveWindows[window.config.layer].Count);
 
             window.Close();
             UpdateCurrentFocusWindow();
