@@ -199,7 +199,7 @@ namespace PureMVCFramework.UI
                 return window;
 
             if (param.name == "SyncWindow")
-                Debug.Log("############ " + window.IsLoading + " " + window.IsOpen);
+                Debug.Log("############ " + param.name + " " + window.IsLoading + " " + window.IsOpen);
 
             window.IsClosed = false;
 
