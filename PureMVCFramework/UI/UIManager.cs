@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
-using UnityEditor.PackageManager.UI;
 
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
