@@ -237,7 +237,7 @@ namespace PureMVCFramework.UI
                 return;
             }
 
-            Debug.Log(gameObject.name + " Close");
+            Debug.Log(config.name + " Close");
 
             ForceClosed = false;
             IsOpen = false;
