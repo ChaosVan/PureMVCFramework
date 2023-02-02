@@ -28,6 +28,9 @@ namespace PureMVCFramework.UI
 #endif
         private readonly Dictionary<UILayer, List<UIWindow>> m_ActiveWindows = new Dictionary<UILayer, List<UIWindow>>();
 
+#if ODIN_INSPECTOR
+        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
+#endif
         // mode为single的windows缓存，确保只打开一个
         private readonly Dictionary<string, UIWindow> m_SingleWindows = new Dictionary<string, UIWindow>();
         // UI栈，支持UI的后开先关功能
@@ -190,7 +193,10 @@ namespace PureMVCFramework.UI
 
                 // 避免重复打开
                 if (param.windowMode != WindowMode.Multiple)
+                {
                     m_SingleWindows[param.name] = window;
+                    Debug.Log(param.name + " @ " + m_SingleWindows[param.name]);
+                }
             }
 
             Assert.IsNotNull(window, param.name + " open failed!");
