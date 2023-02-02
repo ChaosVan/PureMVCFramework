@@ -133,7 +133,7 @@ namespace PureMVCFramework.UI
 
         private void UpdateCurrentFocusWindow()
         {
-            while (CurrentFocusWindow != null && !CurrentFocusWindow.IsOpen)
+            while (CurrentFocusWindow != null && CurrentFocusWindow.Status != WindowStatus.Opened)
             {
                 m_UIStack.Pop();
                 if (m_UIStack.Count > 0)
@@ -195,8 +195,10 @@ namespace PureMVCFramework.UI
 
             Assert.IsNotNull(window, param.name + " open failed!");
 
-            if (window.IsLoading || window.IsOpen)
+            if (window.Status > WindowStatus.None)
                 return window;
+
+            window.Status = WindowStatus.None;
 
             // 覆盖新的config
             window.config = param;
@@ -206,7 +208,6 @@ namespace PureMVCFramework.UI
                 m_ActiveWindows[param.layer] = new List<UIWindow>();
 
             m_ActiveWindows[param.layer].Add(window);
-
 
             return window;
         }
@@ -228,34 +229,46 @@ namespace PureMVCFramework.UI
 
         public UIWindow OpenWindow(UIWindowParams param, object userdata = null)
         {
-            var window = InternalOpenWindow(param);
-
-            if (!window.IsLoading && !window.IsOpen)
-            {
-                window.IsLoading = true;
-                // 加载Prefab
-                AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, window.Open, userdata);
-            }
-
-            return window;
+            return OpenWindow(param, null, userdata);
         }
 
         public UIWindow OpenWindow(UIWindowParams param, System.Action<UIWindow, object> callback, object userdata = null)
         {
             var window = InternalOpenWindow(param);
 
-            if (!window.IsLoading && !window.IsOpen)
+            if (window.Status == WindowStatus.None)
             {
-                window.IsLoading = true;
+                window.Status = WindowStatus.Loading;
+
                 // 加载Prefab
                 AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, (obj, data) =>
                 {
-                    window.Open(obj, data);
-                    callback?.Invoke(window, data);
+                    if (window.Init(obj, data))
+                    {
+                        callback?.Invoke(window, userdata);
+                        delayOpen.Enqueue(window);
+                    }
+                    else
+                    {
+                        callback?.Invoke(null, userdata);
+                    }
                 }, userdata);
             }
 
             return window;
+        }
+
+        private Queue<UIWindow> delayOpen = new Queue<UIWindow>();
+
+        protected override void OnUpdate(float delta)
+        {
+            if (!ResourceManager.Instance.IsSpriteAtlasRequesting)
+            {
+                while(delayOpen.Count > 0)
+                {
+                    delayOpen.Dequeue().Open();
+                }
+            }
         }
 
         public void CloseWindow(UIWindow window)

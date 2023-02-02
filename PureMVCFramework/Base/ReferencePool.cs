@@ -33,7 +33,7 @@ namespace PureMVCFramework
         private static IReflectionProvider provider;
         public static IReflectionProvider Provider { get => provider; }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
         public static void Initialize()
         {
             if (provider == null)

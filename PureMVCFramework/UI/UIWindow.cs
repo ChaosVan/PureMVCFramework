@@ -14,6 +14,15 @@ namespace PureMVCFramework.UI
             Multiple,       // 可以存在多个
         }
 
+        public enum WindowStatus
+        {
+            None,
+            Loading,
+            Openning,
+            Opened,
+            Closed,
+        }
+
         [System.Serializable]
         public class UIWindowParams
         {
@@ -47,8 +56,10 @@ namespace PureMVCFramework.UI
         public UIWindowParams config;
         public WorldParam worldParam;
 
-        public bool IsLoading { get; internal set; }
-        public bool IsOpen { get; private set; }
+        public WindowStatus Status { get; internal set; }
+
+        public bool IsOpen => Status == WindowStatus.Opened;
+
         public bool IsFocus
         {
             get
@@ -63,6 +74,11 @@ namespace PureMVCFramework.UI
         public Canvas Canvas { get; private set; }
 
         internal bool ForceClosed { get; set; }
+
+        protected virtual void OnOpen()
+        {
+
+        }
 
         protected virtual void OnFocus(bool tf)
         {
@@ -119,6 +135,8 @@ namespace PureMVCFramework.UI
                     default:
                         break;
                 }
+
+                Canvas.enabled = false;
             }
         }
 
@@ -134,21 +152,18 @@ namespace PureMVCFramework.UI
             }
         }
 
-        internal void Open(GameObject gameObject, object userdata)
+        internal bool Init(GameObject gameObject, object userdata)
         {
             Assert.IsNotNull(gameObject, config.prefabPath);
-            Assert.IsFalse(IsOpen);
 
-            IsLoading = false;
+            Status = WindowStatus.Openning;
 
             if (ForceClosed)
             {
                 Close();
                 gameObject.Recycle();
-                return;
+                return false;
             }
-
-            IsOpen = true;
 
             // Set Canvas Layer
             SetCanvas(gameObject);
@@ -206,25 +221,36 @@ namespace PureMVCFramework.UI
                         SendNotification(worldParam.callbackNotification, this);
                 }
             }
+
+            return true;
+        }
+
+        internal void Open()
+        {
+            if (Status == WindowStatus.Closed || ForceClosed)
+                return;
+
+            Status = WindowStatus.Opened;
+            Canvas.enabled = true;
+            OnOpen();
         }
 
         internal void Close()
         {
-            if (IsLoading)
+            if (Status == WindowStatus.Loading)
             {
                 ForceClosed = true;
                 return;
             }
 
             ForceClosed = false;
-            IsOpen = false;
+            Status = WindowStatus.Closed;
 
             if (!string.IsNullOrEmpty(config.mediatorName))
             {
                 if (config.windowMode != WindowMode.Multiple)
                 {
                     SendNotification(RemoveMediatorCommand.Name, this, config.mediatorName);
-
                 }
             }
 

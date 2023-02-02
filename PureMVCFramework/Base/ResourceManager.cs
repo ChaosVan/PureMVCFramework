@@ -27,6 +27,10 @@ namespace PureMVCFramework
 
     public class ResourceManager : SingletonBehaviour<ResourceManager>
     {
+        private readonly List<string> SpriteAtlasRequest = new List<string>();
+
+        public bool IsSpriteAtlasRequesting => SpriteAtlasRequest.Count > 0;
+
         public IResourceProvider Provider { get; private set; }
         public IResourcesUpdateProvider Updater { get; private set; }
 
@@ -73,11 +77,13 @@ namespace PureMVCFramework
         private void OnAtlasRequested(string atlasName, System.Action<SpriteAtlas> action)
         {
             Debug.LogWarningFormat("OnAtlasRequested: {0}", atlasName);
-            LoadSpriteAtlas(atlasName, action, 1);
+            SpriteAtlasRequest.Add(atlasName);
+            LoadSpriteAtlas(atlasName, action, 10);
         }
 
         private void OnAtlasRegistered(SpriteAtlas sa)
         {
+            SpriteAtlasRequest.Remove(sa.name);
             Debug.LogWarningFormat("OnAtlasRegistered: {0}", sa.name);
         }
 
