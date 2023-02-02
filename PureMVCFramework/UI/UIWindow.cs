@@ -146,6 +146,7 @@ namespace PureMVCFramework.UI
         {
             Assert.IsNotNull(gameObject, config.prefabPath);
 
+            Debug.Log("##########");
             IsLoading = false;
 
             if (ForceClosed)
