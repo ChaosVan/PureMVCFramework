@@ -268,11 +268,14 @@ namespace PureMVCFramework.UI
 
         protected override void OnUpdate(float delta)
         {
-            if (!ResourceManager.Instance.IsSpriteAtlasRequesting && delayCallback.Count > 0)
+            if (!ResourceManager.Instance.IsSpriteAtlasRequesting)
             {
-                var evt = delayCallback.Dequeue();
-                evt.window.Open(evt.obj, evt.userdata);
-                evt.callback?.Invoke(evt.window, evt.userdata);
+                while(delayCallback.Count > 0)
+                {
+                    var evt = delayCallback.Dequeue();
+                    evt.window.Open(evt.obj, evt.userdata);
+                    evt.callback?.Invoke(evt.window, evt.userdata);
+                }
             }
         }
 
