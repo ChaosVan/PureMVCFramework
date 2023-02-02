@@ -163,10 +163,6 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
-                    if (window.config == null)
-                    {
-                        Debug.Log(window.userdata);
-                    }
                     if (window.config.name == windowName)
                         return window;
                 }
@@ -202,6 +198,8 @@ namespace PureMVCFramework.UI
             if (window.IsLoading || window.IsOpen)
                 return window;
 
+            window.IsClosed = false;
+
             // 覆盖新的config
             window.config = param;
 
@@ -210,7 +208,6 @@ namespace PureMVCFramework.UI
                 m_ActiveWindows[param.layer] = new List<UIWindow>();
 
             m_ActiveWindows[param.layer].Add(window);
-
 
             return window;
         }
@@ -239,7 +236,7 @@ namespace PureMVCFramework.UI
         {
             var window = InternalOpenWindow(param);
 
-            if (!window.IsLoading && !window.IsOpen)
+            if (!window.IsLoading && !window.IsOpen && !window.IsClosed)
             {
                 window.IsLoading = true;
                 // 加载Prefab
