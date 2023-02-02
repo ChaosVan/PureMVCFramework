@@ -241,40 +241,33 @@ namespace PureMVCFramework.UI
                 // 加载Prefab
                 AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, (obj, data) =>
                 {
-                    delayCallback.Enqueue(new DelayCallback
+                    if (window.Init(obj, data))
                     {
-                        window = window,
-                        obj = obj,
-                        callback = callback,
-                        userdata = data
-                    });
-                    //window.Open(obj, data);
-                    //callback?.Invoke(window, data);
+                        callback?.Invoke(window, userdata);
+                        delayOpen.Enqueue(window);
+                    }
                 }, userdata);
             }
 
             return window;
         }
 
-        private struct DelayCallback
-        {
-            public UIWindow window;
-            public GameObject obj;
-            public System.Action<UIWindow, object> callback;
-            public object userdata;
-        }
+        //private struct DelayCallback
+        //{
+        //    public UIWindow window;
+        //    public System.Action<UIWindow, object> callback;
+        //    public object userdata;
+        //}
 
-        private Queue<DelayCallback> delayCallback = new Queue<DelayCallback>();
+        private Queue<UIWindow> delayOpen = new Queue<UIWindow>();
 
         protected override void OnUpdate(float delta)
         {
             if (!ResourceManager.Instance.IsSpriteAtlasRequesting)
             {
-                while(delayCallback.Count > 0)
+                while(delayOpen.Count > 0)
                 {
-                    var evt = delayCallback.Dequeue();
-                    evt.window.Open(evt.obj, evt.userdata);
-                    evt.callback?.Invoke(evt.window, evt.userdata);
+                    delayOpen.Dequeue().Open();
                 }
             }
         }

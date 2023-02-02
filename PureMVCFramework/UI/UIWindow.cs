@@ -64,6 +64,11 @@ namespace PureMVCFramework.UI
 
         internal bool ForceClosed { get; set; }
 
+        protected virtual void OnOpen()
+        {
+
+        }
+
         protected virtual void OnFocus(bool tf)
         {
 
@@ -119,6 +124,8 @@ namespace PureMVCFramework.UI
                     default:
                         break;
                 }
+
+                Canvas.enabled = false;
             }
         }
 
@@ -134,10 +141,9 @@ namespace PureMVCFramework.UI
             }
         }
 
-        internal void Open(GameObject gameObject, object userdata)
+        internal bool Init(GameObject gameObject, object userdata)
         {
             Assert.IsNotNull(gameObject, config.prefabPath);
-            Assert.IsFalse(IsOpen);
 
             IsLoading = false;
 
@@ -145,10 +151,8 @@ namespace PureMVCFramework.UI
             {
                 Close();
                 gameObject.Recycle();
-                return;
+                return false;
             }
-
-            IsOpen = true;
 
             // Set Canvas Layer
             SetCanvas(gameObject);
@@ -206,6 +210,16 @@ namespace PureMVCFramework.UI
                         SendNotification(worldParam.callbackNotification, this);
                 }
             }
+
+            return true;
+        }
+
+        internal void Open()
+        {
+            Assert.IsFalse(IsOpen);
+            IsOpen = true;
+            Canvas.enabled = true;
+            OnOpen();
         }
 
         internal void Close()
