@@ -154,6 +154,8 @@ namespace PureMVCFramework.UI
                 return false;
             }
 
+            Debug.Log(gameObject.name + " Inited");
+
             // Set Canvas Layer
             SetCanvas(gameObject);
 
@@ -216,6 +218,7 @@ namespace PureMVCFramework.UI
 
         internal void Open()
         {
+            Debug.Log(gameObject.name + " Open");
             Assert.IsFalse(IsOpen);
             IsOpen = true;
             Canvas.enabled = true;
@@ -229,6 +232,8 @@ namespace PureMVCFramework.UI
                 ForceClosed = true;
                 return;
             }
+
+            Debug.Log(gameObject.name + " Close");
 
             ForceClosed = false;
             IsOpen = false;
