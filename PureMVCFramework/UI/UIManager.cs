@@ -214,7 +214,7 @@ namespace PureMVCFramework.UI
 
             m_ActiveWindows[param.layer].Add(window);
 
-            Debug.Log(param.layer + " " + m_ActiveWindows[param.layer].Count);
+            Debug.Log(param.layer + " " + m_ActiveWindows[param.layer].Count + " " + param.name);
 
             return window;
         }
@@ -289,7 +289,7 @@ namespace PureMVCFramework.UI
             if (window.config.windowMode != WindowMode.Multiple)
                 m_SingleWindows.Remove(window.config.name);
 
-            Debug.Log(window.config.layer + " " + m_ActiveWindows[window.config.layer].Count);
+            Debug.Log(window.config.layer + " " + m_ActiveWindows[window.config.layer].Count + " " + window.config.name);
 
             window.Close();
             UpdateCurrentFocusWindow();
