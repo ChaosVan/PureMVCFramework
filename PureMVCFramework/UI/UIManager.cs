@@ -164,10 +164,6 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
-                    if (window.config == null)
-                    {
-                        Debug.Log("GetWindow " + windows.Count);
-                    }
                     if (window.config.name == windowName)
                         return window;
                 }
