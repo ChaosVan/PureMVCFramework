@@ -28,9 +28,6 @@ namespace PureMVCFramework.UI
 #endif
         private readonly Dictionary<UILayer, List<UIWindow>> m_ActiveWindows = new Dictionary<UILayer, List<UIWindow>>();
 
-#if ODIN_INSPECTOR
-        [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
-#endif
         // mode为single的windows缓存，确保只打开一个
         private readonly Dictionary<string, UIWindow> m_SingleWindows = new Dictionary<string, UIWindow>();
         // UI栈，支持UI的后开先关功能
@@ -250,6 +247,9 @@ namespace PureMVCFramework.UI
             if (!window.IsLoading && !window.IsOpen && !window.IsClosed)
             {
                 window.IsLoading = true;
+                if (param.name == "SyncWindow")
+                    Debug.Log("############ " + param.name + " " + window.IsLoading + " " + window.IsOpen);
+
                 // 加载Prefab
                 AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, (obj, data) =>
                 {
