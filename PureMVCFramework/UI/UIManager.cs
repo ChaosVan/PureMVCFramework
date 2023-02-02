@@ -198,6 +198,9 @@ namespace PureMVCFramework.UI
             if (window.IsLoading || window.IsOpen)
                 return window;
 
+            if (param.name == "SyncWindow")
+                Debug.Log("############ " + window.IsLoading + " " + window.IsOpen);
+
             window.IsClosed = false;
 
             // 覆盖新的config
