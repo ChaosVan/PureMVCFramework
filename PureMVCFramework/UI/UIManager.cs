@@ -246,18 +246,15 @@ namespace PureMVCFramework.UI
                         callback?.Invoke(window, userdata);
                         delayOpen.Enqueue(window);
                     }
+                    else
+                    {
+                        callback?.Invoke(null, userdata);
+                    }
                 }, userdata);
             }
 
             return window;
         }
-
-        //private struct DelayCallback
-        //{
-        //    public UIWindow window;
-        //    public System.Action<UIWindow, object> callback;
-        //    public object userdata;
-        //}
 
         private Queue<UIWindow> delayOpen = new Queue<UIWindow>();
 
