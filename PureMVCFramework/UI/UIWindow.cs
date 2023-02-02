@@ -58,6 +58,8 @@ namespace PureMVCFramework.UI
 
         public WindowStatus Status { get; internal set; }
 
+        public bool IsOpen => Status == WindowStatus.Opened;
+
         public bool IsFocus
         {
             get
