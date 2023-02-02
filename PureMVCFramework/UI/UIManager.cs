@@ -133,7 +133,7 @@ namespace PureMVCFramework.UI
 
         private void UpdateCurrentFocusWindow()
         {
-            while (CurrentFocusWindow != null && !CurrentFocusWindow.IsOpen)
+            while (CurrentFocusWindow != null && CurrentFocusWindow.Status != WindowStatus.Opened)
             {
                 m_UIStack.Pop();
                 if (m_UIStack.Count > 0)
@@ -195,10 +195,10 @@ namespace PureMVCFramework.UI
 
             Assert.IsNotNull(window, param.name + " open failed!");
 
-            if (window.IsLoading || window.IsOpen)
+            if (window.Status > WindowStatus.None)
                 return window;
 
-            window.IsClosed = false;
+            window.Status = WindowStatus.None;
 
             // 覆盖新的config
             window.config = param;
@@ -236,9 +236,10 @@ namespace PureMVCFramework.UI
         {
             var window = InternalOpenWindow(param);
 
-            if (!window.IsLoading && !window.IsOpen && !window.IsClosed)
+            if (window.Status == WindowStatus.None)
             {
-                window.IsLoading = true;
+                window.Status = WindowStatus.Loading;
+
                 // 加载Prefab
                 AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, (obj, data) =>
                 {

@@ -14,6 +14,15 @@ namespace PureMVCFramework.UI
             Multiple,       // 可以存在多个
         }
 
+        public enum WindowStatus
+        {
+            None,
+            Loading,
+            Openning,
+            Opened,
+            Closed,
+        }
+
         [System.Serializable]
         public class UIWindowParams
         {
@@ -47,8 +56,8 @@ namespace PureMVCFramework.UI
         public UIWindowParams config;
         public WorldParam worldParam;
 
-        public bool IsLoading { get; internal set; }
-        public bool IsOpen { get; private set; }
+        public WindowStatus Status { get; internal set; }
+
         public bool IsFocus
         {
             get
@@ -63,7 +72,6 @@ namespace PureMVCFramework.UI
         public Canvas Canvas { get; private set; }
 
         internal bool ForceClosed { get; set; }
-        internal bool IsClosed { get; set; }
 
         protected virtual void OnOpen()
         {
@@ -146,7 +154,7 @@ namespace PureMVCFramework.UI
         {
             Assert.IsNotNull(gameObject, config.prefabPath);
 
-            IsLoading = false;
+            Status = WindowStatus.Openning;
 
             if (ForceClosed)
             {
@@ -217,33 +225,30 @@ namespace PureMVCFramework.UI
 
         internal void Open()
         {
-            if (IsClosed || ForceClosed)
+            if (Status == WindowStatus.Closed || ForceClosed)
                 return;
 
-            Assert.IsFalse(IsOpen);
-            IsOpen = true;
+            Status = WindowStatus.Opened;
             Canvas.enabled = true;
             OnOpen();
         }
 
         internal void Close()
         {
-            if (IsLoading)
+            if (Status == WindowStatus.Loading)
             {
                 ForceClosed = true;
                 return;
             }
 
             ForceClosed = false;
-            IsOpen = false;
-            IsClosed = true;
+            Status = WindowStatus.Closed;
 
             if (!string.IsNullOrEmpty(config.mediatorName))
             {
                 if (config.windowMode != WindowMode.Multiple)
                 {
                     SendNotification(RemoveMediatorCommand.Name, this, config.mediatorName);
-
                 }
             }
 
