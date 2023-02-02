@@ -63,6 +63,7 @@ namespace PureMVCFramework.UI
         public Canvas Canvas { get; private set; }
 
         internal bool ForceClosed { get; set; }
+        internal bool IsClosed { get; set; }
 
         protected virtual void OnOpen()
         {
@@ -145,6 +146,7 @@ namespace PureMVCFramework.UI
         {
             Assert.IsNotNull(gameObject, config.prefabPath);
 
+            IsClosed = false;
             IsLoading = false;
 
             if (ForceClosed)
@@ -218,6 +220,9 @@ namespace PureMVCFramework.UI
 
         internal void Open()
         {
+            if (IsClosed)
+                return;
+
             Debug.Log(gameObject.name + " Open");
             Assert.IsFalse(IsOpen);
             IsOpen = true;
@@ -237,6 +242,7 @@ namespace PureMVCFramework.UI
 
             ForceClosed = false;
             IsOpen = false;
+            IsClosed = true;
 
             if (!string.IsNullOrEmpty(config.mediatorName))
             {
