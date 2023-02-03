@@ -188,6 +188,8 @@ namespace PureMVCFramework.UI
                     window = ReferencePool.SpawnInstance(param.windowClass) as UIWindow;
                 }
 
+                window.Status = WindowStatus.None;
+
                 // 避免重复打开
                 if (param.windowMode != WindowMode.Multiple)
                     m_SingleWindows[param.name] = window;
