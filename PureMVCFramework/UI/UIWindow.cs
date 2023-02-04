@@ -18,7 +18,7 @@ namespace PureMVCFramework.UI
         {
             None,
             Loading,
-            Openning,
+            Inited,
             Opened,
             Closed,
         }
@@ -156,7 +156,7 @@ namespace PureMVCFramework.UI
         {
             Assert.IsNotNull(gameObject, config.prefabPath);
 
-            Status = WindowStatus.Openning;
+            Status = WindowStatus.Inited;
 
             if (ForceClosed)
             {
@@ -227,7 +227,7 @@ namespace PureMVCFramework.UI
 
         internal void Open()
         {
-            if (Status == WindowStatus.Closed || ForceClosed)
+            if (Status != WindowStatus.Inited || ForceClosed)
                 return;
 
             Status = WindowStatus.Opened;
