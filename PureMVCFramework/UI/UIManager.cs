@@ -247,12 +247,12 @@ namespace PureMVCFramework.UI
                 {
                     if (window.Init(obj, data))
                     {
-                        callback?.Invoke(window, userdata);
+                        callback?.Invoke(window, data);
                         delayOpen.Enqueue(window);
                     }
                     else
                     {
-                        callback?.Invoke(null, userdata);
+                        callback?.Invoke(null, data);
                     }
                 }, userdata);
             }
