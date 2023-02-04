@@ -227,17 +227,21 @@ namespace PureMVCFramework.UI
 
         internal void Open()
         {
-            if (Status != WindowStatus.Inited || ForceClosed)
-                return;
-
             Status = WindowStatus.Opened;
+
+            if (ForceClosed)
+            {
+                Close();
+                return;
+            }
+
             Canvas.enabled = true;
             OnOpen();
         }
 
         internal void Close()
         {
-            if (Status == WindowStatus.Loading)
+            if (Status == WindowStatus.Loading || Status == WindowStatus.Inited)
             {
                 ForceClosed = true;
                 return;
