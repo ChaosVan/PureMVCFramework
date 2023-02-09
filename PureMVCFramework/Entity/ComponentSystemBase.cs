@@ -163,10 +163,12 @@ namespace PureMVCFramework.Entity
             Facade.SendNotification(notificationName, body, type);
         }
 
+#if THREAD_SAFE
         public void SendNotificationSafe(string notificationName, object body = null, string type = null)
         {
             Facade.SendNotificationSafe(notificationName, body, type);
         }
+#endif
     }
 
     // Updating before or after a system constrains the scheduler ordering of these systems within a ComponentSystemGroup.
