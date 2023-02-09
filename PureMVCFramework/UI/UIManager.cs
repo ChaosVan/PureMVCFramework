@@ -1,5 +1,4 @@
 ﻿using PureMVCFramework.Advantages;
-using PureMVCFramework.Patterns;
 using static PureMVCFramework.UI.UIWindow;
 using System.Collections.Generic;
 using UnityEngine;
@@ -60,16 +59,10 @@ namespace PureMVCFramework.UI
             EventSystem = FindObjectOfType<EventSystem>();
 
             CreateCustomCamera("UI Camera", 1 << LayerMask.NameToLayer("UI"));
-
-            Facade.RegisterCommand(RegistMediatorCommand.Name, () => new RegistMediatorCommand());
-            Facade.RegisterCommand(RemoveMediatorCommand.Name, () => new RemoveMediatorCommand());
         }
 
         protected override void OnDelete()
         {
-            Facade.RemoveCommand(RegistMediatorCommand.Name);
-            Facade.RemoveCommand(RemoveMediatorCommand.Name);
-
             base.OnDelete();
         }
 
@@ -266,7 +259,7 @@ namespace PureMVCFramework.UI
         {
             if (!ResourceManager.Instance.IsSpriteAtlasRequesting)
             {
-                while(delayOpen.Count > 0)
+                while (delayOpen.Count > 0)
                 {
                     delayOpen.Dequeue().Open();
                 }

@@ -10,6 +10,11 @@ using PureMVC.Interfaces;
 using PureMVC.Core;
 using PureMVC.Patterns.Observer;
 
+#if THREAD_SAFE
+using System.Collections.Concurrent;
+using UnityEngine;
+#endif
+
 namespace PureMVC.Patterns.Facade
 {
     /// <summary>
@@ -30,7 +35,11 @@ namespace PureMVC.Patterns.Facade
     /// <seealso cref="PureMVC.Core.Model"/>
     /// <seealso cref="PureMVC.Core.View"/>
     /// <seealso cref="PureMVC.Core.Controller"/>
-    public class Facade : IFacade
+    public class Facade :
+#if THREAD_SAFE
+        MonoBehaviour,
+#endif
+        IFacade
     {
         /// <summary>
         /// Constructor.
@@ -52,16 +61,49 @@ namespace PureMVC.Patterns.Facade
             InitializeFacade();
         }
 
-        /// <summary>
-        /// Initialize the Singleton <c>Facade</c> instance.
-        /// </summary>
-        /// <remarks>
-        ///     <para>
-        ///         Called automatically by the constructor. Override in your
-        ///         subclass to do any subclass specific initializations. Be
-        ///         sure to call <c>super.initializeFacade()</c>, though.
-        ///     </para>
-        /// </remarks>
+#if THREAD_SAFE
+        public static bool applicationIsQuitting = false;
+        private static readonly object _lock = new object();
+
+        private ConcurrentQueue<INotification> notificationQueue = null;
+
+        private void Awake()
+        {
+            notificationQueue = new ConcurrentQueue<INotification>();
+            InitializeFacade();
+        }
+
+        private void Update()
+        {
+            while (notificationQueue.Count > 0)
+            {
+                if (notificationQueue.TryDequeue(out var notification))
+                {
+                    NotifyObservers(notification);
+                }
+            }
+        }
+
+        public void SendNotificationSafe(string notificationName, object body = null, string type = null)
+        {
+            lock (_lock)
+            {
+                var notification = new Notification(notificationName, body, type);
+                notificationQueue.Enqueue(notification);
+            }
+        }
+#endif
+
+            /// <summary>
+            /// Initialize the Singleton <c>Facade</c> instance.
+            /// </summary>
+            /// <remarks>
+            ///     <para>
+            ///         Called automatically by the constructor. Override in your
+            ///         subclass to do any subclass specific initializations. Be
+            ///         sure to call <c>super.initializeFacade()</c>, though.
+            ///     </para>
+            /// </remarks>
         protected virtual void InitializeFacade()
         {
             InitializeModel();
@@ -76,9 +118,52 @@ namespace PureMVC.Patterns.Facade
         /// <returns>the Singleton instance of the Facade</returns>
         public static IFacade GetInstance(Func<IFacade> facadeFunc)
         {
+#if THREAD_SAFE
+            if (applicationIsQuitting)
+            {
+                Debug.LogWarning("[Singleton] Instance 'Facade' already destroyed on application quit." +
+                    " Won't create again - returning null.");
+                return null;
+            }
+#endif
+
             if (instance == null)
             {
+#if THREAD_SAFE
+                lock (_lock)
+                {
+                    if (instance == null)
+                    {
+                        var objs = FindObjectsOfType<Facade>();
+                        if (objs.Length > 1)
+                        {
+                            Debug.LogError("[Singleton] Something went really wrong " +
+                                " - there should never be more than 1 singleton!" +
+                                " Reopenning the scene might fix it.");
+                            instance = objs[0];
+                        }
+                        else if (objs.Length > 0)
+                        {
+                            instance = objs[0];
+                        }
+
+                        if (instance == null)
+                        {
+                            GameObject singleton = new GameObject("(Singleton) " + typeof(Facade));
+                            instance = singleton.AddComponent<Facade>();
+
+                            DontDestroyOnLoad(singleton);
+                        }
+                        else
+                        {
+                            Debug.Log("[Singleton] Using instance already created: " +
+                                ((Facade)instance).gameObject.name);
+                        }
+                    }
+                }
+#else
                 instance = facadeFunc();
+#endif
             }
             return instance;
         }
