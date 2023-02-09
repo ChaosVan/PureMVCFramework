@@ -1,4 +1,5 @@
-﻿using PureMVCFramework.Providers;
+﻿using PureMVCFramework.Patterns;
+using PureMVCFramework.Providers;
 using UnityEngine;
 
 namespace PureMVCFramework
@@ -9,11 +10,20 @@ namespace PureMVCFramework
         {
             Debug.unityLogger.logEnabled = Debug.isDebugBuild;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
+            Facade.RegisterCommand(RegistMediatorCommand.Name, () => new RegistMediatorCommand());
+            Facade.RegisterCommand(RemoveMediatorCommand.Name, () => new RemoveMediatorCommand());
         }
 
         private void Start()
         {
             OnLaunch();
+        }
+
+        private void OnDestroy()
+        {
+            Facade.RemoveCommand(RegistMediatorCommand.Name);
+            Facade.RemoveCommand(RemoveMediatorCommand.Name);
         }
 
         protected virtual void OnLaunch()

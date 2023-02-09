@@ -79,22 +79,31 @@ namespace PureMVC.Patterns.Facade
             {
                 if (notificationQueue.TryDequeue(out var notification))
                 {
-                    view.NotifyObservers(notification);
+                    NotifyObservers(notification);
                 }
+            }
+        }
+
+        public void SendNotificationSafe(string notificationName, object body = null, string type = null)
+        {
+            lock (_lock)
+            {
+                var notification = new Notification(notificationName, body, type);
+                notificationQueue.Enqueue(notification);
             }
         }
 #endif
 
-        /// <summary>
-        /// Initialize the Singleton <c>Facade</c> instance.
-        /// </summary>
-        /// <remarks>
-        ///     <para>
-        ///         Called automatically by the constructor. Override in your
-        ///         subclass to do any subclass specific initializations. Be
-        ///         sure to call <c>super.initializeFacade()</c>, though.
-        ///     </para>
-        /// </remarks>
+            /// <summary>
+            /// Initialize the Singleton <c>Facade</c> instance.
+            /// </summary>
+            /// <remarks>
+            ///     <para>
+            ///         Called automatically by the constructor. Override in your
+            ///         subclass to do any subclass specific initializations. Be
+            ///         sure to call <c>super.initializeFacade()</c>, though.
+            ///     </para>
+            /// </remarks>
         protected virtual void InitializeFacade()
         {
             InitializeModel();
@@ -377,14 +386,7 @@ namespace PureMVC.Patterns.Facade
         /// <param name="notification">the <c>INotification</c> to have the <c>View</c> notify <c>Observers</c> of.</param>
         public virtual void NotifyObservers(INotification notification)
         {
-#if THREAD_SAFE
-            lock (_lock)
-            {
-                notificationQueue.Enqueue(notification);
-            }
-#else
             view.NotifyObservers(notification);
-#endif
         }
 
         /// <summary>References to Controller</summary>

@@ -46,5 +46,9 @@ namespace PureMVC.Interfaces
         /// <param name="body">the body of the notification (optional)</param>
         /// <param name="type">the type of the notification (optional)</param>
         void SendNotification(string notificationName, object body = null, string type = null);
+
+#if THREAD_SAFE
+        void SendNotificationSafe(string notificationName, object body = null, string type = null);
+#endif
     }
 }

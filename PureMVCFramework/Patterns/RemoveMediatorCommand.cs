@@ -1,8 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using PureMVC.Interfaces;
+﻿using PureMVC.Interfaces;
 using PureMVC.Patterns.Command;
-using PureMVCFramework.Advantages;
 
 namespace PureMVCFramework.Patterns
 {
