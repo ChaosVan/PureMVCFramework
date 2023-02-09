@@ -4,7 +4,9 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [1.1.7] - 2022-11-18
+## [1.1.8] - 2023-02-09
+- 改进：PureMVC线程安全机制
+## [1.1.7] - 2023-02-02
 - 改进：UI加载优化
 - 改进：Timer值类型问题
 ## [1.1.6] - 2022-11-18
