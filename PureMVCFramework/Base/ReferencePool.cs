@@ -52,6 +52,31 @@ namespace PureMVCFramework
 #endif
         }
 
+        public static void CleanCache(string rootNameSpace = "")
+        {
+            if (string.IsNullOrEmpty(rootNameSpace))
+            {
+                m_Cache.Clear();
+            }
+            else
+            {
+                if (!rootNameSpace.EndsWith("."))
+                    rootNameSpace = rootNameSpace + ".";
+
+                List<string> temp = new List<string>();
+                foreach (var key in m_Cache.Keys)
+                {
+                    if (key.StartsWith(rootNameSpace))
+                        temp.Add(key);
+                }
+
+                foreach (var key in temp)
+                {
+                    m_Cache.TryRemove(key, out _);
+                }
+            }
+        }
+
         public static void LoadTypes(string assemblyString)
         {
             provider.LoadTypes(assemblyString);
