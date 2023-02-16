@@ -1,4 +1,5 @@
 ﻿using PureMVCFramework.Providers;
+using PureMVCFramework.Extensions;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
