@@ -25,8 +25,8 @@ namespace PureMVCFramework
 
     public static class ReferencePool
     {
-        internal static event Action<string> OnSpawned;
-        internal static event Action<string> OnRecycled;
+        internal static event Action<string> OnChanged;
+        internal static event Action OnCleaned;
 
         internal static readonly ConcurrentDictionary<string, ConcurrentQueue<object>> m_Cache = new ConcurrentDictionary<string, ConcurrentQueue<object>>();
 
@@ -52,27 +52,25 @@ namespace PureMVCFramework
 #endif
         }
 
-        public static void CleanCache(string rootNameSpace = "")
+        public static void ClearCache(string rootNameSpace = "")
         {
             if (string.IsNullOrEmpty(rootNameSpace))
             {
                 m_Cache.Clear();
+                OnCleaned?.Invoke();
             }
             else
             {
                 if (!rootNameSpace.EndsWith("."))
                     rootNameSpace = rootNameSpace + ".";
 
-                List<string> temp = new List<string>();
-                foreach (var key in m_Cache.Keys)
+                foreach (var typeName in m_Cache.Keys)
                 {
-                    if (key.StartsWith(rootNameSpace))
-                        temp.Add(key);
-                }
-
-                foreach (var key in temp)
-                {
-                    m_Cache.TryRemove(key, out _);
+                    if (typeName.StartsWith(rootNameSpace) && m_Cache.TryGetValue(typeName, out var queue))
+                    {
+                        queue.Clear();
+                        OnChanged?.Invoke(typeName);
+                    }
                 }
             }
         }
@@ -89,9 +87,9 @@ namespace PureMVCFramework
 
         private static object InternalSpawnInstance(string typeName, bool recallCtor, params object[] args)
         {
-            if (m_Cache.TryGetValue(typeName, out var list) && list.TryDequeue(out var result))
+            if (m_Cache.TryGetValue(typeName, out var queue) && queue.TryDequeue(out var result))
             {
-                OnSpawned?.Invoke(typeName);
+                OnChanged?.Invoke(typeName);
             }
             else
             {
@@ -132,7 +130,7 @@ namespace PureMVCFramework
                     m_Cache[typeName] = new ConcurrentQueue<object>();
 
                 m_Cache[typeName].Enqueue(obj);
-                OnRecycled?.Invoke(typeName);
+                OnChanged?.Invoke(typeName);
             }
 
         }
@@ -150,24 +148,23 @@ namespace PureMVCFramework
         {
             base.OnInitialized();
 
-            ReferencePool.OnSpawned += ReferencePool_OnSpawned;
-            ReferencePool.OnRecycled += ReferencePool_OnRecycled;
+            ReferencePool.OnChanged += ReferencePool_OnSpawned;
+            ReferencePool.OnCleaned += ReferencePool_OnCleaned;
         }
 
         protected override void OnDelete()
         {
             m_Counter.Clear();
 
-            ReferencePool.OnSpawned -= ReferencePool_OnSpawned;
-            ReferencePool.OnRecycled -= ReferencePool_OnRecycled;
+            ReferencePool.OnChanged -= ReferencePool_OnSpawned;
+            ReferencePool.OnCleaned -= ReferencePool_OnCleaned;
 
             base.OnDelete();
         }
 
-        private void ReferencePool_OnRecycled(string typeName)
+        private void ReferencePool_OnCleaned()
         {
-            int count = ReferencePool.m_Cache[typeName].Count;
-            m_Counter[typeName] = count;
+            m_Counter.Clear();
         }
 
         private void ReferencePool_OnSpawned(string typeName)
