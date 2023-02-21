@@ -156,7 +156,7 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
-                    if (window.config.name == windowName)
+                    if (window.config != null && window.config.name == windowName)
                         return window;
                 }
             }
