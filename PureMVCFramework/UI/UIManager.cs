@@ -156,6 +156,9 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
+                    if (window.Status == WindowStatus.Closed || window.ForceClosed)
+                        continue;
+
                     if (window.config != null && window.config.name == windowName)
                         return window;
                 }
@@ -270,6 +273,12 @@ namespace PureMVCFramework.UI
         {
             Assert.IsNotNull(window);
 
+            if (window.Status == WindowStatus.Closed || window.ForceClosed)
+            {
+                UpdateCurrentFocusWindow();
+                return;
+            }
+
             if (m_ActiveWindows.TryGetValue(window.config.layer, out List<UIWindow> windows) && windows != null)
             {
                 windows.Remove(window);
@@ -308,6 +317,9 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
+                    if (window.Status == WindowStatus.Closed || window.ForceClosed)
+                        continue;
+
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
@@ -328,6 +340,9 @@ namespace PureMVCFramework.UI
 
                 foreach (var window in pair.Value)
                 {
+                    if (window.Status == WindowStatus.Closed || window.ForceClosed)
+                        continue;
+
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
@@ -346,6 +361,9 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
+                    if (window.Status == WindowStatus.Closed || window.ForceClosed)
+                        continue;
+
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
