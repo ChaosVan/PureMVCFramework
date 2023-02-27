@@ -255,6 +255,8 @@ namespace PureMVCFramework.Providers
             {
                 if (handle.IsDone)
                     callback?.Invoke(handle.Status == AsyncOperationStatus.Succeeded);
+
+                Resources.UnloadUnusedAssets();
             };
         }
     }
