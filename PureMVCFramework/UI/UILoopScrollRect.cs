@@ -69,25 +69,14 @@ namespace PureMVCFramework.UI
         public int HeadIndex { get; private set; } = -1;
         public int TailIndex { get; private set; } = -1;
 
-        public ScrollRect ScrollRect
-        {
-            get
-            {
-                return scrollRect;
-            }
-        }
+        public ScrollRect ScrollRect => scrollRect;
 
-        public HorizontalOrVerticalLayoutGroup LayoutGroup
-        {
-            get
-            {
-                return layoutGroup;
-            }
-        }
+        public HorizontalOrVerticalLayoutGroup LayoutGroup => layoutGroup;
 
         public bool ToHead
         {
-            set
+            get => toHead;
+            private set
             {
                 toHead = value;
                 toTail &= !toHead;
@@ -95,28 +84,17 @@ namespace PureMVCFramework.UI
         }
         public bool ToTail
         {
-            set
+            get => toTail;
+            private set
             {
                 toTail = value;
                 toHead &= !toTail;
             }
         }
 
-        public Vector2 ViewportSize
-        {
-            get
-            {
-                return scrollRect.viewport.rect.size;
-            }
-        }
+        public Vector2 ViewportSize => scrollRect.viewport.rect.size;
 
-        public Vector2 ContentSize
-        {
-            get
-            {
-                return scrollRect.content.rect.size;
-            }
-        }
+        public Vector2 ContentSize => scrollRect.content.rect.size;
 
         public Vector2 ContentPosition
         {
@@ -188,8 +166,7 @@ namespace PureMVCFramework.UI
 
             if (toHead && HeadIndex > 0)
             {
-                GameObject go = CreateItem(wraps[--HeadIndex]);
-                go?.transform.SetAsFirstSibling();
+                CreateItem(wraps[--HeadIndex]).transform.SetAsFirstSibling();
             }
 
             if (toHead)
@@ -212,8 +189,7 @@ namespace PureMVCFramework.UI
             {
                 if (HeadIndex > 0)
                 {
-                    GameObject go = CreateItem(wraps[--HeadIndex]);
-                    go?.transform.SetAsFirstSibling();
+                    CreateItem(wraps[--HeadIndex]).transform.SetAsFirstSibling();
                 }
                 else if (TailIndex < wraps.Count - 1)
                 {
@@ -281,103 +257,12 @@ namespace PureMVCFramework.UI
             if (ViewportSize == Vector2.zero)
                 return;
 
-            if (scrollRect.vertical)
+            if (HeadIndex == -1 && TailIndex == -1 && wraps.Count > 0)
             {
-                InitVertical();
-            }
-            else if (scrollRect.horizontal)
-            {
-                InitHorizontal();
-            }
+                HeadIndex = TailIndex = 0;
+                CreateItem(wraps[HeadIndex]);
 
-            isInited = true;
-        }
-
-        private void InitVertical()
-        {
-            Vector2 CalcContentSize = new Vector2(layoutGroup.padding.left + layoutGroup.padding.right, layoutGroup.padding.top + layoutGroup.padding.bottom);
-            if (toTail)
-            {
-                TailIndex = wraps.Count - 1;
-                for (int i = TailIndex; i >= 0; --i)
-                {
-                    if (CalcContentSize.y < ViewportSize.y)
-                    {
-                        HeadIndex = i;
-                        GameObject go = CreateItem(wraps[i]);
-                        if (go != null)
-                        {
-                            go.transform.SetAsFirstSibling();
-                            CalcContentSize = new Vector2(CalcContentSize.x, CalcContentSize.y + go.GetComponent<RectTransform>().rect.size.y);
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                HeadIndex = 0;
-                for (int i = 0; i < wraps.Count; ++i)
-                {
-                    if (CalcContentSize.y <= ViewportSize.y)
-                    {
-                        TailIndex = i;
-                        GameObject go = CreateItem(wraps[i]);
-                        if (go != null)
-                            CalcContentSize = new Vector2(CalcContentSize.x, CalcContentSize.y + go.GetComponent<RectTransform>().rect.size.y);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        private void InitHorizontal()
-        {
-            Vector2 CalcContentSize = new Vector2(layoutGroup.padding.left + layoutGroup.padding.right, layoutGroup.padding.top + layoutGroup.padding.bottom);
-            if (toTail)
-            {
-                TailIndex = wraps.Count - 1;
-                for (int i = TailIndex; i >= 0; --i)
-                {
-                    if (CalcContentSize.x < ViewportSize.x)
-                    {
-                        HeadIndex = i;
-                        GameObject go = CreateItem(wraps[i]);
-                        if (go != null)
-                        {
-                            go.transform.SetAsFirstSibling();
-                            CalcContentSize = new Vector2(CalcContentSize.x + go.GetComponent<RectTransform>().rect.size.x, CalcContentSize.y);
-                        }
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                HeadIndex = 0;
-                for (int i = 0; i < wraps.Count; ++i)
-                {
-                    if (CalcContentSize.x <= ViewportSize.x)
-                    {
-                        TailIndex = i;
-                        GameObject go = CreateItem(wraps[i]);
-                        if (go != null)
-                            CalcContentSize = new Vector2(CalcContentSize.x + go.GetComponent<RectTransform>().rect.size.x, CalcContentSize.y);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
+                isInited = true;
             }
         }
 
@@ -385,7 +270,7 @@ namespace PureMVCFramework.UI
         {
             isInited = false;
             isDragging = false;
-            HeadIndex = 0;
+            HeadIndex = -1;
             TailIndex = -1;
 
             wraps.Clear();
@@ -448,13 +333,18 @@ namespace PureMVCFramework.UI
             if (index < 0 || index >= wraps.Count)
                 return;
 
-            wraps.RemoveAt(index);
-
-            if (index < HeadIndex)
+            if (index <= HeadIndex)
+            {
                 HeadIndex--;
-
-            if (index <= TailIndex)
                 TailIndex--;
+            }
+            else if (index <= TailIndex)
+            {
+                TailIndex--;
+                DeleteItem(wraps[index]);
+            }
+
+            wraps.RemoveAt(index);
         }
 
         public void AddItemWrap(GameObject prefab, object userdata)
@@ -465,39 +355,41 @@ namespace PureMVCFramework.UI
 
         public void InsertItemWrap(int index, GameObject prefab, object userdata)
         {
-            if (index < 0 || index > wraps.Count)
-                return;
+            if (wraps.Count > 0)
+            {
+                if (index < 0 || index >= wraps.Count)
+                    return;
 
-            prefab.CreatePool();
-            wraps.Insert(index, new ItemWrap { prefab = prefab, userdata = userdata });
+                prefab.CreatePool();
+                wraps.Insert(index, new ItemWrap { prefab = prefab, userdata = userdata });
 
-            if (index <= HeadIndex)
-                HeadIndex++;
-
-            if (index <= TailIndex)
-                TailIndex++;
+                if (index <= HeadIndex)
+                {
+                    HeadIndex++;
+                    TailIndex++;
+                }
+                else if (index <= TailIndex)
+                {
+                    TailIndex++;
+                    CreateItem(wraps[index]).transform.SetSiblingIndex(index - HeadIndex);
+                }
+            }
+            else
+            {
+                AddItemWrap(prefab, userdata);
+            }
         }
 
         public void AddItemToHead(GameObject prefab, object userdata)
         {
             InsertItemWrap(0, prefab, userdata);
-
-            bool isHead = HeadIndex == 0;
-            if (isHead)
-                CreateItem(wraps[0]);
-
-            ToHead = isHead;
+            ToHead = true;
         }
 
         public void AddItemToTail(GameObject prefab, object userdata)
         {
             AddItemWrap(prefab, userdata);
-
-            var isTail = TailIndex == wraps.Count - 1;
-            if (isTail)
-                CreateItem(wraps[++TailIndex]);
-
-            ToTail = isTail;
+            ToTail = true;
         }
 
         public GameObject GetItem(ItemWrap wrap)
