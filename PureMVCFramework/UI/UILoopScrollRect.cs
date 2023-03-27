@@ -333,7 +333,7 @@ namespace PureMVCFramework.UI
             if (index < 0 || index >= wraps.Count)
                 return;
 
-            if (index <= HeadIndex)
+            if (index < HeadIndex)
             {
                 HeadIndex--;
                 TailIndex--;
@@ -342,6 +342,9 @@ namespace PureMVCFramework.UI
             {
                 TailIndex--;
                 DeleteItem(wraps[index]);
+
+                if (TailIndex == -1)
+                    HeadIndex = -1;
             }
 
             wraps.RemoveAt(index);
