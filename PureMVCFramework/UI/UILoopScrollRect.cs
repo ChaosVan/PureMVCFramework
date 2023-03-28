@@ -92,19 +92,55 @@ namespace PureMVCFramework.UI
             }
         }
 
-        public Vector2 ViewportSize => scrollRect.viewport.rect.size;
+        public float ViewportSize => scrollRect.vertical ? scrollRect.viewport.rect.size.y : scrollRect.viewport.rect.size.x;
 
-        public Vector2 ContentSize => scrollRect.content.rect.size;
+        public float ContentPivot => scrollRect.vertical ? scrollRect.content.pivot.y : scrollRect.content.pivot.x;
 
-        public Vector2 ContentPosition
+        public float ContentSize
         {
             get
             {
-                return scrollRect.content.anchoredPosition;
+                return scrollRect.vertical ? scrollRect.content.sizeDelta.y : scrollRect.content.sizeDelta.x;
             }
             set
             {
-                scrollRect.content.anchoredPosition = value;
+                scrollRect.content.sizeDelta = scrollRect.vertical ? new Vector2(scrollRect.content.sizeDelta.x, value) : new Vector2(value, scrollRect.content.sizeDelta.y);
+            }
+        }
+
+        public float ContentPosition
+        {
+            get
+            {
+                return scrollRect.vertical ? scrollRect.content.anchoredPosition.y : scrollRect.content.anchoredPosition.x;
+            }
+            set
+            {
+                scrollRect.content.anchoredPosition = scrollRect.vertical ? new Vector2(scrollRect.content.anchoredPosition.x, value) : new Vector2(value, scrollRect.content.anchoredPosition.y);
+            }
+        }
+
+        /// <summary>
+        /// 超出Viewport上（左）部区域的高（宽）
+        /// </summary>
+        public float UpperGap
+        {
+            get
+            {
+                var gap = scrollRect.vertical ? ContentSize * (1 - ContentPivot) + ContentPosition : ContentSize * ContentPivot - ContentPosition;
+                return gap > 0 ? gap : 0;
+            }
+        }
+
+        /// <summary>
+        /// 超出Viewport下（右）部区域的高（宽）
+        /// </summary>
+        public float LowerGap
+        {
+            get
+            {
+                var gap = ContentSize - UpperGap - ViewportSize;
+                return gap > 0 ? gap : 0;
             }
         }
 
@@ -126,29 +162,17 @@ namespace PureMVCFramework.UI
 
                 if (layoutGroup == null)
                 {
-                    Debug.LogError("Only support HorizontalOrVerticalLayoutGroup in UILoopScrollRect component, you can use UILoopScrollGrid or other component to support your custom style.");
                     enabled = false;
-                    return;
+                    throw new System.Exception("Only support HorizontalOrVerticalLayoutGroup in UILoopScrollRect component, you can use UILoopScrollGrid or other component to support your custom style.");
                 }
 
                 spacing = layoutGroup.spacing;
             }
             else
             {
-                Debug.LogError("Vertical or Horizontal must be different in UILoopScrollRect component for now");
                 enabled = false;
-                return;
+                throw new System.Exception("Vertical or Horizontal must be different in UILoopScrollRect component for now");
             }
-        }
-
-        private void OnEnable()
-        {
-            scrollRect.onValueChanged.AddListener(OnValueChanged);
-        }
-
-        private void OnDisable()
-        {
-            scrollRect.onValueChanged.RemoveListener(OnValueChanged);
         }
 
         private void Update()
@@ -185,7 +209,7 @@ namespace PureMVCFramework.UI
                     scrollRect.horizontalNormalizedPosition = 1;
             }
 
-            if ((scrollRect.vertical && ContentSize.y < ViewportSize.y) || (scrollRect.horizontal && ContentSize.x < ViewportSize.x))
+            if (ContentSize < ViewportSize)
             {
                 if (HeadIndex > 0)
                 {
@@ -194,6 +218,68 @@ namespace PureMVCFramework.UI
                 else if (TailIndex < wraps.Count - 1)
                 {
                     CreateItem(wraps[++TailIndex]);
+                }
+            }
+
+            if (isInited && !isDragging && wraps.Count > 0)
+            {
+                float topSize = 0, bottomSize = 0;
+                if (scrollRect.vertical)
+                {
+                    topSize = items[wraps[HeadIndex]].GetComponent<RectTransform>().sizeDelta.y;
+                    bottomSize = items[wraps[TailIndex]].GetComponent<RectTransform>().sizeDelta.y;
+                }
+                else if (scrollRect.horizontal)
+                {
+                    topSize = items[wraps[HeadIndex]].GetComponent<RectTransform>().sizeDelta.x;
+                    bottomSize = items[wraps[TailIndex]].GetComponent<RectTransform>().sizeDelta.x;
+                }
+
+                if (UpperGap > ViewportSize + topSize + spacing)
+                {
+                    DeleteItem(wraps[HeadIndex++]);
+                    if (scrollRect.vertical && ContentPivot == 1)
+                        ContentPosition -= topSize + spacing;
+                    else if (scrollRect.horizontal && ContentPivot == 0)
+                        ContentPosition += topSize + spacing;
+                }
+                else if (HeadIndex > 0 && UpperGap < ViewportSize)
+                {
+                    var go = CreateItem(wraps[--HeadIndex]);
+                    go.transform.SetAsFirstSibling();
+                    if (scrollRect.vertical && ContentPivot == 1)
+                    {
+                        var size = go.GetComponent<RectTransform>().sizeDelta.y;
+                        ContentPosition += size + spacing;
+                    }
+                    else if (scrollRect.horizontal && ContentPivot == 0)
+                    {
+                        var size = go.GetComponent<RectTransform>().sizeDelta.x;
+                        ContentPosition -= size + spacing;
+                    }
+                }
+
+                if (LowerGap > ViewportSize + bottomSize + spacing)
+                {
+                    DeleteItem(wraps[TailIndex--]);
+                    if (scrollRect.vertical && ContentPivot == 0)
+                        ContentPosition += bottomSize + spacing;
+                    else if (scrollRect.horizontal && ContentPivot == 1)
+                        ContentPosition -= bottomSize + spacing;
+                }
+                else if (TailIndex < wraps.Count - 1 && LowerGap < ViewportSize)
+                {
+                    var go = CreateItem(wraps[++TailIndex]);
+                    if (scrollRect.vertical && ContentPivot == 0)
+                    {
+                        var size = go.GetComponent<RectTransform>().sizeDelta.y;
+                        ContentPosition -= size + spacing;
+                    }
+                    else if (scrollRect.horizontal && ContentPivot == 1)
+                    {
+                        var size = go.GetComponent<RectTransform>().sizeDelta.x;
+                        ContentPosition += size + spacing;
+                    }
                 }
             }
         }
@@ -229,10 +315,6 @@ namespace PureMVCFramework.UI
                 {
                     OnFetchTail?.Invoke();
                 }
-                else
-                {
-                    OnValueChanged(scrollRect.normalizedPosition);
-                }
             }
             else if (scrollRect.horizontal)
             {
@@ -244,17 +326,13 @@ namespace PureMVCFramework.UI
                 {
                     OnFetchTail?.Invoke();
                 }
-                else
-                {
-                    OnValueChanged(scrollRect.normalizedPosition);
-                }
             }
         }
         #endregion
 
         private void Initialize()
         {
-            if (ViewportSize == Vector2.zero)
+            if (ViewportSize == 0)
                 return;
 
             if (HeadIndex == -1 && TailIndex == -1 && wraps.Count > 0)
@@ -444,98 +522,6 @@ namespace PureMVCFramework.UI
 
                 go.Recycle();
                 items.Remove(wrap);
-            }
-        }
-
-        void OnValueChanged(Vector2 vec)
-        {
-            if (!isInited)
-                return;
-
-            int count = scrollRect.content.childCount;
-            if (count > 0 && wraps.Count > 0)
-            {
-                if (!isDragging)
-                {
-                    if (scrollRect.vertical)
-                    {
-                        float topHeight = items[wraps[HeadIndex]].GetComponent<RectTransform>().rect.height;
-                        float bottomHeight = items[wraps[TailIndex]].GetComponent<RectTransform>().rect.height;
-
-                        if (ContentPosition.y > ViewportSize.y + topHeight + spacing) // Drag to higher
-                        {
-                            DeleteItem(wraps[HeadIndex++]);
-                            ContentPosition = new Vector2(ContentPosition.x, ContentPosition.y - topHeight - spacing);
-
-                            if (TailIndex < wraps.Count - 1)
-                                CreateItem(wraps[++TailIndex]);
-                        }
-                        else if (ContentPosition.y < ViewportSize.y) // Drag to lower
-                        {
-                            if (ContentSize.y - ContentPosition.y - ViewportSize.y > ViewportSize.y + bottomHeight + spacing)
-                            {
-                                DeleteItem(wraps[TailIndex--]);
-                            }
-
-                            if (HeadIndex > 0)
-                            {
-                                GameObject go = CreateItem(wraps[--HeadIndex]);
-                                if (go != null)
-                                {
-                                    go.transform.SetAsFirstSibling();
-#if UNITY_EDITOR
-                                    go.GetComponent<UILoopScrollItem>()?.DebugInfo();
-#endif
-                                    float height = go.GetComponent<RectTransform>().rect.height;
-                                    ContentPosition = new Vector2(ContentPosition.x, ContentPosition.y + height + spacing);
-                                }
-                            }
-                            else if (ContentSize.y - ContentPosition.y - ViewportSize.y < ViewportSize.y && TailIndex < wraps.Count - 1)
-                            {
-                                CreateItem(wraps[++TailIndex]);
-                            }
-                        }
-                    }
-                    else if (scrollRect.horizontal)
-                    {
-                        float leftWidth = items[wraps[HeadIndex]].GetComponent<RectTransform>().rect.width;
-                        float rightWidth = items[wraps[TailIndex]].GetComponent<RectTransform>().rect.width;
-
-                        if (ContentPosition.x < -(ViewportSize.x + leftWidth + spacing)) // Drag to higher
-                        {
-                            DeleteItem(wraps[HeadIndex++]);
-                            ContentPosition = new Vector2(ContentPosition.x + leftWidth + spacing, ContentPosition.y);
-
-                            if (TailIndex < wraps.Count - 1)
-                                CreateItem(wraps[++TailIndex]);
-                        }
-                        else if (ContentPosition.x > -ViewportSize.x) // Drag to lower
-                        {
-                            if (ContentSize.x + ContentPosition.x - ViewportSize.x > ViewportSize.x + rightWidth + spacing)
-                            {
-                                DeleteItem(wraps[TailIndex--]);
-                            }
-
-                            if (HeadIndex > 0)
-                            {
-                                GameObject go = CreateItem(wraps[--HeadIndex]);
-                                if (go != null)
-                                {
-                                    go.transform.SetAsFirstSibling();
-#if UNITY_EDITOR
-                                    go.GetComponent<UILoopScrollItem>()?.DebugInfo();
-#endif
-                                    float width = go.GetComponent<RectTransform>().rect.width;
-                                    ContentPosition = new Vector2(ContentPosition.x - width - spacing, ContentPosition.y);
-                                }
-                            }
-                            else if (ContentSize.x + ContentPosition.x - ViewportSize.x < ViewportSize.x && TailIndex < wraps.Count - 1)
-                            {
-                                CreateItem(wraps[++TailIndex]);
-                            }
-                        }
-                    }
-                }
             }
         }
 
