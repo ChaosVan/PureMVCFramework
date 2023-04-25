@@ -156,7 +156,7 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
-                    if (window.Status == WindowStatus.Closed || window.ForceClosed)
+                    if (window.Status == WindowStatus.Closed)
                         continue;
 
                     if (window.config != null && window.config.name == windowName)
@@ -241,6 +241,12 @@ namespace PureMVCFramework.UI
                 // 加载Prefab
                 AutoReleaseManager.Instance.LoadGameObjectAsync(param.prefabPath, transform, (obj, data) =>
                 {
+                    if (window.Status == WindowStatus.Closed)
+                    {
+                        obj.Recycle();
+                        return;
+                    }
+
                     if (window.Init(obj, data))
                     {
                         callback?.Invoke(window, data);
@@ -264,7 +270,9 @@ namespace PureMVCFramework.UI
             {
                 while (delayOpen.Count > 0)
                 {
-                    delayOpen.Dequeue().Open();
+                    var window = delayOpen.Dequeue();
+                    if (window.Status != WindowStatus.Closed)
+                        window.Open();
                 }
             }
         }
@@ -273,7 +281,7 @@ namespace PureMVCFramework.UI
         {
             Assert.IsNotNull(window);
 
-            if (window.Status == WindowStatus.Closed || window.ForceClosed)
+            if (window.Status == WindowStatus.Closed)
             {
                 UpdateCurrentFocusWindow();
                 return;
@@ -317,7 +325,7 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
-                    if (window.Status == WindowStatus.Closed || window.ForceClosed)
+                    if (window.Status == WindowStatus.Closed)
                         continue;
 
                     if (window.config.windowMode != WindowMode.Multiple)
@@ -340,7 +348,7 @@ namespace PureMVCFramework.UI
 
                 foreach (var window in pair.Value)
                 {
-                    if (window.Status == WindowStatus.Closed || window.ForceClosed)
+                    if (window.Status == WindowStatus.Closed)
                         continue;
 
                     if (window.config.windowMode != WindowMode.Multiple)
@@ -361,7 +369,7 @@ namespace PureMVCFramework.UI
             {
                 foreach (var window in windows)
                 {
-                    if (window.Status == WindowStatus.Closed || window.ForceClosed)
+                    if (window.Status == WindowStatus.Closed)
                         continue;
 
                     if (window.config.windowMode != WindowMode.Multiple)

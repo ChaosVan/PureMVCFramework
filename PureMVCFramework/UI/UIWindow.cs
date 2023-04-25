@@ -73,7 +73,7 @@ namespace PureMVCFramework.UI
         }
         public Canvas Canvas { get; private set; }
 
-        internal bool ForceClosed { get; set; }
+        //internal bool ForceClosed { get; set; }
 
         protected virtual void OnOpen()
         {
@@ -156,15 +156,6 @@ namespace PureMVCFramework.UI
         {
             Assert.IsNotNull(gameObject, config.prefabPath);
 
-            Status = WindowStatus.Inited;
-
-            if (ForceClosed)
-            {
-                Close();
-                gameObject.Recycle();
-                return false;
-            }
-
             // Set Canvas Layer
             SetCanvas(gameObject);
 
@@ -197,6 +188,8 @@ namespace PureMVCFramework.UI
             else
                 IsFocus = true;
 
+            Status = WindowStatus.Inited;
+
             try
             {
                 OnCreate(gameObject, userdata);
@@ -228,53 +221,43 @@ namespace PureMVCFramework.UI
         internal void Open()
         {
             Status = WindowStatus.Opened;
-
-            if (ForceClosed)
-            {
-                Close();
-                return;
-            }
-
-            Canvas.enabled = true;
+            if (Canvas != null)
+                Canvas.enabled = true;
             OnOpen();
         }
 
         internal void Close()
         {
-            if (Status == WindowStatus.Loading || Status == WindowStatus.Inited)
+            if (Status == WindowStatus.Inited || Status == WindowStatus.Opened)
             {
-                ForceClosed = true;
-                return;
-            }
-
-            ForceClosed = false;
-            Status = WindowStatus.Closed;
-
-            if (!string.IsNullOrEmpty(config.mediatorName))
-            {
-                if (config.windowMode != WindowMode.Multiple)
+                if (!string.IsNullOrEmpty(config.mediatorName))
                 {
-                    SendNotification(RemoveMediatorCommand.Name, this, config.mediatorName);
+                    if (config.windowMode != WindowMode.Multiple)
+                    {
+                        SendNotification(RemoveMediatorCommand.Name, this, config.mediatorName);
+                    }
+                }
+
+                // Reset Canvas Layer
+                ResetCanvas();
+
+                config = null;
+                worldParam = null;
+
+                if (gameObject != null)
+                    gameObject.Recycle();
+
+                try
+                {
+                    OnDelete();
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError(e);
                 }
             }
 
-            // Reset Canvas Layer
-            ResetCanvas();
-
-            config = null;
-            worldParam = null;
-
-            if (gameObject != null)
-                gameObject.Recycle();
-
-            try
-            {
-                OnDelete();
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError(e);
-            }
+            Status = WindowStatus.Closed;
         }
     }
 }
