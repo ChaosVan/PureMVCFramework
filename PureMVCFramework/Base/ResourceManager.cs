@@ -27,6 +27,8 @@ namespace PureMVCFramework
 
     public class ResourceManager : SingletonBehaviour<ResourceManager>
     {
+        public static float SpriteAtlasHoldTime = 10;
+
         private readonly List<string> SpriteAtlasRequest = new List<string>();
 
         public bool IsSpriteAtlasRequesting => SpriteAtlasRequest.Count > 0;
@@ -78,7 +80,7 @@ namespace PureMVCFramework
         {
             Debug.LogWarningFormat("OnAtlasRequested: {0}", atlasName);
             SpriteAtlasRequest.Add(atlasName);
-            LoadSpriteAtlas(atlasName, action, 10);
+            LoadSpriteAtlas(atlasName, action, SpriteAtlasHoldTime);
         }
 
         private void OnAtlasRegistered(SpriteAtlas sa)
@@ -124,7 +126,8 @@ namespace PureMVCFramework
         {
             yield return new WaitForSeconds(delay);
 
-            ReleaseAsset(asset);
+            if (asset != null)
+                ReleaseAsset(asset);
         }
 
         public void ReleaseAsset(Object asset)
