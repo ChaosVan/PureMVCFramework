@@ -30,6 +30,8 @@ namespace PureMVCFramework.UI
         private readonly Dictionary<string, UIWindow> m_SingleWindows = new Dictionary<string, UIWindow>();
         // UI栈，支持UI的后开先关功能
         private readonly Stack<UIWindow> m_UIStack = new Stack<UIWindow>();
+        // 将要关闭的UI列表
+        private readonly List<UIWindow> m_willRemove = new List<UIWindow>();
 
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo")]
@@ -328,7 +330,7 @@ namespace PureMVCFramework.UI
         {
             if (m_ActiveWindows.TryGetValue(layer, out List<UIWindow> windows) && windows != null)
             {
-                lockLayer = 1 << ((int)layer + 1);
+                //lockLayer = 1 << ((int)layer + 1);
                 foreach (var window in windows)
                 {
                     if (window.Status == WindowStatus.Closed)
@@ -337,14 +339,19 @@ namespace PureMVCFramework.UI
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
-                    window.Close();
+                    m_willRemove.Add(window);
                 }
 
                 windows.Clear();
-                lockLayer = 0;
-
-                UpdateCurrentFocusWindow();
+                //lockLayer = 0;
             }
+
+            foreach (var window in m_willRemove)
+            {
+                window.Close();
+            }
+
+            UpdateCurrentFocusWindow();
         }
 
         public void CloseWindowExceptLayer(UILayer layer)
