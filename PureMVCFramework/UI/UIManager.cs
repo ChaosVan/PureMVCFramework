@@ -1,6 +1,7 @@
 ﻿using PureMVCFramework.Advantages;
 using static PureMVCFramework.UI.UIWindow;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -25,7 +26,7 @@ namespace PureMVCFramework.UI
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
 #endif
-        private readonly Dictionary<UILayer, List<UIWindow>> m_ActiveWindows = new Dictionary<UILayer, List<UIWindow>>();
+        private readonly ConcurrentDictionary<UILayer, List<UIWindow>> m_ActiveWindows = new ConcurrentDictionary<UILayer, List<UIWindow>>();
 
         // mode为single的windows缓存，确保只打开一个
         private readonly Dictionary<string, UIWindow> m_SingleWindows = new Dictionary<string, UIWindow>();
