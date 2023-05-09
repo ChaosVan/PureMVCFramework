@@ -4,6 +4,9 @@ All notable changes to this package will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [1.1.10] - 2023-05-09
+- 改进：DomainReload的范围
+- 修复：按层关闭UI时可能产生的Collection被修改的报错
 ## [1.1.9] - 2023-03-28
 - 改进：UILoopScrollRect刷新逻辑，减少计算量，兼容Viewport的Pivot为0或1的情况
 ## [1.1.8] - 2023-02-09
