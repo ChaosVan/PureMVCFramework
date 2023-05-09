@@ -330,7 +330,6 @@ namespace PureMVCFramework.UI
         {
             if (m_ActiveWindows.TryGetValue(layer, out List<UIWindow> windows) && windows != null)
             {
-                //lockLayer = 1 << ((int)layer + 1);
                 foreach (var window in windows)
                 {
                     if (window.Status == WindowStatus.Closed)
@@ -343,13 +342,14 @@ namespace PureMVCFramework.UI
                 }
 
                 windows.Clear();
-                //lockLayer = 0;
             }
 
             foreach (var window in m_willRemove)
             {
                 window.Close();
             }
+
+            m_willRemove.Clear();
 
             UpdateCurrentFocusWindow();
         }
@@ -361,7 +361,6 @@ namespace PureMVCFramework.UI
                 if (pair.Key == layer)
                     continue;
 
-                lockLayer = 1 << ((int)pair.Key + 1);
                 foreach (var window in pair.Value)
                 {
                     if (window.Status == WindowStatus.Closed)
@@ -370,22 +369,27 @@ namespace PureMVCFramework.UI
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
-                    window.Close();
+                    m_willRemove.Add(window);
                 }
 
                 pair.Value.Clear();
-                lockLayer = 0;
             }
+
+            foreach (var window in m_willRemove)
+            {
+                window.Close();
+            }
+
+            m_willRemove.Clear();
 
             UpdateCurrentFocusWindow();
         }
 
         public void CloseAllWindows()
         {
-            foreach (var pair in m_ActiveWindows)
+            foreach (var windows in m_ActiveWindows.Values)
             {
-                lockLayer = 1 << ((int)pair.Key + 1);
-                foreach (var window in pair.Value)
+                foreach (var window in windows)
                 {
                     if (window.Status == WindowStatus.Closed)
                         continue;
@@ -393,11 +397,18 @@ namespace PureMVCFramework.UI
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
-                    window.Close();
+                    m_willRemove.Add(window);
                 }
-                pair.Value.Clear();
-                lockLayer = 0;
+
+                windows.Clear();
             }
+
+            foreach (var window in m_willRemove)
+            {
+                window.Close();
+            }
+
+            m_willRemove.Clear();
 
             m_ActiveWindows.Clear();
             m_UIStack.Clear();
