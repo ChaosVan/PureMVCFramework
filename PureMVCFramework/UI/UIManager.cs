@@ -278,8 +278,6 @@ namespace PureMVCFramework.UI
             }
         }
 
-        private int lockLayer;
-
         public void CloseWindow(UIWindow window)
         {
             Assert.IsNotNull(window);
@@ -289,10 +287,6 @@ namespace PureMVCFramework.UI
                 UpdateCurrentFocusWindow();
                 return;
             }
-
-            // Check layer is locking
-            if (lockLayer == 1 << ((int)window.config.layer + 1))
-                return;
 
             if (m_ActiveWindows.TryGetValue(window.config.layer, out List<UIWindow> windows) && windows != null)
             {
