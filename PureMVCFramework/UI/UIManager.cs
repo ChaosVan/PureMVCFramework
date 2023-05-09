@@ -1,14 +1,12 @@
 ﻿using PureMVCFramework.Advantages;
-using static PureMVCFramework.UI.UIWindow;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using UnityEngine;
-using UnityEngine.Assertions;
-using UnityEngine.EventSystems;
-
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
+using static PureMVCFramework.UI.UIWindow;
 
 namespace PureMVCFramework.UI
 {
@@ -26,7 +24,7 @@ namespace PureMVCFramework.UI
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo"), DictionaryDrawerSettings(IsReadOnly = true, DisplayMode = DictionaryDisplayOptions.Foldout)]
 #endif
-        private readonly ConcurrentDictionary<UILayer, List<UIWindow>> m_ActiveWindows = new ConcurrentDictionary<UILayer, List<UIWindow>>();
+        private readonly Dictionary<UILayer, List<UIWindow>> m_ActiveWindows = new Dictionary<UILayer, List<UIWindow>>();
 
         // mode为single的windows缓存，确保只打开一个
         private readonly Dictionary<string, UIWindow> m_SingleWindows = new Dictionary<string, UIWindow>();
@@ -278,6 +276,8 @@ namespace PureMVCFramework.UI
             }
         }
 
+        private int lockLayer;
+
         public void CloseWindow(UIWindow window)
         {
             Assert.IsNotNull(window);
@@ -287,6 +287,10 @@ namespace PureMVCFramework.UI
                 UpdateCurrentFocusWindow();
                 return;
             }
+
+            // Check layer is locking
+            if (lockLayer == 1 << ((int)window.config.layer + 1))
+                return;
 
             if (m_ActiveWindows.TryGetValue(window.config.layer, out List<UIWindow> windows) && windows != null)
             {
@@ -324,6 +328,7 @@ namespace PureMVCFramework.UI
         {
             if (m_ActiveWindows.TryGetValue(layer, out List<UIWindow> windows) && windows != null)
             {
+                lockLayer = 1 << ((int)layer + 1);
                 foreach (var window in windows)
                 {
                     if (window.Status == WindowStatus.Closed)
@@ -335,7 +340,9 @@ namespace PureMVCFramework.UI
                     window.Close();
                 }
 
-                m_ActiveWindows[layer].Clear();
+                windows.Clear();
+                lockLayer = 0;
+
                 UpdateCurrentFocusWindow();
             }
         }
@@ -347,6 +354,7 @@ namespace PureMVCFramework.UI
                 if (pair.Key == layer)
                     continue;
 
+                lockLayer = 1 << ((int)pair.Key + 1);
                 foreach (var window in pair.Value)
                 {
                     if (window.Status == WindowStatus.Closed)
@@ -358,7 +366,8 @@ namespace PureMVCFramework.UI
                     window.Close();
                 }
 
-                m_ActiveWindows[pair.Key].Clear();
+                pair.Value.Clear();
+                lockLayer = 0;
             }
 
             UpdateCurrentFocusWindow();
@@ -366,9 +375,10 @@ namespace PureMVCFramework.UI
 
         public void CloseAllWindows()
         {
-            foreach (var windows in m_ActiveWindows.Values)
+            foreach (var pair in m_ActiveWindows)
             {
-                foreach (var window in windows)
+                lockLayer = 1 << ((int)pair.Key + 1);
+                foreach (var window in pair.Value)
                 {
                     if (window.Status == WindowStatus.Closed)
                         continue;
@@ -378,7 +388,8 @@ namespace PureMVCFramework.UI
 
                     window.Close();
                 }
-                windows.Clear();
+                pair.Value.Clear();
+                lockLayer = 0;
             }
 
             m_ActiveWindows.Clear();
