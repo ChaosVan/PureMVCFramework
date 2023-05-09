@@ -1,13 +1,12 @@
 ﻿using PureMVCFramework.Advantages;
-using static PureMVCFramework.UI.UIWindow;
+#if ODIN_INSPECTOR
+using Sirenix.OdinInspector;
+#endif
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
-
-#if ODIN_INSPECTOR
-using Sirenix.OdinInspector;
-#endif
+using static PureMVCFramework.UI.UIWindow;
 
 namespace PureMVCFramework.UI
 {
@@ -31,6 +30,8 @@ namespace PureMVCFramework.UI
         private readonly Dictionary<string, UIWindow> m_SingleWindows = new Dictionary<string, UIWindow>();
         // UI栈，支持UI的后开先关功能
         private readonly Stack<UIWindow> m_UIStack = new Stack<UIWindow>();
+        // 将要关闭的UI列表
+        private readonly List<UIWindow> m_willRemove = new List<UIWindow>();
 
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo")]
@@ -331,12 +332,20 @@ namespace PureMVCFramework.UI
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
-                    window.Close();
+                    m_willRemove.Add(window);
                 }
 
-                m_ActiveWindows[layer].Clear();
-                UpdateCurrentFocusWindow();
+                windows.Clear();
             }
+
+            foreach (var window in m_willRemove)
+            {
+                window.Close();
+            }
+
+            m_willRemove.Clear();
+
+            UpdateCurrentFocusWindow();
         }
 
         public void CloseWindowExceptLayer(UILayer layer)
@@ -354,11 +363,18 @@ namespace PureMVCFramework.UI
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
-                    window.Close();
+                    m_willRemove.Add(window);
                 }
 
-                m_ActiveWindows[pair.Key].Clear();
+                pair.Value.Clear();
             }
+
+            foreach (var window in m_willRemove)
+            {
+                window.Close();
+            }
+
+            m_willRemove.Clear();
 
             UpdateCurrentFocusWindow();
         }
@@ -375,10 +391,18 @@ namespace PureMVCFramework.UI
                     if (window.config.windowMode != WindowMode.Multiple)
                         m_SingleWindows.Remove(window.config.name);
 
-                    window.Close();
+                    m_willRemove.Add(window);
                 }
+
                 windows.Clear();
             }
+
+            foreach (var window in m_willRemove)
+            {
+                window.Close();
+            }
+
+            m_willRemove.Clear();
 
             m_ActiveWindows.Clear();
             m_UIStack.Clear();
