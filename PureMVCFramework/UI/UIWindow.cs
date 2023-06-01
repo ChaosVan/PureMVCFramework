@@ -5,53 +5,29 @@ using UnityEngine.Assertions;
 
 namespace PureMVCFramework.UI
 {
+    public enum WindowStatus
+    {
+        None,
+        Loading,
+        Inited,
+        Opened,
+        Closed,
+    }
+
+    public class WorldParam
+    {
+        public Transform root;
+        public Vector3 position;
+        public Quaternion rotation;
+        /// <summary>
+        /// 创建成功时发的消息
+        /// </summary>
+        public string callbackNotification;
+        public object userdata;
+    }
+
     public class UIWindow : UIComponent
     {
-        public enum WindowMode
-        {
-            Single = 0,     // 只存在一个
-            SingleInStack,  // 只存在一个，并且进栈
-            Multiple,       // 可以存在多个
-        }
-
-        public enum WindowStatus
-        {
-            None,
-            Loading,
-            Inited,
-            Opened,
-            Closed,
-        }
-
-        [System.Serializable]
-        public class UIWindowParams
-        {
-            public string name;
-            public UILayer layer;
-            public int orderInLayer;
-            public int cameraIndex;
-            public WindowMode windowMode;
-            public string windowClass;
-            public string mediatorName;
-            public string prefabPath;
-
-            public override string ToString()
-            {
-                return JsonUtility.ToJson(this);
-            }
-        }
-
-        public class WorldParam
-        {
-            public Transform root;
-            public Vector3 position;
-            public Quaternion rotation;
-            /// <summary>
-            /// 创建成功时发的消息
-            /// </summary>
-            public string callbackNotification;
-            public object userdata;
-        }
 
         public UIWindowParams config;
         public WorldParam worldParam;
@@ -61,8 +37,6 @@ namespace PureMVCFramework.UI
         public bool IsOpen => Status == WindowStatus.Opened;
 
         public Canvas Canvas { get; internal set; }
-
-        //internal bool ForceClosed { get; set; }
 
         protected virtual void OnOpen()
         {
@@ -139,8 +113,6 @@ namespace PureMVCFramework.UI
         internal void Open()
         {
             Status = WindowStatus.Opened;
-            if (Canvas != null)
-                Canvas.enabled = true;
             OnOpen();
         }
 

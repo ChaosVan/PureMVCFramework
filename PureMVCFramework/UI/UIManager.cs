@@ -3,13 +3,20 @@
 using Sirenix.OdinInspector;
 #endif
 using System.Collections.Generic;
+using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
-using static PureMVCFramework.UI.UIWindow;
 
 namespace PureMVCFramework.UI
 {
+    public enum WindowMode
+    {
+        Single = 0,     // 只存在一个
+        SingleInStack,  // 只存在一个，并且进栈
+        Multiple,       // 可以存在多个
+    }
+
     public enum UILayer
     {
         Background = -1,
@@ -287,7 +294,11 @@ namespace PureMVCFramework.UI
                 {
                     var window = delayOpen.Dequeue();
                     if (window.Status != WindowStatus.Closed)
+                    {
                         window.Open();
+                        if (window.Canvas != null)
+                            window.Canvas.enabled = true;
+                    }
                 }
             }
         }
@@ -432,9 +443,16 @@ namespace PureMVCFramework.UI
         {
             if (gameObject != null)
             {
-                SetCanvas(window, gameObject);
-                if (window.Canvas.renderMode != RenderMode.WorldSpace)
-                    RegisterWindowCamera(window, window.config.cameraIndex);
+                //var canvas = SetCanvas(window.config, gameObject);
+                var canvas = SetCanvasDel == null ? SetCanvas(window.config, gameObject) : SetCanvasDel.Invoke(window.config, gameObject);
+                if (canvas != null)
+                {
+                    window.Canvas = canvas;
+                    if (window.Canvas.renderMode != RenderMode.WorldSpace)
+                        RegisterWindowCamera(window, window.config.cameraIndex);
+
+                    window.Canvas.enabled = false;
+                }
             }
         }
 
@@ -454,8 +472,12 @@ namespace PureMVCFramework.UI
             }
         }
 
+        public delegate Canvas SetCanvasDelegate(UIWindowParams window, GameObject gameObject);
 
-        private void SetCanvas(UIWindow window, GameObject gameObject)
+        public SetCanvasDelegate SetCanvasDel { get; set; }
+
+
+        public Canvas SetCanvas(UIWindowParams config, GameObject gameObject)
         {
             var canvas = gameObject.GetComponent<Canvas>();
             if (canvas != null)
@@ -463,46 +485,45 @@ namespace PureMVCFramework.UI
                 switch (canvas.renderMode)
                 {
                     case RenderMode.ScreenSpaceOverlay:
-                        if (window.config.layer == UILayer.Top)
+                        if (config.layer == UILayer.Top)
                         {
-                            canvas.sortingOrder = window.config.orderInLayer;
+                            canvas.sortingOrder = config.orderInLayer;
                         }
                         else
                         {
                             canvas.renderMode = RenderMode.ScreenSpaceCamera;
-                            canvas.worldCamera = GetCamera(window.config.cameraIndex);
-                            canvas.sortingLayerName = window.config.layer.ToString();
-                            canvas.sortingOrder = window.config.orderInLayer;
+                            canvas.worldCamera = GetCamera(config.cameraIndex);
+                            canvas.sortingLayerName = config.layer.ToString();
+                            canvas.sortingOrder = config.orderInLayer;
                         }
                         break;
                     case RenderMode.ScreenSpaceCamera:
-                        if (window.config.layer == UILayer.Top)
+                        if (config.layer == UILayer.Top)
                         {
                             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                            canvas.sortingOrder = window.config.orderInLayer;
+                            canvas.sortingOrder = config.orderInLayer;
                         }
                         else
                         {
-                            canvas.worldCamera = GetCamera(window.config.cameraIndex);
-                            canvas.sortingLayerName = window.config.layer.ToString();
-                            canvas.sortingOrder = window.config.orderInLayer;
+                            canvas.worldCamera = GetCamera(config.cameraIndex);
+                            canvas.sortingLayerName = config.layer.ToString();
+                            canvas.sortingOrder = config.orderInLayer;
                         }
                         break;
                     case RenderMode.WorldSpace:
                         canvas.worldCamera = Camera.main;
-                        canvas.sortingLayerName = window.config.layer.ToString();
-                        canvas.sortingOrder = window.config.orderInLayer;
+                        canvas.sortingLayerName = config.layer.ToString();
+                        canvas.sortingOrder = config.orderInLayer;
                         break;
                     default:
                         break;
                 }
-
-                canvas.enabled = false;
-                window.Canvas = canvas;
             }
+
+            return canvas;
         }
 
-        private void ResetCanvas(GameObject gameObject)
+        public void ResetCanvas(GameObject gameObject)
         {
             var canvas = gameObject.GetComponent<Canvas>();
             if (canvas != null)
@@ -511,6 +532,25 @@ namespace PureMVCFramework.UI
                 canvas.sortingLayerName = UILayer.Default.ToString();
                 canvas.sortingOrder = 0;
             }
+        }
+    }
+
+
+    [System.Serializable]
+    public class UIWindowParams
+    {
+        public string name;
+        public UILayer layer;
+        public int orderInLayer;
+        public int cameraIndex;
+        public WindowMode windowMode;
+        public string windowClass;
+        public string mediatorName;
+        public string prefabPath;
+
+        public override string ToString()
+        {
+            return JsonUtility.ToJson(this);
         }
     }
 }
