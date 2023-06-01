@@ -36,7 +36,22 @@ namespace PureMVCFramework.UI
 #if ODIN_INSPECTOR
         [ShowInInspector, ShowIf("showOdinInfo")]
 #endif
-        public UIWindow CurrentFocusWindow { get; private set; }
+        private UIWindow _focusWindow;
+
+        public UIWindow CurrentFocusWindow
+        {
+            get { return _focusWindow; }
+            set
+            {
+                if (_focusWindow != null)
+                    _focusWindow.SetFocus(false);
+
+                _focusWindow = value;
+
+                if (_focusWindow != null && _focusWindow.Status == WindowStatus.Opened)
+                    _focusWindow.SetFocus(true);
+            }
+        }
         public EventSystem EventSystem { get; private set; }
 
         private List<Camera> cameras = new List<Camera>();
@@ -135,20 +150,12 @@ namespace PureMVCFramework.UI
                 else
                     CurrentFocusWindow = null;
             }
-
-            if (CurrentFocusWindow != null)
-                CurrentFocusWindow.IsFocus = true;
         }
 
         internal void PushIntoStack(UIWindow window)
         {
-            m_UIStack.Push(window);
-
-            // 当前window失去焦点，新的window获得焦点
-            if (CurrentFocusWindow != null)
-                CurrentFocusWindow.IsFocus = false;
+            m_UIStack.Push(window); 
             CurrentFocusWindow = window;
-            CurrentFocusWindow.IsFocus = true;
         }
 
         public UIWindow GetWindow(string windowName)
@@ -248,8 +255,15 @@ namespace PureMVCFramework.UI
                         return;
                     }
 
+                    PreOpenWindow(window, obj);
+
                     if (window.Init(obj, data))
                     {
+                        if (window.config.windowMode == WindowMode.SingleInStack)
+                            PushIntoStack(window);
+                        else
+                            window.SetFocus(true);
+
                         callback?.Invoke(window, data);
                         delayOpen.Enqueue(window);
                     }
@@ -296,7 +310,9 @@ namespace PureMVCFramework.UI
             if (window.config.windowMode != WindowMode.Multiple)
                 m_SingleWindows.Remove(window.config.name);
 
-            window.Close();
+            window.Close(out var gameObject);
+            PostCloseWindow(window, gameObject);
+
             UpdateCurrentFocusWindow();
         }
 
@@ -340,7 +356,8 @@ namespace PureMVCFramework.UI
 
             foreach (var window in m_willRemove)
             {
-                window.Close();
+                window.Close(out var gameObject);
+                PostCloseWindow(window, gameObject);
             }
 
             m_willRemove.Clear();
@@ -371,7 +388,8 @@ namespace PureMVCFramework.UI
 
             foreach (var window in m_willRemove)
             {
-                window.Close();
+                window.Close(out var gameObject);
+                PostCloseWindow(window, gameObject);
             }
 
             m_willRemove.Clear();
@@ -399,7 +417,8 @@ namespace PureMVCFramework.UI
 
             foreach (var window in m_willRemove)
             {
-                window.Close();
+                window.Close(out var gameObject);
+                PostCloseWindow(window, gameObject);
             }
 
             m_willRemove.Clear();
@@ -407,6 +426,91 @@ namespace PureMVCFramework.UI
             m_ActiveWindows.Clear();
             m_UIStack.Clear();
             CurrentFocusWindow = null;
+        }
+
+        private void PreOpenWindow(UIWindow window, GameObject gameObject)
+        {
+            if (gameObject != null)
+            {
+                SetCanvas(window, gameObject);
+                if (window.Canvas.renderMode != RenderMode.WorldSpace)
+                    RegisterWindowCamera(window, window.config.cameraIndex);
+            }
+        }
+
+        private void PostCloseWindow(UIWindow window, GameObject gameObject)
+        {
+            if (gameObject != null)
+            {
+                if (window.Canvas.renderMode != RenderMode.WorldSpace) 
+                    UnregistWindowCamera(window, window.config.cameraIndex);
+
+                ResetCanvas(gameObject);
+                if (gameObject != null)
+                    gameObject.Recycle();
+
+                window.Canvas = null;
+                window.config = null;
+            }
+        }
+
+
+        private void SetCanvas(UIWindow window, GameObject gameObject)
+        {
+            var canvas = gameObject.GetComponent<Canvas>();
+            if (canvas != null)
+            {
+                switch (canvas.renderMode)
+                {
+                    case RenderMode.ScreenSpaceOverlay:
+                        if (window.config.layer == UILayer.Top)
+                        {
+                            canvas.sortingOrder = window.config.orderInLayer;
+                        }
+                        else
+                        {
+                            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                            canvas.worldCamera = GetCamera(window.config.cameraIndex);
+                            canvas.sortingLayerName = window.config.layer.ToString();
+                            canvas.sortingOrder = window.config.orderInLayer;
+                        }
+                        break;
+                    case RenderMode.ScreenSpaceCamera:
+                        if (window.config.layer == UILayer.Top)
+                        {
+                            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                            canvas.sortingOrder = window.config.orderInLayer;
+                        }
+                        else
+                        {
+                            canvas.worldCamera = GetCamera(window.config.cameraIndex);
+                            canvas.sortingLayerName = window.config.layer.ToString();
+                            canvas.sortingOrder = window.config.orderInLayer;
+                        }
+                        break;
+                    case RenderMode.WorldSpace:
+                        canvas.worldCamera = Camera.main;
+                        canvas.sortingLayerName = window.config.layer.ToString();
+                        canvas.sortingOrder = window.config.orderInLayer;
+                        break;
+                    default:
+                        break;
+                }
+
+                canvas.enabled = false;
+                window.Canvas = canvas;
+            }
+        }
+
+        private void ResetCanvas(GameObject gameObject)
+        {
+            var canvas = gameObject.GetComponent<Canvas>();
+            if (canvas != null)
+            {
+                canvas.worldCamera = null;
+                canvas.sortingLayerName = UILayer.Default.ToString();
+                canvas.sortingOrder = 0;
+            }
         }
     }
 }
