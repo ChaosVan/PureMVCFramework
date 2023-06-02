@@ -3,7 +3,6 @@
 using Sirenix.OdinInspector;
 #endif
 using System.Collections.Generic;
-using UnityEditor.PackageManager.UI;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -161,7 +160,7 @@ namespace PureMVCFramework.UI
 
         internal void PushIntoStack(UIWindow window)
         {
-            m_UIStack.Push(window); 
+            m_UIStack.Push(window);
             CurrentFocusWindow = window;
         }
 
@@ -460,7 +459,7 @@ namespace PureMVCFramework.UI
         {
             if (gameObject != null)
             {
-                if (window.Canvas.renderMode != RenderMode.WorldSpace) 
+                if (window.Canvas.renderMode != RenderMode.WorldSpace)
                     UnregistWindowCamera(window, window.config.cameraIndex);
 
                 ResetCanvas(gameObject);
