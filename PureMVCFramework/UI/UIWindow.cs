@@ -5,53 +5,29 @@ using UnityEngine.Assertions;
 
 namespace PureMVCFramework.UI
 {
+    public enum WindowStatus
+    {
+        None,
+        Loading,
+        Inited,
+        Opened,
+        Closed,
+    }
+
+    public class WorldParam
+    {
+        public Transform root;
+        public Vector3 position;
+        public Quaternion rotation;
+        /// <summary>
+        /// 创建成功时发的消息
+        /// </summary>
+        public string callbackNotification;
+        public object userdata;
+    }
+
     public class UIWindow : UIComponent
     {
-        public enum WindowMode
-        {
-            Single = 0,     // 只存在一个
-            SingleInStack,  // 只存在一个，并且进栈
-            Multiple,       // 可以存在多个
-        }
-
-        public enum WindowStatus
-        {
-            None,
-            Loading,
-            Inited,
-            Opened,
-            Closed,
-        }
-
-        [System.Serializable]
-        public class UIWindowParams
-        {
-            public string name;
-            public UILayer layer;
-            public int orderInLayer;
-            public int cameraIndex;
-            public WindowMode windowMode;
-            public string windowClass;
-            public string mediatorName;
-            public string prefabPath;
-
-            public override string ToString()
-            {
-                return JsonUtility.ToJson(this);
-            }
-        }
-
-        public class WorldParam
-        {
-            public Transform root;
-            public Vector3 position;
-            public Quaternion rotation;
-            /// <summary>
-            /// 创建成功时发的消息
-            /// </summary>
-            public string callbackNotification;
-            public object userdata;
-        }
 
         public UIWindowParams config;
         public WorldParam worldParam;
@@ -60,20 +36,7 @@ namespace PureMVCFramework.UI
 
         public bool IsOpen => Status == WindowStatus.Opened;
 
-        public bool IsFocus
-        {
-            get
-            {
-                return UIManager.Instance.CurrentFocusWindow == this;
-            }
-            internal set
-            {
-                OnFocus(value);
-            }
-        }
-        public Canvas Canvas { get; private set; }
-
-        //internal bool ForceClosed { get; set; }
+        public Canvas Canvas { get; internal set; }
 
         protected virtual void OnOpen()
         {
@@ -90,74 +53,9 @@ namespace PureMVCFramework.UI
 
         }
 
-        private void SetCanvas(GameObject gameObject)
-        {
-            Canvas = gameObject.GetComponent<Canvas>();
-            if (Canvas != null)
-            {
-                switch (Canvas.renderMode)
-                {
-                    case RenderMode.ScreenSpaceOverlay:
-                        if (config.layer == UILayer.Top)
-                        {
-                            Canvas.sortingOrder = config.orderInLayer;
-                        }
-                        else
-                        {
-                            Canvas.renderMode = RenderMode.ScreenSpaceCamera;
-                            Canvas.worldCamera = UIManager.Instance.GetCamera(config.cameraIndex);
-                            Canvas.sortingLayerName = config.layer.ToString();
-                            Canvas.sortingOrder = config.orderInLayer;
-
-                            UIManager.Instance.RegisterWindowCamera(this, config.cameraIndex);
-                        }
-                        break;
-                    case RenderMode.ScreenSpaceCamera:
-                        if (config.layer == UILayer.Top)
-                        {
-                            Canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                            Canvas.sortingOrder = config.orderInLayer;
-                        }
-                        else
-                        {
-                            Canvas.worldCamera = UIManager.Instance.GetCamera(config.cameraIndex);
-                            Canvas.sortingLayerName = config.layer.ToString();
-                            Canvas.sortingOrder = config.orderInLayer;
-
-                            UIManager.Instance.RegisterWindowCamera(this, config.cameraIndex);
-                        }
-                        break;
-                    case RenderMode.WorldSpace:
-                        Canvas.worldCamera = Camera.main;
-                        Canvas.sortingLayerName = config.layer.ToString();
-                        Canvas.sortingOrder = config.orderInLayer;
-                        break;
-                    default:
-                        break;
-                }
-
-                Canvas.enabled = false;
-            }
-        }
-
-        private void ResetCanvas()
-        {
-            if (Canvas != null)
-            {
-                UIManager.Instance.UnregistWindowCamera(this, config.cameraIndex);
-                Canvas.worldCamera = null;
-                Canvas.sortingLayerName = UILayer.Default.ToString();
-                Canvas.sortingOrder = 0;
-                Canvas = null;
-            }
-        }
-
         internal bool Init(GameObject gameObject, object userdata)
         {
             Assert.IsNotNull(gameObject, config.prefabPath);
-
-            // Set Canvas Layer
-            SetCanvas(gameObject);
 
             if (userdata is WorldParam param)
             {
@@ -181,12 +79,6 @@ namespace PureMVCFramework.UI
                         SendNotification(RegistMediatorCommand.Name, new Dictionary<string, UIWindow>(), config.mediatorName);
                 }
             }
-
-            // window是否需要进栈
-            if (config.windowMode == WindowMode.SingleInStack)
-                UIManager.Instance.PushIntoStack(this);
-            else
-                IsFocus = true;
 
             Status = WindowStatus.Inited;
 
@@ -221,15 +113,16 @@ namespace PureMVCFramework.UI
         internal void Open()
         {
             Status = WindowStatus.Opened;
-            if (Canvas != null)
-                Canvas.enabled = true;
             OnOpen();
         }
 
-        internal void Close()
+        internal void Close(out GameObject obj)
         {
+            obj = null;
             if (Status == WindowStatus.Inited || Status == WindowStatus.Opened)
             {
+                obj = gameObject;
+
                 if (!string.IsNullOrEmpty(config.mediatorName))
                 {
                     if (config.windowMode != WindowMode.Multiple)
@@ -238,14 +131,7 @@ namespace PureMVCFramework.UI
                     }
                 }
 
-                // Reset Canvas Layer
-                ResetCanvas();
-
-                config = null;
                 worldParam = null;
-
-                if (gameObject != null)
-                    gameObject.Recycle();
 
                 try
                 {
@@ -258,6 +144,11 @@ namespace PureMVCFramework.UI
             }
 
             Status = WindowStatus.Closed;
+        }
+
+        internal void SetFocus(bool tf)
+        {
+            OnFocus(tf);
         }
     }
 }
