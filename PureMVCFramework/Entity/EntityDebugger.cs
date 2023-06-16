@@ -138,23 +138,46 @@ namespace PureMVCFramework.Entity
             GameObjectEntities.Remove(gameObject);
         }
 
-        private readonly Dictionary<ulong, Dictionary<string, IComponentData>> snapshot = new Dictionary<ulong, Dictionary<string, IComponentData>>();
+        private readonly Dictionary<object, Dictionary<string, IComponentData>> snapshot = new Dictionary<object, Dictionary<string, IComponentData>>();
 
-        public string TakeSnapshot(JsonSerializerSettings settings)
+        public string TakeSnapshot(JsonSerializerSettings settings, EntitySnapshotKey keyType = EntitySnapshotKey.EntityGUID)
         {
             snapshot.Clear();
             var e = Entities.GetEnumerator();
             while (e.MoveNext())
             {
                 var current = e.Current;
-                snapshot.Add(current.Key, new Dictionary<string, IComponentData>());
-                foreach (var c in current.Value)
+                if (keyType == EntitySnapshotKey.EntityGUID)
                 {
-                    snapshot[current.Key].Add(c.GetType().FullName, c);
+                    snapshot.Add(current.Key, new Dictionary<string, IComponentData>());
+                    foreach (var c in current.Value)
+                    {
+                        snapshot[current.Key].Add(c.GetType().FullName, c);
+                    }
+                }
+                else if (keyType == EntitySnapshotKey.EntityName)
+                {
+                    string name = current.Key.ToString();
+                    if (EntityManager.TryGetEntity(current.Key, out var entity) && entity.gameObject != null)
+                    {
+                        name = entity.gameObject.name;
+                    }
+
+                    snapshot.Add(name, new Dictionary<string, IComponentData>());
+                    foreach (var c in current.Value)
+                    {
+                        snapshot[name].Add(c.GetType().FullName, c);
+                    }
                 }
             }
 
             return JsonConvert.SerializeObject(snapshot, settings);
         }
+    }
+
+    public enum EntitySnapshotKey
+    {
+        EntityGUID,
+        EntityName,
     }
 }
