@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
@@ -135,6 +136,25 @@ namespace PureMVCFramework.Entity
         void OnEntityGameObjectDeleted(GameObject gameObject)
         {
             GameObjectEntities.Remove(gameObject);
+        }
+
+        private readonly Dictionary<ulong, Dictionary<string, IComponentData>> snapshot = new Dictionary<ulong, Dictionary<string, IComponentData>>();
+
+        public string TakeSnapshot(JsonSerializerSettings settings)
+        {
+            snapshot.Clear();
+            var e = Entities.GetEnumerator();
+            while (e.MoveNext())
+            {
+                var current = e.Current;
+                snapshot.Add(current.Key, new Dictionary<string, IComponentData>());
+                foreach (var c in current.Value)
+                {
+                    snapshot[current.Key].Add(c.GetType().FullName, c);
+                }
+            }
+
+            return JsonConvert.SerializeObject(snapshot, settings);
         }
     }
 }
