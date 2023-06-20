@@ -138,36 +138,27 @@ namespace PureMVCFramework.Entity
             GameObjectEntities.Remove(gameObject);
         }
 
-        private readonly Dictionary<object, Dictionary<string, IComponentData>> snapshot = new Dictionary<object, Dictionary<string, IComponentData>>();
+        private readonly List<List<IComponentData>> snapshot = new List<List<IComponentData>>();
+        private readonly List<ulong> sortList = new List<ulong>();
 
+        [System.Obsolete]
         public string TakeSnapshot(JsonSerializerSettings settings, EntitySnapshotKey keyType = EntitySnapshotKey.EntityGUID)
         {
-            snapshot.Clear();
-            var e = Entities.GetEnumerator();
-            while (e.MoveNext())
-            {
-                var current = e.Current;
-                if (keyType == EntitySnapshotKey.EntityGUID)
-                {
-                    snapshot.Add(current.Key, new Dictionary<string, IComponentData>());
-                    foreach (var c in current.Value)
-                    {
-                        snapshot[current.Key].Add(c.GetType().FullName, c);
-                    }
-                }
-                else if (keyType == EntitySnapshotKey.EntityName)
-                {
-                    string name = current.Key.ToString();
-                    if (EntityManager.TryGetEntity(current.Key, out var entity) && entity.gameObject != null)
-                    {
-                        name = entity.gameObject.name;
-                    }
+            return TakeSnapshot(settings);
+        }
 
-                    snapshot.Add(name, new Dictionary<string, IComponentData>());
-                    foreach (var c in current.Value)
-                    {
-                        snapshot[name].Add(c.GetType().FullName, c);
-                    }
+        public string TakeSnapshot(JsonSerializerSettings settings)
+        {
+            sortList.Clear();
+            sortList.AddRange(Entities.Keys);
+            sortList.Sort((a, b) => (int)(a - b));
+
+            snapshot.Clear();
+            foreach (var key in sortList)
+            {
+                if (Entities.TryGetValue(key, out var list))
+                {
+                    snapshot.Add(list);
                 }
             }
 
@@ -175,6 +166,7 @@ namespace PureMVCFramework.Entity
         }
     }
 
+    [System.Obsolete]
     public enum EntitySnapshotKey
     {
         EntityGUID,
