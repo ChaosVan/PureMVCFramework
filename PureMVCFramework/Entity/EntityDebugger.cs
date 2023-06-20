@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Sirenix.OdinInspector;
 #endif
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace PureMVCFramework.Entity
@@ -164,6 +165,8 @@ namespace PureMVCFramework.Entity
 
             return JsonConvert.SerializeObject(snapshot, settings);
         }
+
+        public Dictionary<ulong, List<IComponentData>> DebugEntities => Entities;
     }
 
     [System.Obsolete]
