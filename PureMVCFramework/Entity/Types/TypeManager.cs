@@ -99,6 +99,7 @@ namespace PureMVCFramework.Entity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         public static void Initialize()
         {
+#if !UNITY_DOTSRUNTIME
             if (s_Initialized)
                 return;
 
@@ -130,6 +131,7 @@ namespace PureMVCFramework.Entity
 
             InitializeSystemsState();
             InitializeAllComponentTypes();
+#endif
         }
 
         public static void Shutdown()
