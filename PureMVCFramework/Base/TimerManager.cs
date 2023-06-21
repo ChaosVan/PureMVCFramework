@@ -32,7 +32,8 @@ namespace PureMVCFramework
         [ShowInInspector, ShowIf("showOdinInfo"), ListDrawerSettings(IsReadOnly = true)]
 #endif
         private readonly List<ITimerTask> m_TaskList = new List<ITimerTask>();
-        private readonly List<ITimerTask> m_ToBeRemoved = new List<ITimerTask>();
+        private readonly List<ITimerTask> m_SafeAdded = new List<ITimerTask>();
+        private readonly List<ITimerTask> m_SafeRemoved = new List<ITimerTask>();
 
         public float DeltaTime { get; private set; }
 
@@ -45,23 +46,30 @@ namespace PureMVCFramework
         protected override void OnUpdate(float delta)
         {
             DeltaTime = delta;
+
+            if (m_SafeAdded.Count > 0)
+            {
+                m_TaskList.AddRange(m_SafeAdded);
+                m_SafeAdded.Clear();
+            }
+
             for (int i = 0; i < m_TaskList.Count; ++i)
             {
                 ITimerTask task = m_TaskList[i];
                 if (task.Update(delta) && task.Execute())
                 {
                     task.Stop();
-                    m_ToBeRemoved.Add(task);
+                    m_SafeRemoved.Add(task);
                 }
             }
 
-            if (m_ToBeRemoved.Count > 0)
+            if (m_SafeRemoved.Count > 0)
             {
-                for (int i = 0; i < m_ToBeRemoved.Count; ++i)
+                for (int i = 0; i < m_SafeRemoved.Count; ++i)
                 {
-                    m_TaskList.Remove(m_ToBeRemoved[i]);
+                    m_TaskList.Remove(m_SafeRemoved[i]);
                 }
-                m_ToBeRemoved.Clear();
+                m_SafeRemoved.Clear();
             }
         }
 
@@ -149,7 +157,7 @@ namespace PureMVCFramework
                 name = string.IsNullOrEmpty(taskName) ? DefaultTaskName(executable) : taskName,
 #endif
             };
-            m_TaskList.Add(task);
+            m_SafeAdded.Add(task);
 
             return task;
         }

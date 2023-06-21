@@ -158,7 +158,10 @@ namespace PureMVCFramework
 #if UNITY_2020_1_OR_NEWER
                         if (operation.webRequest.result > UnityWebRequest.Result.Success)
                         {
-                            Debug.LogErrorFormat("Error: {0}, Code: {1}, Url: {2}", operation.webRequest.error, operation.webRequest.responseCode, key);
+                            Debug.LogErrorFormat("{0}[{1}]: {2}, Url: {3}", 
+                                operation.webRequest.result,  
+                                operation.webRequest.responseCode,
+                                operation.webRequest.error, key);
                         }
 #else
                         if (operation.webRequest.isHttpError || operation.webRequest.isNetworkError)
@@ -170,13 +173,10 @@ namespace PureMVCFramework
                         // 通知最终用户请求进度
                         param.calback?.Invoke(operation.webRequest, param.userdata);
                     }
-                    else
-                    {
-                        throw new System.Exception(string.Format("{0} is out of control", operation.webRequest.url));
-                    }
                 }
                 catch (System.Exception e)
                 {
+                    Debug.LogError("Fetal Error: " + operation.webRequest.url);
                     Debug.LogError(e);
                 }
                 finally

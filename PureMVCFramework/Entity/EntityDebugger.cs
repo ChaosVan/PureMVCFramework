@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using Sirenix.OdinInspector;
 #endif
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace PureMVCFramework.Entity
@@ -139,14 +138,9 @@ namespace PureMVCFramework.Entity
             GameObjectEntities.Remove(gameObject);
         }
 
+#if UNITY_EDITOR
         private readonly List<List<IComponentData>> snapshot = new List<List<IComponentData>>();
         private readonly List<ulong> sortList = new List<ulong>();
-
-        [System.Obsolete]
-        public string TakeSnapshot(JsonSerializerSettings settings, EntitySnapshotKey keyType = EntitySnapshotKey.EntityGUID)
-        {
-            return TakeSnapshot(settings);
-        }
 
         public string TakeSnapshot(JsonSerializerSettings settings)
         {
@@ -167,12 +161,6 @@ namespace PureMVCFramework.Entity
         }
 
         public Dictionary<ulong, List<IComponentData>> DebugEntities => Entities;
-    }
-
-    [System.Obsolete]
-    public enum EntitySnapshotKey
-    {
-        EntityGUID,
-        EntityName,
+#endif
     }
 }
