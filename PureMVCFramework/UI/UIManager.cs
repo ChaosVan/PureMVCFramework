@@ -1,4 +1,5 @@
 ﻿using PureMVCFramework.Advantages;
+using PureMVCFramework.Patterns;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
@@ -265,6 +266,8 @@ namespace PureMVCFramework.UI
 
                     if (window.Init(obj, data))
                     {
+                        RegistMediator(window);
+
                         if (window.config.windowMode == WindowMode.SingleInStack)
                             PushIntoStack(window);
                         else
@@ -320,6 +323,7 @@ namespace PureMVCFramework.UI
             if (window.config.windowMode != WindowMode.Multiple)
                 m_SingleWindows.Remove(window.config.name);
 
+            RemoveMediator(window);
             window.Close(out var gameObject);
             PostCloseWindow(window, gameObject);
 
@@ -330,9 +334,12 @@ namespace PureMVCFramework.UI
         {
             if (m_ActiveWindows.TryGetValue(param.layer, out List<UIWindow> windows) && windows != null)
             {
-                var window = windows.Find(x => x.config.name == param.name);
-                if (window != null)
-                    CloseWindow(window);
+                var array = windows.FindAll(x => x.config.name == param.name);
+                if (array != null)
+                {
+                    foreach (var window in array)
+                        CloseWindow(window);
+                }
             }
         }
 
@@ -366,6 +373,7 @@ namespace PureMVCFramework.UI
 
             foreach (var window in m_willRemove)
             {
+                RemoveMediator(window);
                 window.Close(out var gameObject);
                 PostCloseWindow(window, gameObject);
             }
@@ -398,6 +406,7 @@ namespace PureMVCFramework.UI
 
             foreach (var window in m_willRemove)
             {
+                RemoveMediator(window);
                 window.Close(out var gameObject);
                 PostCloseWindow(window, gameObject);
             }
@@ -427,6 +436,7 @@ namespace PureMVCFramework.UI
 
             foreach (var window in m_willRemove)
             {
+                RemoveMediator(window);
                 window.Close(out var gameObject);
                 PostCloseWindow(window, gameObject);
             }
@@ -530,6 +540,40 @@ namespace PureMVCFramework.UI
                 canvas.worldCamera = null;
                 canvas.sortingLayerName = UILayer.Default.ToString();
                 canvas.sortingOrder = 0;
+            }
+        }
+
+        private void RegistMediator(UIWindow window)
+        {
+            if (!string.IsNullOrEmpty(window.config.mediatorName))
+            {
+                if (window.config.windowMode == WindowMode.Multiple)
+                {
+                    if (!Facade.HasMediator(window.config.mediatorName))
+                        SendNotification(RegistMediatorCommand.Name, window, window.config.mediatorName);
+                    else if (window.worldParam != null && !string.IsNullOrEmpty(window.worldParam.createNotification))
+                        SendNotification(window.worldParam.createNotification, window);
+                }
+                else
+                {
+                    SendNotification(RegistMediatorCommand.Name, window, window.config.mediatorName);
+                }
+            }
+        }
+
+        private void RemoveMediator(UIWindow window)
+        {
+            if (!string.IsNullOrEmpty(window.config.mediatorName))
+            {
+                if (window.config.windowMode == WindowMode.Multiple)
+                {
+                    if (window.worldParam != null && !string.IsNullOrEmpty(window.worldParam.deleteNotification))
+                        SendNotification(window.worldParam.deleteNotification, window);
+                }
+                else
+                {
+                    SendNotification(RemoveMediatorCommand.Name, window, window.config.mediatorName);
+                }
             }
         }
     }

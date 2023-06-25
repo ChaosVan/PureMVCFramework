@@ -1,6 +1,4 @@
-﻿using PureMVCFramework.Patterns;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Assertions;
 
 namespace PureMVCFramework.UI
@@ -19,16 +17,22 @@ namespace PureMVCFramework.UI
         public Transform root;
         public Vector3 position;
         public Quaternion rotation;
-        /// <summary>
-        /// 创建成功时发的消息
-        /// </summary>
+
+        [System.Obsolete]
         public string callbackNotification;
+        /// <summary>
+        /// window打开后发出通知
+        /// </summary>
+        public string createNotification;
+        /// <summary>
+        /// window关闭后发出通知
+        /// </summary>
+        public string deleteNotification;
         public object userdata;
     }
 
     public class UIWindow : UIComponent
     {
-
         public UIWindowParams config;
         public WorldParam worldParam;
 
@@ -38,20 +42,11 @@ namespace PureMVCFramework.UI
 
         public Canvas Canvas { get; internal set; }
 
-        protected virtual void OnOpen()
-        {
+        protected virtual void OnOpen() { }
 
-        }
+        protected virtual void OnFocus(bool tf) { }
 
-        protected virtual void OnFocus(bool tf)
-        {
-
-        }
-
-        protected virtual void ApplySafeArea(Rect area)
-        {
-
-        }
+        protected virtual void ApplySafeArea(Rect area) { }
 
         internal bool Init(GameObject gameObject, object userdata)
         {
@@ -71,13 +66,6 @@ namespace PureMVCFramework.UI
 
                 worldParam = param;
                 userdata = param.userdata;
-
-                if (!string.IsNullOrEmpty(config.mediatorName))
-                {
-                    var mediator = Facade.RetrieveMediator(config.mediatorName);
-                    if (mediator == null)
-                        SendNotification(RegistMediatorCommand.Name, new Dictionary<string, UIWindow>(), config.mediatorName);
-                }
             }
 
             Status = WindowStatus.Inited;
@@ -94,19 +82,6 @@ namespace PureMVCFramework.UI
 
             transform.SetAsLastSibling();
 
-            if (!string.IsNullOrEmpty(config.mediatorName))
-            {
-                if (config.windowMode != WindowMode.Multiple)
-                {
-                    SendNotification(RegistMediatorCommand.Name, this, config.mediatorName);
-                }
-                else
-                {
-                    if (!string.IsNullOrEmpty(worldParam.callbackNotification))
-                        SendNotification(worldParam.callbackNotification, this);
-                }
-            }
-
             return true;
         }
 
@@ -122,15 +97,6 @@ namespace PureMVCFramework.UI
             if (Status == WindowStatus.Inited || Status == WindowStatus.Opened)
             {
                 obj = gameObject;
-
-                if (!string.IsNullOrEmpty(config.mediatorName))
-                {
-                    if (config.windowMode != WindowMode.Multiple)
-                    {
-                        SendNotification(RemoveMediatorCommand.Name, this, config.mediatorName);
-                    }
-                }
-
                 worldParam = null;
 
                 try

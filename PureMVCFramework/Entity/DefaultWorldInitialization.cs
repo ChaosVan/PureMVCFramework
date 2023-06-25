@@ -12,7 +12,9 @@ namespace PureMVCFramework.Entity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize()
         {
+#if !UNITY_DOTSRUNTIME
             DefaultWorldInitialization.Initialize("Default World", false);
+#endif
         }
     }
 
@@ -30,7 +32,6 @@ namespace PureMVCFramework.Entity
         internal static event Action DefaultWorldDestroyed;
 #pragma warning restore 0067 // unused variable
 
-#if !UNITY_DOTSRUNTIME
         [DomainReload(true)]
         static bool s_UnloadOrPlayModeChangeShutdownRegistered = true;
 
@@ -43,7 +44,6 @@ namespace PureMVCFramework.Entity
         {
             DomainUnloadOrPlayModeChangeShutdown();
         }
-#endif
 
         internal static void DomainUnloadOrPlayModeChangeShutdown()
         {

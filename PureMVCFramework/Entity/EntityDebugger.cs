@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 #if ODIN_INSPECTOR
 using Sirenix.OdinInspector;
 #endif
@@ -136,5 +137,30 @@ namespace PureMVCFramework.Entity
         {
             GameObjectEntities.Remove(gameObject);
         }
+
+#if UNITY_EDITOR
+        private readonly List<List<IComponentData>> snapshot = new List<List<IComponentData>>();
+        private readonly List<ulong> sortList = new List<ulong>();
+
+        public string TakeSnapshot(JsonSerializerSettings settings)
+        {
+            sortList.Clear();
+            sortList.AddRange(Entities.Keys);
+            sortList.Sort((a, b) => (int)(a - b));
+
+            snapshot.Clear();
+            foreach (var key in sortList)
+            {
+                if (Entities.TryGetValue(key, out var list))
+                {
+                    snapshot.Add(list);
+                }
+            }
+
+            return JsonConvert.SerializeObject(snapshot, settings);
+        }
+
+        public Dictionary<ulong, List<IComponentData>> DebugEntities => Entities;
+#endif
     }
 }
